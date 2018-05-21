@@ -176,7 +176,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
-		7C5505FC20B3370A00175D8F /* iTorrent_Framework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent_Framework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C5505FC20B3370A00175D8F /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C5505FF20B3370A00175D8F /* iTorrent_Framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent_Framework.h; sourceTree = "<group>"; };
 		7C55060020B3370A00175D8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7C553DC720B3379C00175D8F /* alert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = alert.cpp; sourceTree = "<group>"; };
@@ -368,7 +368,7 @@
 		7C5505FD20B3370A00175D8F /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				7C5505FC20B3370A00175D8F /* iTorrent_Framework.framework */,
+				7C5505FC20B3370A00175D8F /* iTorrent.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -628,9 +628,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		7C5505FB20B3370A00175D8F /* iTorrent-Framework */ = {
+		7C5505FB20B3370A00175D8F /* iTorrent */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent-Framework" */;
+			buildConfigurationList = 7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent" */;
 			buildPhases = (
 				7C5505F720B3370A00175D8F /* Sources */,
 				7C5505F820B3370A00175D8F /* Frameworks */,
@@ -641,9 +641,9 @@
 			);
 			dependencies = (
 			);
-			name = "iTorrent-Framework";
+			name = iTorrent;
 			productName = "iTorrent-Framework";
-			productReference = 7C5505FC20B3370A00175D8F /* iTorrent_Framework.framework */;
+			productReference = 7C5505FC20B3370A00175D8F /* iTorrent.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -660,7 +660,7 @@
 					};
 				};
 			};
-			buildConfigurationList = 7C5505F620B3370A00175D8F /* Build configuration list for PBXProject "iTorrent-Framework" */;
+			buildConfigurationList = 7C5505F620B3370A00175D8F /* Build configuration list for PBXProject "iTorrent" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -672,7 +672,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7C5505FB20B3370A00175D8F /* iTorrent-Framework */,
+				7C5505FB20B3370A00175D8F /* iTorrent */,
 			);
 		};
 /* End PBXProject section */
@@ -1034,7 +1034,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7C5505F620B3370A00175D8F /* Build configuration list for PBXProject "iTorrent-Framework" */ = {
+		7C5505F620B3370A00175D8F /* Build configuration list for PBXProject "iTorrent" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7C55060220B3370A00175D8F /* Debug */,
@@ -1043,7 +1043,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent-Framework" */ = {
+		7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7C55060520B3370A00175D8F /* Debug */,
