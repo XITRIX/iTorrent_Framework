@@ -7,12 +7,16 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7C0624A220BD688800C7466C /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADDA20B5CB4600ED9C84 /* stdafx.cpp */; };
+		7C0624A320BD688B00C7466C /* ftp_session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADD920B5CB4600ED9C84 /* ftp_session.cpp */; };
+		7C0624A420BD688D00C7466C /* ftp_console.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADD820B5CB4600ED9C84 /* ftp_console.cpp */; };
+		7C0624A520BD688F00C7466C /* ftp_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADD720B5CB4600ED9C84 /* ftp_server.cpp */; };
+		7C0624A620BD689100C7466C /* ftp_wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */; };
+		7C0624A720BD689300C7466C /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
 		7C554E9A20B3525500175D8F /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9520B3525500175D8F /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9B20B3525500175D8F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9C20B3525500175D8F /* iTorrent-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9720B3525500175D8F /* iTorrent-Bridging-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9D20B3525500175D8F /* result_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9820B3525500175D8F /* result_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		7C554E9E20B3525500175D8F /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
-		7C554EBB20B3537A00175D8F /* wrapper.cpp in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C5571E420B337AC00175D8F /* alert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553DC720B3379C00175D8F /* alert.cpp */; };
 		7C5571E520B337AC00175D8F /* alert_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553DC820B3379C00175D8F /* alert_manager.cpp */; };
 		7C5571E620B337AC00175D8F /* allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553DC920B3379C00175D8F /* allocator.cpp */; };
@@ -98,8 +102,6 @@
 		7C55723720B337AC00175D8F /* lsd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553E1C20B3379C00175D8F /* lsd.cpp */; };
 		7C55723820B337AC00175D8F /* lt_trackers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553E1D20B3379C00175D8F /* lt_trackers.cpp */; };
 		7C55723920B337AC00175D8F /* magnet_uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553E1E20B3379C00175D8F /* magnet_uri.cpp */; };
-		7C55723A20B337AC00175D8F /* Makefile.am in Resources */ = {isa = PBXBuildFile; fileRef = 7C553E1F20B3379C00175D8F /* Makefile.am */; };
-		7C55723B20B337AC00175D8F /* Makefile.in in Resources */ = {isa = PBXBuildFile; fileRef = 7C553E2020B3379C00175D8F /* Makefile.in */; };
 		7C55723C20B337AC00175D8F /* merkle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553E2120B3379C00175D8F /* merkle.cpp */; };
 		7C55723D20B337AC00175D8F /* metadata_transfer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553E2220B3379C00175D8F /* metadata_transfer.cpp */; };
 		7C55723E20B337AC00175D8F /* mpi.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553E2320B3379C00175D8F /* mpi.cpp */; };
@@ -176,6 +178,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7C4FADD720B5CB4600ED9C84 /* ftp_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_server.cpp; sourceTree = "<group>"; };
+		7C4FADD820B5CB4600ED9C84 /* ftp_console.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_console.cpp; sourceTree = "<group>"; };
+		7C4FADD920B5CB4600ED9C84 /* ftp_session.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_session.cpp; sourceTree = "<group>"; };
+		7C4FADDA20B5CB4600ED9C84 /* stdafx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stdafx.cpp; sourceTree = "<group>"; };
+		7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_wrapper.cpp; sourceTree = "<group>"; };
 		7C5505FC20B3370A00175D8F /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C5505FF20B3370A00175D8F /* iTorrent_Framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent_Framework.h; sourceTree = "<group>"; };
 		7C55060020B3370A00175D8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -344,6 +351,7 @@
 		7C55744920B3426C00175D8F /* windows_file_codecvt.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = windows_file_codecvt.cpp; sourceTree = "<group>"; };
 		7C55744A20B3426C00175D8F /* windows_file_codecvt.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = windows_file_codecvt.hpp; sourceTree = "<group>"; };
 		7C55744C20B3426D00175D8F /* error_code.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = error_code.cpp; sourceTree = "<group>"; };
+		7C57FBBC20B93D320060D862 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -357,10 +365,21 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		7C4FADD620B5CB4600ED9C84 /* ftp */ = {
+			isa = PBXGroup;
+			children = (
+				7C4FADD720B5CB4600ED9C84 /* ftp_server.cpp */,
+				7C4FADD820B5CB4600ED9C84 /* ftp_console.cpp */,
+				7C4FADD920B5CB4600ED9C84 /* ftp_session.cpp */,
+				7C4FADDA20B5CB4600ED9C84 /* stdafx.cpp */,
+			);
+			path = ftp;
+			sourceTree = "<group>";
+		};
 		7C5505F220B3370A00175D8F = {
 			isa = PBXGroup;
 			children = (
-				7C5505FE20B3370A00175D8F /* iTorrent-Framework */,
+				7C5505FE20B3370A00175D8F /* iTorrent */,
 				7C5505FD20B3370A00175D8F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -373,20 +392,22 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
-		7C5505FE20B3370A00175D8F /* iTorrent-Framework */ = {
+		7C5505FE20B3370A00175D8F /* iTorrent */ = {
 			isa = PBXGroup;
 			children = (
+				7C57FBBC20B93D320060D862 /* include */,
 				7C554E9420B3525500175D8F /* Headers */,
 				7C553DB620B3379C00175D8F /* Source */,
 				7C5505FF20B3370A00175D8F /* iTorrent_Framework.h */,
 				7C55060020B3370A00175D8F /* Info.plist */,
 			);
-			path = "iTorrent-Framework";
+			path = iTorrent;
 			sourceTree = "<group>";
 		};
 		7C553DB620B3379C00175D8F /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				7C4FADD620B5CB4600ED9C84 /* ftp */,
 				7C55744120B3426C00175D8F /* boost_filesystem */,
 				7C55744B20B3426D00175D8F /* boost_system */,
 				7C553DC620B3379C00175D8F /* torrent */,
@@ -575,6 +596,7 @@
 				7C554E9720B3525500175D8F /* iTorrent-Bridging-Header.h */,
 				7C554E9820B3525500175D8F /* result_struct.h */,
 				7C554E9920B3525500175D8F /* wrapper.cpp */,
+				7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */,
 			);
 			path = Headers;
 			sourceTree = "<group>";
@@ -614,7 +636,6 @@
 				7C554E9B20B3525500175D8F /* helper_code.h in Headers */,
 				7C554E9C20B3525500175D8F /* iTorrent-Bridging-Header.h in Headers */,
 				7C554E9D20B3525500175D8F /* result_struct.h in Headers */,
-				7C554EBB20B3537A00175D8F /* wrapper.cpp in Headers */,
 				7C55720720B337AC00175D8F /* precomp_data.h in Headers */,
 				7C55720120B337AC00175D8F /* fe.h in Headers */,
 				7C55720920B337AC00175D8F /* sc.h in Headers */,
@@ -682,8 +703,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7C55723B20B337AC00175D8F /* Makefile.in in Resources */,
-				7C55723A20B337AC00175D8F /* Makefile.am in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -694,7 +713,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				7C554E9E20B3525500175D8F /* wrapper.cpp in Sources */,
+				7C0624A720BD689300C7466C /* wrapper.cpp in Sources */,
+				7C0624A620BD689100C7466C /* ftp_wrapper.cpp in Sources */,
+				7C0624A520BD688F00C7466C /* ftp_server.cpp in Sources */,
+				7C0624A420BD688D00C7466C /* ftp_console.cpp in Sources */,
+				7C0624A320BD688B00C7466C /* ftp_session.cpp in Sources */,
+				7C0624A220BD688800C7466C /* stdafx.cpp in Sources */,
 				7C55720F20B337AC00175D8F /* entry.cpp in Sources */,
 				7C5571EC20B337AC00175D8F /* bandwidth_queue_entry.cpp in Sources */,
 				7C55727420B337AD00175D8F /* ut_pex.cpp in Sources */,
@@ -983,8 +1007,8 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_NO_COMMON_BLOCKS = NO;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent-Framework/include";
-				INFOPLIST_FILE = "iTorrent-Framework/Info.plist";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
+				INFOPLIST_FILE = iTorrent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1013,8 +1037,8 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_NO_COMMON_BLOCKS = NO;
-				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent-Framework/include";
-				INFOPLIST_FILE = "iTorrent-Framework/Info.plist";
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
+				INFOPLIST_FILE = iTorrent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
