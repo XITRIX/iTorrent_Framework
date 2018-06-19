@@ -344,10 +344,15 @@ extern "C" void remove_torrent(char* torrent_hash, int remove_files) {
 }
 
 extern "C" char* get_torrent_file_hash(char* torrent_path) {
-	std::string s = get_torrent(torrent_path)->hash_to_string();
-	char* res = new char[s.length() + 1];
-	strcpy(res, s.c_str());
-	return res;
+    lt::torrent_info* info = get_torrent(torrent_path);
+    if (info != NULL) {
+        std::string s = info->hash_to_string();
+        char* res = new char[s.length() + 1];
+        strcpy(res, s.c_str());
+        return res;
+    } else {
+        return (char*)"-1";
+    }
 }
 
 extern "C" char* get_magnet_hash(char* magnet_link) {
@@ -387,6 +392,11 @@ extern "C" void set_torrent_files_priority(char* torrent_hash, int states[]) {
     }
 //    printf("SETTED! %d\n", states[0]);
 //    printf("%d\n", Engine::standart->getHandleByHash(torrent_hash)->file_priority(0));
+}
+
+extern "C" void set_torrent_file_priority(char* torrent_hash, int file_number, int state) {
+    torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+    handle->file_priority(file_number, state);
 }
 
 extern "C" void start_torrent(char* torrent_hash) {
