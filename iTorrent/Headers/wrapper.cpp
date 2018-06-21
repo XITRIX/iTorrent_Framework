@@ -315,11 +315,19 @@ extern "C" int init_engine(char* save_path) {
 }
 
 extern "C" char* add_torrent(char* torrent_path) {
-	return Engine::standart->addTorrent(get_torrent(torrent_path));
+	libtorrent::torrent_info* torrent = get_torrent(torrent_path);
+	if (torrent == NULL) {
+		return (char*)"-1";
+	}
+	return Engine::standart->addTorrent(torrent);
 }
 
 extern "C" void add_torrent_with_states(char* torrent_path, int states[]) {
-    Engine::standart->addTorrentWithStates(get_torrent(torrent_path), states);
+	libtorrent::torrent_info* torrent = get_torrent(torrent_path);
+	if (torrent == NULL) {
+		return;
+	}
+    Engine::standart->addTorrentWithStates(torrent, states);
 }
 
 extern "C" char* add_magnet(char* magnet_link) {
@@ -420,6 +428,12 @@ extern "C" void rehash_torrent(char* torrent_hash) {
 
 extern "C" Files get_files_of_torrent_by_path(char* torrent_path) {
     torrent_info* info = get_torrent(torrent_path);
+	if (info == NULL) {
+		Files files {
+			.size = -1
+		};
+		return files;
+	}
     return get_files_of_torrent(info);
 }
 
