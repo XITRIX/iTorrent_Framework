@@ -14,7 +14,7 @@
 		7C0624A620BD689100C7466C /* ftp_wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */; };
 		7C0624A720BD689300C7466C /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
 		7C554E9A20B3525500175D8F /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9520B3525500175D8F /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		7C554E9B20B3525500175D8F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C554E9B20B3525500175D8F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; };
 		7C554E9C20B3525500175D8F /* iTorrent-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9720B3525500175D8F /* iTorrent-Bridging-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9D20B3525500175D8F /* result_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9820B3525500175D8F /* result_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C5571E420B337AC00175D8F /* alert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C553DC720B3379C00175D8F /* alert.cpp */; };
@@ -633,9 +633,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				7C554E9A20B3525500175D8F /* file_struct.h in Headers */,
-				7C554E9B20B3525500175D8F /* helper_code.h in Headers */,
 				7C554E9C20B3525500175D8F /* iTorrent-Bridging-Header.h in Headers */,
 				7C554E9D20B3525500175D8F /* result_struct.h in Headers */,
+				7C554E9B20B3525500175D8F /* helper_code.h in Headers */,
 				7C55720720B337AC00175D8F /* precomp_data.h in Headers */,
 				7C55720120B337AC00175D8F /* fe.h in Headers */,
 				7C55720920B337AC00175D8F /* sc.h in Headers */,

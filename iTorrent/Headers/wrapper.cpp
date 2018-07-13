@@ -283,8 +283,9 @@ public:
 		//handlers.push_back(handle);
 		handlers = s->get_torrents();
 		
-		char* res = new char[handle.status().hash_to_string().length() + 1];
-		strcpy(res, handle.status().hash_to_string().c_str());
+		std::string hash = handle.status().hash_to_string();
+		char* res = new char[hash.length() + 1];
+		strcpy(res, hash.c_str());
 		return res;
     }
     
@@ -464,13 +465,63 @@ extern "C" Files get_files_of_torrent_by_hash(char* torrent_hash) {
     return files;
 }
 
+extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
+	torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+	if (handle == NULL) {
+		Trackers t = {
+			.size = -1
+		};
+		return t;
+	}
+	torrent_info* info = (torrent_info*)&handle->get_torrent_info();
+	std::vector<announce_entry> trackers_list = info->trackers();
+	Trackers trackers {
+		.size = static_cast<int>(trackers_list.size()),
+		.tracker_url = new char*[trackers_list.size()],
+		.messages = new char*[trackers_list.size()],
+		.seeders = new int[trackers_list.size()],
+		.peers = new int[trackers_list.size()],
+		.working = new int[trackers_list.size()],
+		.verified = new int[trackers_list.size()]
+	};
+	
+	for (int i = 0; i < trackers_list.size(); i++) {
+		trackers.tracker_url[i] = new char[trackers_list[i].url.length() + 1];
+		strcpy(trackers.tracker_url[i], trackers_list[i].url.c_str());
+		
+		trackers.messages[i] = new char[strlen("MSG") + 1];
+		strcpy(trackers.messages[i], "MSG");
+		
+		trackers.working[i] = trackers_list[i].is_working() ? 1 : 0;
+		trackers.verified[i] = trackers_list[i].verified ? 1 : 0;
+		
+		trackers.seeders[i] = trackers_list[i].scrape_downloaded;
+		trackers.peers[i] = 0; //trackers_list[i].next_announce_in();
+	}
+	
+	return trackers;
+}
+
+extern "C" int add_tracker_to_torrent(char* torrent_hash, char* tracker_url) {
+	torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+	if (handle == NULL) {
+		return -1;
+	}
+	announce_entry* entry = new announce_entry(std::string(tracker_url));
+	handle->add_tracker(*entry);
+	
+	return 0;
+}
+
 extern "C" void save_magnet_to_file(char* hash) {
 	torrent_handle* handle = Engine::standart->getHandleByHash(hash);
 	torrent_info torinfo = handle->get_torrent_info();
 	
 	std::ofstream out((Engine::standart->root_path + "/_Config/" + handle->name().c_str() + ".torrent").c_str(), std::ios_base::binary);
 	out.unsetf(std::ios_base::skipws);
-	bencode(std::ostream_iterator<char>(out), create_torrent(torinfo).generate());
+	create_torrent ct = create_torrent(torinfo);
+	ct.set_creator("iTorrent");
+	bencode(std::ostream_iterator<char>(out), ct.generate());
 }
 
 extern "C" void resume_to_app() {
@@ -546,10 +597,24 @@ extern "C" void save_fast_resume() {
 			--outstanding_resume_data;
 			sleep(10);
 		}
-
-		
     }
     printf("SAVED!!\n");
+}
+
+extern "C" void set_download_limit(int limit_in_bytes) {
+	session* ses = Engine::standart->s;
+	session_settings ss = ses->settings();
+	ss.download_rate_limit = limit_in_bytes;
+	ses->set_settings(ss);
+	//ses->set_download_rate_limit(limit_in_bytes);
+}
+
+extern "C" void set_upload_limit(int limit_in_bytes) {
+	session* ses = Engine::standart->s;
+	session_settings ss = ses->settings();
+	ss.upload_rate_limit = limit_in_bytes;
+	ses->set_settings(ss);
+	//ses->set_upload_rate_limit(limit_in_bytes);
 }
 
 extern "C" Result getTorrentInfo() {
