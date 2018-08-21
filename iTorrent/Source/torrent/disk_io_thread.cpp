@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2007-2016, Arvid Norberg, Steven Siloti
+Copyright (c) 2007-2018, Arvid Norberg, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -62,6 +62,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #if __cplusplus >= 201103L || defined __clang__
 
 #if DEBUG_DISK_THREAD
+#include <cstdarg> // for va_list
 #define DLOG(...) debug_log(__VA_ARGS__)
 #else
 #define DLOG(...) do {} while(false)
@@ -219,9 +220,8 @@ namespace libtorrent
 				boost::shared_ptr<io_service::work> work =
 					boost::make_shared<io_service::work>(boost::ref(m_ios));
 
-				// the magic number 3 is also used in add_job()
 				// every 4:th thread is a hasher thread
-				if ((thread_id & 0x3) == 3) type = hasher_thread;
+				if ((thread_id & hasher_thread_mask) == hasher_thread_mask) type = hasher_thread;
 				m_threads.push_back(boost::shared_ptr<thread>(
 					new thread(boost::bind(&disk_io_thread::thread_fun, this
 						, thread_id, type, work))));
@@ -615,8 +615,8 @@ namespace libtorrent
 		TORRENT_PIECE_ASSERT(num_blocks > 0, pe);
 		m_stats_counters.inc_stats_counter(counters::num_writing_threads, 1);
 
-		time_point start_time = clock_type::now();
-		int block_size = m_disk_cache.block_size();
+		time_point const start_time = clock_type::now();
+		int const block_size = m_disk_cache.block_size();
 
 #if DEBUG_DISK_THREAD
 		DLOG("flush_iovec: piece: %d [ ", int(pe->piece));
@@ -652,8 +652,7 @@ namespace libtorrent
 		if (!failed)
 		{
 			TORRENT_PIECE_ASSERT(!error, pe);
-			boost::uint32_t write_time = total_microseconds(clock_type::now() - start_time);
-			m_write_time.add_sample(write_time / num_blocks);
+			boost::uint32_t const write_time = total_microseconds(clock_type::now() - start_time);
 
 			m_stats_counters.inc_stats_counter(counters::num_blocks_written, num_blocks);
 			m_stats_counters.inc_stats_counter(counters::num_write_ops);
@@ -675,7 +674,7 @@ namespace libtorrent
 	// It is necessary to call this function with the blocks produced by
 	// build_iovec, to reset their state to not being flushed anymore
 	// the cache needs to be locked when calling this function
-	void disk_io_thread::iovec_flushed(cached_piece_entry* pe
+	bool disk_io_thread::iovec_flushed(cached_piece_entry* pe
 		, int* flushing, int num_blocks, int block_offset
 		, storage_error const& error
 		, jobqueue_t& completed_jobs)
@@ -690,7 +689,8 @@ namespace libtorrent
 			DLOG("%d ", flushing[i]);
 		DLOG("]\n");
 #endif
-		m_disk_cache.blocks_flushed(pe, flushing, num_blocks);
+		if (m_disk_cache.blocks_flushed(pe, flushing, num_blocks))
+			return true;
 
 		int block_size = m_disk_cache.block_size();
 
@@ -720,6 +720,8 @@ namespace libtorrent
 				j = next;
 			}
 		}
+
+		return false;
 	}
 
 	// issues write operations for blocks in the given
@@ -755,9 +757,8 @@ namespace libtorrent
 
 		TORRENT_PIECE_ASSERT(pe->piece_refcount > 0, pe);
 		--pe->piece_refcount;
-		iovec_flushed(pe, flushing, iov_len, 0, error, completed_jobs);
-
-		m_disk_cache.maybe_free_piece(pe);
+		if (!iovec_flushed(pe, flushing, iov_len, 0, error, completed_jobs))
+			m_disk_cache.maybe_free_piece(pe);
 
 		// if the cache is under high pressure, we need to evict
 		// the blocks we just flushed to make room for more write pieces
@@ -1110,8 +1111,6 @@ namespace libtorrent
 
 		TORRENT_ASSERT(j->action < sizeof(job_functions)/sizeof(job_functions[0]));
 
-		time_point start_time = clock_type::now();
-
 		m_stats_counters.inc_stats_counter(counters::num_running_disk_jobs, 1);
 
 		// call disk function
@@ -1163,8 +1162,6 @@ namespace libtorrent
 
 		j->ret = ret;
 
-		time_point now = clock_type::now();
-		m_job_time.add_sample(total_microseconds(now - start_time));
 		completed_jobs.push_back(j);
 	}
 
@@ -1178,7 +1175,7 @@ namespace libtorrent
 			return -1;
 		}
 
-		time_point start_time = clock_type::now();
+		time_point const start_time = clock_type::now();
 
 		int const file_flags = file_flags_for_job(j
 			, m_settings.get_bool(settings_pack::coalesce_reads));
@@ -1191,8 +1188,7 @@ namespace libtorrent
 
 		if (!j->error.ec)
 		{
-			boost::uint32_t read_time = total_microseconds(clock_type::now() - start_time);
-			m_read_time.add_sample(read_time);
+			boost::uint32_t const read_time = total_microseconds(clock_type::now() - start_time);
 
 			m_stats_counters.inc_stats_counter(counters::num_read_back);
 			m_stats_counters.inc_stats_counter(counters::num_blocks_read);
@@ -1257,7 +1253,7 @@ namespace libtorrent
 
 		int const file_flags = file_flags_for_job(j
 			, m_settings.get_bool(settings_pack::coalesce_reads));
-		time_point start_time = clock_type::now();
+		time_point const start_time = clock_type::now();
 
 		ret = j->storage->get_storage_impl()->readv(iov, iov_len
 			, j->piece, adjusted_offset, file_flags, j->error);
@@ -1265,7 +1261,6 @@ namespace libtorrent
 		if (!j->error.ec)
 		{
 			boost::uint32_t const read_time = total_microseconds(clock_type::now() - start_time);
-			m_read_time.add_sample(read_time / iov_len);
 
 			m_stats_counters.inc_stats_counter(counters::num_blocks_read, iov_len);
 			m_stats_counters.inc_stats_counter(counters::num_read_ops);
@@ -1411,7 +1406,7 @@ namespace libtorrent
 
 	int disk_io_thread::do_uncached_write(disk_io_job* j)
 	{
-		time_point start_time = clock_type::now();
+		time_point const start_time = clock_type::now();
 
 		file::iovec_t const b = { j->buffer.disk_block, size_t(j->d.io.buffer_size) };
 		int const file_flags = file_flags_for_job(j
@@ -1427,8 +1422,7 @@ namespace libtorrent
 
 		if (!j->error.ec)
 		{
-			boost::uint32_t write_time = total_microseconds(clock_type::now() - start_time);
-			m_write_time.add_sample(write_time);
+			boost::uint32_t const write_time = total_microseconds(clock_type::now() - start_time);
 
 			m_stats_counters.inc_stats_counter(counters::num_blocks_written);
 			m_stats_counters.inc_stats_counter(counters::num_write_ops);
@@ -2025,6 +2019,8 @@ namespace libtorrent
 		add_job(j);
 	}
 
+	// TODO 3: take `prios` by value and move it into the disk job instead of
+	// copying it into a heap allocation
 	void disk_io_thread::async_set_file_priority(piece_manager* storage
 		, std::vector<boost::uint8_t> const& prios
 		, boost::function<void(disk_io_job const*)> const& handler)
@@ -2174,7 +2170,7 @@ namespace libtorrent
 
 		l.unlock();
 
-		time_point start_time = clock_type::now();
+		time_point const start_time = clock_type::now();
 
 		for (int i = cursor; i < end; ++i)
 		{
@@ -2184,7 +2180,7 @@ namespace libtorrent
 			offset += size;
 		}
 
-		boost::uint64_t hash_time = total_microseconds(clock_type::now() - start_time);
+		boost::uint64_t const hash_time = total_microseconds(clock_type::now() - start_time);
 
 		l.lock();
 
@@ -2193,8 +2189,6 @@ namespace libtorrent
 
 		TORRENT_PIECE_ASSERT(pe->hashing, pe);
 		TORRENT_PIECE_ASSERT(pe->hash, pe);
-
-		m_hash_time.add_sample(hash_time / (end - cursor));
 
 		m_stats_counters.inc_stats_counter(counters::num_blocks_hashed, end - cursor);
 		m_stats_counters.inc_stats_counter(counters::disk_hash_time, hash_time);
@@ -2267,7 +2261,7 @@ namespace libtorrent
 			DLOG("do_hash: (uncached) reading (piece: %d block: %d)\n"
 				, int(j->piece), i);
 
-			time_point start_time = clock_type::now();
+			time_point const start_time = clock_type::now();
 
 			iov.iov_len = (std::min)(block_size, piece_size - offset);
 			ret = j->storage->get_storage_impl()->readv(&iov, 1, j->piece
@@ -2277,7 +2271,6 @@ namespace libtorrent
 			if (!j->error.ec)
 			{
 				boost::uint32_t const read_time = total_microseconds(clock_type::now() - start_time);
-				m_read_time.add_sample(read_time);
 
 				m_stats_counters.inc_stats_counter(counters::num_blocks_read);
 				m_stats_counters.inc_stats_counter(counters::num_read_ops);
@@ -2382,8 +2375,28 @@ namespace libtorrent
 		}
 		partial_hash* ph = pe->hash;
 
-		int block_size = m_disk_cache.block_size();
-		int blocks_in_piece = (piece_size + block_size - 1) / block_size;
+		int const block_size = m_disk_cache.block_size();
+		int const blocks_in_piece = (piece_size + block_size - 1) / block_size;
+
+		// we don't care about anything to the left of ph->offset
+		// since those blocks have already been hashed.
+		// we just care about [firs_block, first_block + blocks_left]
+		int const first_block = ph->offset / block_size;
+		int const blocks_left = blocks_in_piece - first_block;
+
+		//   ph->offset
+		//           |  first_block
+		//           |   |
+		//           v   v
+		// +---+---+---+---+---+---+
+		// |   |   |   |   |   |   |
+		// +---+---+---+---+---+---+
+		//
+		//             \-----------/
+		//               blocks_left
+		//
+		// \-----------------------/
+		//     blocks_in_piece
 
 		// keep track of which blocks we have locked by incrementing
 		// their refcounts. This is used to decrement only these blocks
@@ -2395,13 +2408,13 @@ namespace libtorrent
 		// increment the refcounts of all
 		// blocks up front, and then hash them without holding the lock
 		TORRENT_PIECE_ASSERT(ph->offset % block_size == 0, pe);
-		for (int i = ph->offset / block_size; i < blocks_in_piece; ++i)
+		for (int i = 0; i < blocks_left; ++i)
 		{
 			// is the block not in the cache?
-			if (pe->blocks[i].buf == NULL) continue;
+			if (pe->blocks[first_block + i].buf == NULL) continue;
 
 			// if we fail to lock the block, it' no longer in the cache
-			if (m_disk_cache.inc_block_refcount(pe, i, block_cache::ref_hashing) == false)
+			if (m_disk_cache.inc_block_refcount(pe, first_block + i, block_cache::ref_hashing) == false)
 				continue;
 
 			locked_blocks[num_locked_blocks++] = i;
@@ -2418,97 +2431,151 @@ namespace libtorrent
 
 		l.unlock();
 
+		bool slow_path = true;
 		int ret = 0;
-		int next_locked_block = 0;
-		for (int i = offset / block_size; i < blocks_in_piece; ++i)
+
+		if (num_locked_blocks == 0)
 		{
-			file::iovec_t iov;
-			iov.iov_len = (std::min)(block_size, piece_size - offset);
-
-			if (next_locked_block < num_locked_blocks
-				&& locked_blocks[next_locked_block] == i)
+			// this is the fast path where we don't have any blocks in the cache.
+			// We'll need to read all (remaining blocks) from disk
+			file::iovec_t* iov = TORRENT_ALLOCA(file::iovec_t, blocks_left);
+			ret = m_disk_cache.allocate_iovec(iov, blocks_left);
+			if (ret >= 0)
 			{
-				++next_locked_block;
-				TORRENT_PIECE_ASSERT(pe->blocks[i].buf, pe);
-				TORRENT_PIECE_ASSERT(offset == i * block_size, pe);
-				offset += iov.iov_len;
-				ph->h.update(pe->blocks[i].buf, iov.iov_len);
-			}
-			else
-			{
-				iov.iov_base = m_disk_cache.allocate_buffer("hashing");
+				// if this is the last piece, adjust the size of the
+				// last buffer to match up
+				iov[blocks_left-1].iov_len = int(piece_size)
+					- (blocks_in_piece - 1) * block_size;
+				TORRENT_ASSERT(iov[blocks_left-1].iov_len > 0);
+				TORRENT_ASSERT(iov[blocks_left-1].iov_len <= block_size);
 
-				if (iov.iov_base == NULL)
+				time_point const start_time = clock_type::now();
+				ret = j->storage->get_storage_impl()->readv(iov, blocks_left
+					, j->piece, offset, file_flags, j->error);
+
+				if (ret == piece_size - offset)
 				{
-					l.lock();
-					// TODO: introduce a holder class that automatically increments
-					// and decrements the piece_refcount
+					boost::uint32_t const read_time = total_microseconds(clock_type::now() - start_time);
 
-					// decrement the refcounts of the blocks we just hashed
-					for (int k = 0; k < num_locked_blocks; ++k)
-						m_disk_cache.dec_block_refcount(pe, locked_blocks[k], block_cache::ref_hashing);
-
-					--pe->piece_refcount;
-					pe->hashing = false;
-					delete pe->hash;
-					pe->hash = NULL;
-
-					m_disk_cache.maybe_free_piece(pe);
-
-					j->error.ec = errors::no_memory;
-					j->error.operation = storage_error::alloc_cache_piece;
-					return -1;
-				}
-
-				DLOG("do_hash: reading (piece: %d block: %d)\n", int(pe->piece), i);
-
-				time_point start_time = clock_type::now();
-
-				TORRENT_PIECE_ASSERT(offset == i * block_size, pe);
-				ret = j->storage->get_storage_impl()->readv(&iov, 1, j->piece
-						, offset, file_flags, j->error);
-
-				if (ret < 0)
-				{
-					TORRENT_ASSERT(j->error.ec && j->error.operation != 0);
-					m_disk_cache.free_buffer(static_cast<char*>(iov.iov_base));
-					l.lock();
-					break;
-				}
-
-				// treat a short read as an error. The hash will be invalid, the
-				// block cannot be cached and the main thread should skip the rest
-				// of this file
-				if (ret != iov.iov_len)
-				{
-					ret = -1;
-					j->error.ec.assign(boost::asio::error::eof
-						, boost::asio::error::get_misc_category());
-					j->error.operation = storage_error::read;
-					m_disk_cache.free_buffer(static_cast<char*>(iov.iov_base));
-					l.lock();
-					break;
-				}
-
-				if (!j->error.ec)
-				{
-					boost::uint32_t read_time = total_microseconds(clock_type::now() - start_time);
-					m_read_time.add_sample(read_time);
-
-					m_stats_counters.inc_stats_counter(counters::num_read_back);
-					m_stats_counters.inc_stats_counter(counters::num_blocks_read);
+					m_stats_counters.inc_stats_counter(counters::num_read_back, blocks_left);
+					m_stats_counters.inc_stats_counter(counters::num_blocks_read, blocks_left);
 					m_stats_counters.inc_stats_counter(counters::num_read_ops);
 					m_stats_counters.inc_stats_counter(counters::disk_read_time, read_time);
 					m_stats_counters.inc_stats_counter(counters::disk_job_time, read_time);
+
+					for (int i = 0; i < blocks_left; ++i)
+					{
+						offset += iov[i].iov_len;
+						ph->h.update(static_cast<char const*>(iov[i].iov_base), iov[i].iov_len);
+					}
+					TORRENT_ASSERT(offset == piece_size);
+
+					slow_path = false;
+
+					l.lock();
+					m_disk_cache.insert_blocks(pe, first_block, iov, blocks_left, j);
+					l.unlock();
 				}
+				else
+				{
+					m_disk_cache.free_iovec(iov, blocks_left);
+				}
+			}
+		}
 
-				TORRENT_PIECE_ASSERT(offset == i * block_size, pe);
-				offset += iov.iov_len;
-				ph->h.update(static_cast<char const*>(iov.iov_base), iov.iov_len);
+		if (slow_path)
+		{
+			ret = 0;
+			int next_locked_block = 0;
+			for (int i = 0; i < blocks_left; ++i)
+			{
+				file::iovec_t iov;
+				iov.iov_len = (std::min)(block_size, piece_size - offset);
 
-				l.lock();
-				m_disk_cache.insert_blocks(pe, i, &iov, 1, j);
-				l.unlock();
+				if (next_locked_block < num_locked_blocks
+					&& locked_blocks[next_locked_block] == i)
+				{
+					++next_locked_block;
+					TORRENT_PIECE_ASSERT(pe->blocks[first_block + i].buf, pe);
+					TORRENT_PIECE_ASSERT(offset == (first_block + i) * block_size, pe);
+					offset += iov.iov_len;
+					ph->h.update(pe->blocks[first_block + i].buf, iov.iov_len);
+				}
+				else
+				{
+					iov.iov_base = m_disk_cache.allocate_buffer("hashing");
+
+					if (iov.iov_base == NULL)
+					{
+						l.lock();
+						// TODO: introduce a holder class that automatically increments
+						// and decrements the piece_refcount
+
+						// decrement the refcounts of the blocks we just hashed
+						for (int k = 0; k < num_locked_blocks; ++k)
+							m_disk_cache.dec_block_refcount(pe, first_block + locked_blocks[k], block_cache::ref_hashing);
+
+						--pe->piece_refcount;
+						pe->hashing = false;
+						delete pe->hash;
+						pe->hash = NULL;
+
+						m_disk_cache.maybe_free_piece(pe);
+
+						j->error.ec = errors::no_memory;
+						j->error.operation = storage_error::alloc_cache_piece;
+						return -1;
+					}
+
+					DLOG("do_hash: reading (piece: %d block: %d)\n", int(pe->piece), first_block + i);
+
+					time_point const start_time = clock_type::now();
+
+					TORRENT_PIECE_ASSERT(offset == (first_block + i) * block_size, pe);
+					ret = j->storage->get_storage_impl()->readv(&iov, 1, j->piece
+							, offset, file_flags, j->error);
+
+					if (ret < 0)
+					{
+						TORRENT_ASSERT(j->error.ec && j->error.operation != 0);
+						m_disk_cache.free_buffer(static_cast<char*>(iov.iov_base));
+						l.lock();
+						break;
+					}
+
+					// treat a short read as an error. The hash will be invalid, the
+					// block cannot be cached and the main thread should skip the rest
+					// of this file
+					if (ret != iov.iov_len)
+					{
+						ret = -1;
+						j->error.ec.assign(boost::asio::error::eof
+							, boost::asio::error::get_misc_category());
+						j->error.operation = storage_error::read;
+						m_disk_cache.free_buffer(static_cast<char*>(iov.iov_base));
+						l.lock();
+						break;
+					}
+
+					if (!j->error.ec)
+					{
+						boost::uint32_t const read_time = total_microseconds(clock_type::now() - start_time);
+
+						m_stats_counters.inc_stats_counter(counters::num_read_back);
+						m_stats_counters.inc_stats_counter(counters::num_blocks_read);
+						m_stats_counters.inc_stats_counter(counters::num_read_ops);
+						m_stats_counters.inc_stats_counter(counters::disk_read_time, read_time);
+						m_stats_counters.inc_stats_counter(counters::disk_job_time, read_time);
+					}
+
+					TORRENT_PIECE_ASSERT(offset == (first_block + i) * block_size, pe);
+					offset += iov.iov_len;
+					ph->h.update(static_cast<char const*>(iov.iov_base), iov.iov_len);
+
+					l.lock();
+					m_disk_cache.insert_blocks(pe, (first_block + i), &iov, 1, j);
+					l.unlock();
+				}
 			}
 		}
 
@@ -2519,7 +2586,7 @@ namespace libtorrent
 
 		// decrement the refcounts of the blocks we just hashed
 		for (int i = 0; i < num_locked_blocks; ++i)
-			m_disk_cache.dec_block_refcount(pe, locked_blocks[i], block_cache::ref_hashing);
+			m_disk_cache.dec_block_refcount(pe, first_block + locked_blocks[i], block_cache::ref_hashing);
 
 		--pe->piece_refcount;
 
@@ -2682,8 +2749,6 @@ namespace libtorrent
 #if TORRENT_USE_ASSERTS
 		pe->piece_log.push_back(piece_log_t(j->action));
 #endif
-		TORRENT_PIECE_ASSERT(pe->cache_state <= cached_piece_entry::read_lru1
-			|| pe->cache_state == cached_piece_entry::read_lru2, pe);
 		++pe->piece_refcount;
 
 		int block_size = m_disk_cache.block_size();
@@ -2719,7 +2784,7 @@ namespace libtorrent
 			DLOG("do_cache_piece: reading (piece: %d block: %d)\n"
 				, int(pe->piece), i);
 
-			time_point start_time = clock_type::now();
+			time_point const start_time = clock_type::now();
 
 			ret = j->storage->get_storage_impl()->readv(&iov, 1, j->piece
 				, offset, file_flags, j->error);
@@ -2732,8 +2797,7 @@ namespace libtorrent
 
 			if (!j->error.ec)
 			{
-				boost::uint32_t read_time = total_microseconds(clock_type::now() - start_time);
-				m_read_time.add_sample(read_time);
+				boost::uint32_t const read_time = total_microseconds(clock_type::now() - start_time);
 
 				m_stats_counters.inc_stats_counter(counters::num_blocks_read);
 				m_stats_counters.inc_stats_counter(counters::num_read_ops);
@@ -2990,8 +3054,7 @@ namespace libtorrent
 
 	int disk_io_thread::do_file_priority(disk_io_job* j, jobqueue_t& /* completed_jobs */ )
 	{
-		boost::scoped_ptr<std::vector<boost::uint8_t> > p(j->buffer.priorities);
-		j->storage->get_storage_impl()->set_file_priority(*p, j->error);
+		j->storage->get_storage_impl()->set_file_priority(*j->buffer.priorities, j->error);
 		return 0;
 	}
 
@@ -3183,7 +3246,7 @@ namespace libtorrent
 		// if there are at least 3 threads, there's a hasher thread
 		// and the hash jobs go into a separate queue
 		// see set_num_threads()
-		if (m_num_threads > 3 && j->action == disk_io_job::hash)
+		if (m_num_threads > hasher_thread_mask && j->action == disk_io_job::hash)
 		{
 			m_queued_hash_jobs.push_back(j);
 		}

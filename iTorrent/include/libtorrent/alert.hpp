@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg, Daniel Wallin
+Copyright (c) 2003-2018, Arvid Norberg, Daniel Wallin
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -223,7 +223,7 @@ namespace libtorrent {
 		// 
 		//			case read_piece_alert::alert_type:
 		//			{
-		//				read_piece_alert* p = (read_piece_alert*)a;
+		//				auto* p = static_cast<read_piece_alert*>(a);
 		//				if (p->ec) {
 		//					// read_piece failed
 		//					break;

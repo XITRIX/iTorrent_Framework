@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -320,11 +320,6 @@ namespace libtorrent
 
 		// returns the info-hash of the torrent
 		const sha1_hash& info_hash() const { return m_info_hash; }
-		std::string hash_to_string() {
-			std::stringstream ss;
-			ss << info_hash();
-			return ss.str();
-		}
 
 #ifndef TORRENT_NO_DEPRECATE
 		// deprecated in 1.0. Use the variants that take an index instead

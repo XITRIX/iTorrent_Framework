@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015-2016, Arvid Norberg
+Copyright (c) 2015-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -146,7 +146,10 @@ namespace libtorrent
 
 			// the error occurred while loading the .torrent file via the user
 			// supplied load function
-			error_file_metadata = -4
+			error_file_metadata = -4,
+
+			// the error occurred with the partfile
+			error_file_partfile = -5
 		};
 
 		// the path to the directory where this torrent's files are stored.
@@ -518,11 +521,6 @@ namespace libtorrent
 
 		// the info-hash for this torrent
 		sha1_hash info_hash;
-        std::string hash_to_string() {
-            std::stringstream ss;
-            ss << info_hash;
-            return ss.str();
-        }
 	};
 
 }

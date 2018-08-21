@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2011-2016, Arvid Norberg
+Copyright (c) 2011-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -68,8 +68,7 @@ namespace libtorrent
 	};
 
 	template <typename T>
-//#error boost::enable_if< is_base<T, tailqueue_node<T> > >
-	struct TORRENT_EXTRA_EXPORT tailqueue
+	struct tailqueue
 	{
 		tailqueue(): m_first(NULL), m_last(NULL), m_size(0) {}
 

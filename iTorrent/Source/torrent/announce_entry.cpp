@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2015-2016, Arvid Norberg
+Copyright (c) 2015-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -29,6 +29,7 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 POSSIBILITY OF SUCH DAMAGE.
 
 */
+
 #include "libtorrent/config.hpp"
 #include "libtorrent/announce_entry.hpp"
 #include "libtorrent/aux_/time.hpp"
@@ -115,9 +116,10 @@ namespace libtorrent
 	{
 		// if we're a seed and we haven't sent a completed
 		// event, we need to let this announce through
-		bool need_send_complete = is_seed && !complete_sent;
+		bool const need_send_complete = is_seed && !complete_sent;
 
-		return now >= next_announce
+		// add some slack here for rounding errors
+		return now  + seconds(1) >= next_announce
 			&& (now >= min_announce || need_send_complete)
 			&& (fails < fail_limit || fail_limit == 0)
 			&& !updating;

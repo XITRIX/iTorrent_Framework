@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -115,6 +115,28 @@ namespace libtorrent
 {
 	namespace {
 
+	boost::uint32_t const unset = std::numeric_limits<boost::uint32_t>::max();
+
+	bool is_downloading_state(int st)
+	{
+		switch (st)
+		{
+			case torrent_status::checking_files:
+			case torrent_status::allocating:
+			case torrent_status::checking_resume_data:
+				return false;
+			case torrent_status::downloading_metadata:
+			case torrent_status::downloading:
+			case torrent_status::finished:
+			case torrent_status::seeding:
+				return true;
+			default:
+				// unexpected state
+				TORRENT_ASSERT_VAL(false, st);
+				return false;
+		}
+	}
+
 	int root2(int x)
 	{
 		int ret = 0;
@@ -160,6 +182,22 @@ namespace libtorrent
 		restart_request.piece = -1;
 		restart_request.start = -1;
 		restart_request.length = -1;
+	}
+
+	peer_id generate_peer_id(aux::session_settings const& sett)
+	{
+		// ---- generate a peer id ----
+		std::string print = sett.get_str(settings_pack::peer_fingerprint);
+		if (print.size() > 20) print.resize(20);
+
+		// the client's fingerprint
+		peer_id ret;
+		std::copy(print.begin(), print.begin() + print.length(), ret.begin());
+		if (print.length() < 20)
+		{
+			url_random(ret.data() + print.length(), ret.data() + 20);
+		}
+		return ret;
 	}
 
 #ifndef TORRENT_DISABLE_EXTENSIONS
@@ -223,6 +261,7 @@ namespace libtorrent
 		, m_sequence_number(seq)
 		, m_peer_class(0)
 		, m_num_connecting(0)
+		, m_peer_id(generate_peer_id(settings()))
 		, m_upload_mode_time(0)
 		, m_announce_to_trackers((p.flags & add_torrent_params::flag_paused) == 0)
 		, m_announce_to_lsd((p.flags & add_torrent_params::flag_paused) == 0)
@@ -230,7 +269,7 @@ namespace libtorrent
 		, m_files_checked(false)
 		, m_storage_mode(p.storage_mode)
 		, m_announcing(false)
-		, m_waiting_tracker(false)
+		, m_waiting_tracker(0)
 		, m_active_time(0)
 		, m_last_working_tracker(-1)
 		, m_finished_time(0)
@@ -259,24 +298,23 @@ namespace libtorrent
 		, m_padding(0)
 		, m_incomplete(0xffffff)
 		, m_announce_to_dht((p.flags & add_torrent_params::flag_paused) == 0)
-		, m_in_state_updates(false)
 		, m_is_active_download(false)
 		, m_is_active_finished(false)
 		, m_ssl_torrent(false)
 		, m_deleted(false)
 		, m_pinned((p.flags & add_torrent_params::flag_pinned) != 0)
 		, m_should_be_loaded(true)
-		, m_last_download((std::numeric_limits<boost::int16_t>::min)())
+		, m_last_download(unset)
 		, m_num_seeds(0)
 		, m_num_connecting_seeds(0)
-		, m_last_upload((std::numeric_limits<boost::int16_t>::min)())
+		, m_last_upload(unset)
 		, m_storage_tick(0)
 		, m_auto_managed(p.flags & add_torrent_params::flag_auto_managed)
 		, m_current_gauge_state(no_gauge_state)
 		, m_moving_storage(false)
 		, m_inactive(false)
 		, m_downloaded(0xffffff)
-		, m_last_scrape((std::numeric_limits<boost::int16_t>::min)())
+		, m_last_scrape(unset)
 		, m_progress_ppm(0)
 		, m_pending_active_change(false)
 		, m_use_resume_save_path((p.flags & add_torrent_params::flag_use_resume_save_path) != 0)
@@ -1012,8 +1050,7 @@ namespace libtorrent
 		}
 
 		boost::shared_ptr<read_piece_struct> rp = boost::make_shared<read_piece_struct>();
-        rp->piece_data.reset(new (std::nothrow) char[piece_size]);
-        
+		rp->piece_data.reset(new (std::nothrow) char[piece_size]);
 		if (!rp->piece_data)
 		{
 			m_ses.alerts().emplace_alert<read_piece_alert>(
@@ -1105,17 +1142,12 @@ namespace libtorrent
 #ifndef TORRENT_DISABLE_LOGGING
 		debug_log("*** set-share-mode: %d", s);
 #endif
-
-		// in share mode, all pieces have their priorities initialized to 0
-		if (m_share_mode && valid_metadata())
+		if (m_share_mode)
 		{
-			m_file_priority.clear();
-			m_file_priority.resize(m_torrent_file->num_files(), 0);
+			int const num_files = valid_metadata() ? m_torrent_file->num_files() : m_file_priority.size();
+			// in share mode, all pieces have their priorities initialized to 0
+			prioritize_files(std::vector<int>(num_files));
 		}
-
-		update_piece_priorities();
-
-		if (m_share_mode) recalc_share_mode();
 	}
 
 	void torrent::set_upload_mode(bool b)
@@ -1961,9 +1993,12 @@ namespace libtorrent
 			}
 		}
 
-		// if we've already loaded file priorities, don't load piece priorities,
-		// they will interfere.
-		if (!m_seed_mode && m_resume_data && m_file_priority.empty())
+		// in case file priorities were passed in via the add_torrent_params
+		// and also in the case of share mode, we need to update the priorities
+		// this has to be applied before piece priority
+		if (!m_file_priority.empty()) update_piece_priorities(m_file_priority);
+
+		if (!m_seed_mode && m_resume_data)
 		{
 			bdecode_node piece_priority = m_resume_data->node
 				.dict_find_string("piece_priority");
@@ -1983,14 +2018,6 @@ namespace libtorrent
 			}
 		}
 
-		// in case file priorities were passed in via the add_torrent_params
-		// and also in the case of share mode, we need to update the priorities
-		if (!m_file_priority.empty() && std::find(m_file_priority.begin()
-				, m_file_priority.end(), 0) != m_file_priority.end())
-		{
-			update_piece_priorities();
-		}
-
 #if TORRENT_USE_ASSERTS
 		m_resume_data_loaded = true;
 #endif
@@ -2003,6 +2030,8 @@ namespace libtorrent
 		}
 		else
 		{
+			need_picker();
+
 			int num_pad_files = 0;
 			TORRENT_ASSERT(block_size() > 0);
 			file_storage const& fs = m_torrent_file->files();
@@ -2013,10 +2042,6 @@ namespace libtorrent
 				if (fs.pad_file_at(i)) ++num_pad_files;
 
 				m_padding += boost::uint32_t(fs.file_size(i));
-
-				// TODO: instead of creating the picker up front here,
-				// maybe this whole section should move to need_picker()
-				need_picker();
 
 				peer_request pr = m_torrent_file->map_file(i, 0, fs.file_size(i));
 				int off = pr.start & (block_size()-1);
@@ -2029,7 +2054,7 @@ namespace libtorrent
 				for (; pr.length >= block; pr.length -= block, ++pb.block_index)
 				{
 					if (int(pb.block_index) == blocks_per_piece) { pb.block_index = 0; ++pb.piece_index; }
-					m_picker->mark_as_finished(pb, 0);
+					m_picker->mark_as_pad(pb);
 				}
 				// ugly edge case where padfiles are not used they way they're
 				// supposed to be. i.e. added back-to back or at the end
@@ -2327,7 +2352,7 @@ namespace libtorrent
 		return NULL;
 	}
 
-	peer_connection* torrent::find_peer(sha1_hash const& pid)
+	peer_connection* torrent::find_peer(peer_id const& pid)
 	{
 		for (peer_iterator i = m_connections.begin(); i != m_connections.end(); ++i)
 		{
@@ -2734,9 +2759,12 @@ namespace {
 		int num_outstanding = settings().get_int(settings_pack::checking_mem_usage) * block_size()
 			/ m_torrent_file->piece_length();
 		// if we only keep a single read operation in-flight at a time, we suffer
-		// significant performance degradation. Always keep at least two jobs
-		// outstanding
-		if (num_outstanding < 2) num_outstanding = 2;
+		// significant performance degradation. Always keep at least 4 jobs
+		// outstanding per hasher thread
+		int const min_outstanding = 4
+			* std::max(1, settings().get_int(settings_pack::aio_threads)
+				/ disk_io_thread::hasher_thread_divisor);
+		if (num_outstanding < min_outstanding) num_outstanding = min_outstanding;
 
 		// we might already have some outstanding jobs, if we were paused and
 		// resumed quickly, before the outstanding jobs completed
@@ -2960,7 +2988,8 @@ namespace {
 #endif
 		boost::shared_ptr<torrent> t = p.lock();
 		if (!t) return;
-		t->m_waiting_tracker = false;
+		TORRENT_ASSERT(t->m_waiting_tracker > 0);
+		--t->m_waiting_tracker;
 
 		if (e) return;
 		t->on_tracker_announce();
@@ -3175,7 +3204,7 @@ namespace {
 		req.private_torrent = m_torrent_file->priv();
 
 		req.info_hash = m_torrent_file->info_hash();
-		req.pid = m_ses.get_peer_id();
+		req.pid = m_peer_id;
 		req.downloaded = m_stat.total_payload_download() - m_total_failed_bytes;
 		req.uploaded = m_stat.total_payload_upload();
 		req.corrupt = m_total_failed_bytes;
@@ -3187,9 +3216,34 @@ namespace {
 		req.ssl_ctx = m_ssl_ctx.get();
 #endif
 
+		req.redundant = m_total_redundant_bytes;
 		// exclude redundant bytes if we should
 		if (!settings().get_bool(settings_pack::report_true_downloaded))
+		{
 			req.downloaded -= m_total_redundant_bytes;
+
+			// if the torrent is complete we know that all incoming pieces will be
+			// marked redundant so add them to the redundant count
+			// this is mainly needed to cover the case where a torrent has just completed
+			// but still has partially downloaded pieces
+			// if the incoming pieces are not accounted for it could cause the downloaded
+			// amount to exceed the total size of the torrent which upsets some trackers
+			if (is_seed())
+			{
+				for (peer_iterator i = m_connections.begin();
+					i != m_connections.end(); ++i)
+				{
+					TORRENT_INCREMENT(m_iterating_connections);
+					peer_connection* p = *i;
+					boost::optional<piece_block_progress> pbp = p->downloading_piece_progress();
+					if (pbp && pbp->bytes_downloaded > 0)
+					{
+						req.downloaded -= pbp->bytes_downloaded;
+						req.redundant += pbp->bytes_downloaded;
+					}
+				}
+			}
+		}
 		if (req.downloaded < 0) req.downloaded = 0;
 
 		req.event = e;
@@ -3210,7 +3264,7 @@ namespace {
 		req.num_want = (req.event == tracker_request::stopped)
 			? 0 : settings().get_int(settings_pack::num_want);
 
-		time_point now = aux::time_now();
+		time_point const now = aux::time_now();
 
 		// the tier is kept as INT_MAX until we find the first
 		// tracker that works, then it's set to that tracker's
@@ -3358,10 +3412,16 @@ namespace {
 		update_tracker_timer(now);
 	}
 
+	int torrent::seconds_since_last_scrape() const
+	{
+		return m_last_scrape == unset ? -1
+		: total_seconds(clock_type::now() - time_point(seconds(m_last_scrape)));
+	}
+
 	void torrent::scrape_tracker(int idx, bool user_triggered)
 	{
 		TORRENT_ASSERT(is_single_thread());
-		m_last_scrape = m_ses.session_time();
+		m_last_scrape = total_seconds(clock_type::now().time_since_epoch());
 
 		if (m_trackers.empty()) return;
 
@@ -3520,7 +3580,7 @@ namespace {
 		update_tracker_timer(now);
 
 		if (resp.complete >= 0 && resp.incomplete >= 0)
-			m_last_scrape = m_ses.session_time();
+			m_last_scrape = total_seconds(clock_type::now().time_since_epoch());
 
 #ifndef TORRENT_DISABLE_LOGGING
 		std::string resolved_to;
@@ -3546,7 +3606,7 @@ namespace {
 			i != resp.peers.end(); ++i)
 		{
 			// don't make connections to ourself
-			if (i->pid == m_ses.get_peer_id())
+			if (i->pid == m_peer_id)
 				continue;
 
 #if TORRENT_USE_I2P
@@ -3753,11 +3813,6 @@ namespace {
 		if (want_peers()) m_ses.prioritize_connections(shared_from_this());
 	}
 
-	time_point torrent::next_announce() const
-	{
-		return m_waiting_tracker?m_tracker_timer.expires_at():min_time();
-	}
-
 	// this is the entry point for the client to force a re-announce. It's
 	// considered a client-initiated announce (as opposed to the regular ones,
 	// issued by libtorrent)
@@ -3924,7 +3979,7 @@ namespace {
 	}
 
 	// fills in total_wanted, total_wanted_done and total_done
-	void torrent::bytes_done(torrent_status& st, bool accurate) const
+	void torrent::bytes_done(torrent_status& st, bool const accurate) const
 	{
 		INVARIANT_CHECK;
 
@@ -3989,7 +4044,7 @@ namespace {
 		if (m_picker->has_piece_passed(last_piece))
 		{
 			TORRENT_ASSERT(st.total_done >= piece_size);
-			int corr = m_torrent_file->piece_size(last_piece)
+			int const corr = m_torrent_file->piece_size(last_piece)
 				- piece_size;
 			TORRENT_ASSERT(corr <= 0);
 			TORRENT_ASSERT(corr > -piece_size);
@@ -4358,23 +4413,26 @@ namespace {
 
 		remove_time_critical_piece(index, true);
 
-		if (is_finished()
-			&& m_state != torrent_status::finished
-			&& m_state != torrent_status::seeding)
+		if (is_downloading_state(m_state))
 		{
-			// torrent finished
-			// i.e. all the pieces we're interested in have
-			// been downloaded. Release the files (they will open
-			// in read only mode if needed)
-			finished();
-			// if we just became a seed, picker is now invalid, since it
-			// is deallocated by the torrent once it starts seeding
+			if (is_finished()
+				&& m_state != torrent_status::finished
+				&& m_state != torrent_status::seeding)
+			{
+				// torrent finished
+				// i.e. all the pieces we're interested in have
+				// been downloaded. Release the files (they will open
+				// in read only mode if needed)
+				finished();
+				// if we just became a seed, picker is now invalid, since it
+				// is deallocated by the torrent once it starts seeding
+			}
+
+			m_last_download = total_seconds(clock_type::now().time_since_epoch());
+
+			if (m_share_mode)
+				recalc_share_mode();
 		}
-
-		m_last_download = m_ses.session_time();
-
-		if (m_share_mode)
-			recalc_share_mode();
 	}
 
 	// this is called when the piece hash is checked as correct. Note
@@ -4491,9 +4549,6 @@ namespace {
 		TORRENT_ASSERT(index < m_torrent_file->num_pieces());
 
 		inc_stats_counter(counters::num_piece_failed);
-
-		if (m_ses.alerts().should_post<hash_failed_alert>())
-			m_ses.alerts().emplace_alert<hash_failed_alert>(get_handle(), index);
 
 		std::vector<int>::iterator it = std::lower_bound(m_predictive_pieces.begin()
 			, m_predictive_pieces.end(), index);
@@ -4694,6 +4749,9 @@ namespace {
 		// unlock the piece and restore it, as if no block was
 		// ever downloaded for it.
 		m_picker->restore_piece(j->piece);
+
+		if (m_ses.alerts().should_post<hash_failed_alert>())
+			m_ses.alerts().emplace_alert<hash_failed_alert>(get_handle(), j->piece);
 
 		// we have to let the piece_picker know that
 		// this piece failed the check as it can restore it
@@ -5587,64 +5645,85 @@ namespace {
 
 	namespace
 	{
+		std::vector<boost::uint8_t> fix_priorities(std::vector<int> const& input
+			, file_storage const* fs)
+		{
+			std::vector<boost::uint8_t> files(input.begin(), input.end());
+			if (fs) files.resize(fs->num_files(), 4);
+
+			for (int i = 0; i < int(files.size()); ++i)
+			{
+				// initialize pad files to priority 0
+				if (files[i] > 0 && fs && fs->pad_file_at(i))
+					files[i] = 0;
+				else if (files[i] > 7)
+					files[i] = 7;
+			}
+
+			return files;
+		}
+
 		void set_if_greater(int& piece_prio, int file_prio)
 		{
 			if (file_prio > piece_prio) piece_prio = file_prio;
 		}
 	}
 
-	void torrent::on_file_priority()
+	void torrent::on_file_priority(disk_io_job const* j)
 	{
 		dec_refcount("file_priority");
+
+		boost::scoped_ptr<std::vector<boost::uint8_t> > p(j->buffer.priorities);
+
+		if (m_file_priority != *p)
+		{
+			m_file_priority = *p;
+			if (m_share_mode)
+				recalc_share_mode();
+		}
+
+		if (!j->error) return;
+
+		// in this case, some file priorities failed to get set
+
+		if (alerts().should_post<file_error_alert>())
+			alerts().emplace_alert<file_error_alert>(j->error.ec
+				, resolve_filename(j->error.file), j->error.operation_str(), get_handle());
+
+		set_error(j->error.ec, j->error.file);
+		pause();
 	}
 
 	void torrent::prioritize_files(std::vector<int> const& files)
 	{
 		INVARIANT_CHECK;
 
-		// this call is only valid on torrents with metadata
-		if (!valid_metadata() || is_seed()) return;
-
-		// the vector need to have exactly one element for every file
-		// in the torrent
-		TORRENT_ASSERT(int(files.size()) == m_torrent_file->num_files());
-
-		int limit = int(files.size());
-		if (valid_metadata() && limit > m_torrent_file->num_files())
-			limit = m_torrent_file->num_files();
-
-		if (int(m_file_priority.size()) < limit)
-			m_file_priority.resize(limit, 4);
-
-		std::copy(files.begin(), files.begin() + limit, m_file_priority.begin());
-
-		if (valid_metadata() && m_torrent_file->num_files() > int(m_file_priority.size()))
-			m_file_priority.resize(m_torrent_file->num_files(), 4);
-
-		// initialize pad files to priority 0
-		file_storage const& fs = m_torrent_file->files();
-		for (int i = 0; i < (std::min)(fs.num_files(), limit); ++i)
-		{
-			if (!fs.pad_file_at(i)) continue;
-			m_file_priority[i] = 0;
-		}
+		std::vector<boost::uint8_t> const new_priority = fix_priorities(files
+			, valid_metadata() ? &m_torrent_file->files() : NULL);
 
 		// storage may be NULL during shutdown
-		if (m_torrent_file->num_pieces() > 0 && m_storage)
+		if (m_storage)
 		{
+			// the update of m_file_priority is deferred until the disk job comes
+			// back, but to preserve sanity and consistency, the piece priorities are
+			// updated immediately. If, on the off-chance, there's a disk failure, the
+			// piece priorities still stay the same, but the file priorities are
+			// possibly not fully updated.
+			update_piece_priorities(new_priority);
+
 			inc_refcount("file_priority");
 			m_ses.disk_thread().async_set_file_priority(m_storage.get()
-				, m_file_priority, boost::bind(&torrent::on_file_priority, shared_from_this()));
+				, new_priority, boost::bind(&torrent::on_file_priority, shared_from_this(), _1));
 		}
-
-		update_piece_priorities();
+		else
+		{
+			m_file_priority = new_priority;
+		}
 	}
 
 	void torrent::set_file_priority(int index, int prio)
 	{
 		INVARIANT_CHECK;
-
-		if (is_seed()) return;
 
 		// setting file priority on a torrent that doesn't have metadata yet is
 		// similar to having passed in file priorities through add_torrent_params.
@@ -5656,26 +5735,29 @@ namespace {
 
 		if (prio < 0) prio = 0;
 		else if (prio > 7) prio = 7;
-		if (int(m_file_priority.size()) <= index)
-		{
-			// any unallocated slot is assumed to be 4
-			if (prio == 4) return;
-			m_file_priority.resize(index+1, 4);
-		}
 
-		if (m_file_priority[index] == prio) return;
-		m_file_priority[index] = prio;
+		std::vector<boost::uint8_t> new_priority = m_file_priority;
+		new_priority.resize(std::max(int(new_priority.size()), index + 1), 4);
+		new_priority[index] = prio;
 
-		if (!valid_metadata()) return;
-
-		// stoage may be NULL during shutdown
+		// storage may be NULL during shutdown
 		if (m_storage)
 		{
+			// the update of m_file_priority is deferred until the disk job comes
+			// back, but to preserve sanity and consistency, the piece priorities are
+			// updated immediately. If, on the off-chance, there's a disk failure, the
+			// piece priorities still stay the same, but the file priorities are
+			// possibly not fully updated.
+			update_piece_priorities(new_priority);
+
 			inc_refcount("file_priority");
 			m_ses.disk_thread().async_set_file_priority(m_storage.get()
-				, m_file_priority, boost::bind(&torrent::on_file_priority, shared_from_this()));
+				, new_priority, boost::bind(&torrent::on_file_priority, shared_from_this(), _1));
 		}
-		update_piece_priorities();
+		else
+		{
+			m_file_priority = new_priority;
+		}
 	}
 
 	int torrent::file_priority(int index) const
@@ -5703,20 +5785,17 @@ namespace {
 	{
 		INVARIANT_CHECK;
 
+		files->assign(m_file_priority.begin(), m_file_priority.end());
+
 		if (!valid_metadata())
 		{
-			files->resize(m_file_priority.size());
-			std::copy(m_file_priority.begin(), m_file_priority.end(), files->begin());
 			return;
 		}
 
-		files->clear();
 		files->resize(m_torrent_file->num_files(), 4);
-		TORRENT_ASSERT(int(m_file_priority.size()) <= m_torrent_file->num_files());
-		std::copy(m_file_priority.begin(), m_file_priority.end(), files->begin());
 	}
 
-	void torrent::update_piece_priorities()
+	void torrent::update_piece_priorities(std::vector<boost::uint8_t> const& file_prios)
 	{
 		INVARIANT_CHECK;
 
@@ -5724,7 +5803,7 @@ namespace {
 
 		bool need_update = false;
 		boost::int64_t position = 0;
-		int piece_length = m_torrent_file->piece_length();
+		int const piece_length = m_torrent_file->piece_length();
 		// initialize the piece priorities to 0, then only allow
 		// setting higher priorities
 		std::vector<int> pieces(m_torrent_file->num_pieces(), 0);
@@ -5733,8 +5812,8 @@ namespace {
 		{
 			if (i >= fs.num_files()) break;
 
-			boost::int64_t start = position;
-			boost::int64_t size = m_torrent_file->files().file_size(i);
+			boost::int64_t const start = position;
+			boost::int64_t const size = m_torrent_file->files().file_size(i);
 			if (size == 0) continue;
 			position += size;
 			int file_prio;
@@ -5742,10 +5821,10 @@ namespace {
 			// pad files always have priority 0
 			if (fs.pad_file_at(i))
 				file_prio = 0;
-			else if (m_file_priority.size() <= i)
+			else if (file_prios.size() <= i)
 				file_prio = 4;
 			else
-				file_prio = m_file_priority[i];
+				file_prio = file_prios[i];
 
 			if (file_prio == 0)
 			{
@@ -5758,8 +5837,8 @@ namespace {
 			// mark all pieces of the file with this file's priority
 			// but only if the priority is higher than the pieces
 			// already set (to avoid problems with overlapping pieces)
-			int start_piece = int(start / piece_length);
-			int last_piece = int((position - 1) / piece_length);
+			int const start_piece = int(start / piece_length);
+			int const last_piece = int((position - 1) / piece_length);
 			TORRENT_ASSERT(last_piece < int(pieces.size()));
 			// if one piece spans several files, we might
 			// come here several times with the same start_piece, end_piece
@@ -5783,6 +5862,15 @@ namespace {
 			// invalidate the iterator
 			++i;
 			p->update_interest();
+		}
+
+		if (!is_downloading_state(m_state))
+		{
+#ifndef TORRENT_DISABLE_LOGGING
+			debug_log("*** UPDATE_PEER_INTEREST [ skipping, state: %d ]"
+				, int(m_state));
+#endif
+			return;
 		}
 
 #ifndef TORRENT_DISABLE_LOGGING
@@ -6985,13 +7073,12 @@ namespace {
 #endif
 		}
 
-		int now = m_ses.session_time();
-		int tmp = rd.dict_find_int_value("last_scrape", -1);
-		m_last_scrape = tmp == -1 ? (std::numeric_limits<boost::int16_t>::min)() : now - tmp;
+		boost::int64_t tmp = rd.dict_find_int_value("last_scrape", -1);
+		m_last_scrape = tmp == -1 ? unset : tmp;
 		tmp = rd.dict_find_int_value("last_download", -1);
-		m_last_download = tmp == -1 ? (std::numeric_limits<boost::int16_t>::min)() : now - tmp;
+		m_last_download = tmp == -1 ? unset : tmp;
 		tmp = rd.dict_find_int_value("last_upload", -1);
-		m_last_upload = tmp == -1 ? (std::numeric_limits<boost::int16_t>::min)() : now - tmp;
+		m_last_upload = tmp == -1 ? unset : tmp;
 
 		if (m_use_resume_save_path)
 		{
@@ -7072,10 +7159,8 @@ namespace {
 				{
 					inc_refcount("file_priority");
 					m_ses.disk_thread().async_set_file_priority(m_storage.get()
-						, m_file_priority, boost::bind(&torrent::on_file_priority, shared_from_this()));
+						, m_file_priority, boost::bind(&torrent::on_file_priority, shared_from_this(), _1));
 				}
-
-				update_piece_priorities();
 			}
 		}
 
@@ -7143,7 +7228,7 @@ namespace {
 		if (m_torrent_file->is_merkle_torrent())
 		{
 			bdecode_node mt = rd.dict_find_string("merkle tree");
-			if (mt)
+			if (mt && mt.string_length() >= 20)
 			{
 				std::vector<sha1_hash> tree;
 				tree.resize(m_torrent_file->merkle_tree().size());
@@ -7233,6 +7318,9 @@ namespace {
 		ret["num_complete"] = m_complete;
 		ret["num_incomplete"] = m_incomplete;
 		ret["num_downloaded"] = m_downloaded;
+		ret["last_upload"] = m_last_upload == unset ? -1 : boost::int64_t(m_last_upload);
+		ret["last_download"] = m_last_download == unset ? -1 : boost::int64_t(m_last_download);
+		ret["last_scrape"] = m_last_scrape == unset ? -1 : boost::int64_t(m_last_scrape);
 
 		ret["sequential_download"] = m_sequential_download;
 
@@ -7540,21 +7628,18 @@ namespace {
 
 		// piece priorities and file priorities are mutually exclusive. If there
 		// are file priorities set, don't save piece priorities.
-		if (!m_file_priority.empty())
+		// when in seed mode (i.e. the client promises that we have all files)
+		// it does not make sense to save file priorities.
+		if (!m_file_priority.empty() && !m_seed_mode)
 		{
-
-			// when in seed mode (i.e. the client promises that we have all files)
-			// it does not make sense to save file priorities.
-			if (!m_seed_mode)
-			{
-				// write file priorities
-				entry::list_type& file_priority = ret["file_priority"].list();
-				file_priority.clear();
-				for (int i = 0, end(m_file_priority.size()); i < end; ++i)
-					file_priority.push_back(m_file_priority[i]);
-			}
+			// write file priorities
+			entry::list_type& file_priority = ret["file_priority"].list();
+			file_priority.clear();
+			for (int i = 0, end(m_file_priority.size()); i < end; ++i)
+				file_priority.push_back(m_file_priority[i]);
 		}
-		else if (has_picker())
+
+		if (has_picker())
 		{
 			// write piece priorities
 			// but only if they are not set to the default
@@ -7857,7 +7942,7 @@ namespace {
 		pack.peerinfo = peerinfo;
 
 		boost::shared_ptr<peer_connection> c = boost::make_shared<bt_peer_connection>(
-			boost::cref(pack), m_ses.get_peer_id());
+			boost::cref(pack));
 
 		TORRENT_TRY
 		{
@@ -8098,8 +8183,7 @@ namespace {
 			return false;
 		}
 
-		if ((m_state == torrent_status::checking_files
-			|| m_state == torrent_status::checking_resume_data)
+		if (!is_downloading_state(m_state)
 			&& valid_metadata())
 		{
 			p->disconnect(errors::torrent_not_ready, op_bittorrent);
@@ -8618,7 +8702,7 @@ namespace {
 			// we need to keep the object alive during this operation
 			inc_refcount("release_files");
 			m_ses.disk_thread().async_release_files(m_storage.get()
-				, boost::bind(&torrent::on_cache_flushed, shared_from_this(), _1));
+				, boost::bind(&torrent::on_cache_flushed, shared_from_this(), _1, false));
 		}
 
 		// this torrent just completed downloads, which means it will fall
@@ -8636,16 +8720,9 @@ namespace {
 		// to be in downloading state (which it will be set to shortly)
 //		INVARIANT_CHECK;
 
-		if (m_state == torrent_status::checking_resume_data
-			|| m_state == torrent_status::checking_files
-			|| m_state == torrent_status::allocating)
-		{
-#ifndef TORRENT_DISABLE_LOGGING
-			debug_log("*** RESUME_DOWNLOAD [ skipping, state: %d ]"
-				, int(m_state));
-#endif
-			return;
-		}
+		TORRENT_ASSERT(m_state != torrent_status::checking_resume_data
+			&& m_state != torrent_status::checking_files
+			&& m_state != torrent_status::allocating);
 
 		// we're downloading now, which means we're no longer in seed mode
 		if (m_seed_mode)
@@ -8761,24 +8838,6 @@ namespace {
 			return;
 		}
 
-		// we might be finished already, in which case we should
-		// not switch to downloading mode. If all files are
-		// filtered, we're finished when we start.
-		if (m_state != torrent_status::finished
-			&& m_state != torrent_status::seeding
-			&& !m_seed_mode)
-		{
-			set_state(torrent_status::downloading);
-		}
-
-		INVARIANT_CHECK;
-
-		if (m_ses.alerts().should_post<torrent_checked_alert>())
-		{
-			m_ses.alerts().emplace_alert<torrent_checked_alert>(
-				get_handle());
-		}
-
 		// calling pause will also trigger the auto managed
 		// recalculation
 		// if we just got here by downloading the metadata,
@@ -8813,6 +8872,24 @@ namespace {
 			if (m_state != torrent_status::finished
 				&& m_state != torrent_status::seeding)
 				finished();
+		}
+
+		// we might be finished already, in which case we should
+		// not switch to downloading mode. If all files are
+		// filtered, we're finished when we start.
+		if (m_state != torrent_status::finished
+			&& m_state != torrent_status::seeding
+			&& !m_seed_mode)
+		{
+			set_state(torrent_status::downloading);
+		}
+
+		INVARIANT_CHECK;
+
+		if (m_ses.alerts().should_post<torrent_checked_alert>())
+		{
+			m_ses.alerts().emplace_alert<torrent_checked_alert>(
+				get_handle());
 		}
 
 #ifndef TORRENT_DISABLE_EXTENSIONS
@@ -9498,10 +9575,14 @@ namespace {
 	}
 	std::string torrent::resolve_filename(int file) const
 	{
-		if (file == torrent_status::error_file_none) return "";
-		if (file == torrent_status::error_file_url) return m_url;
-		if (file == torrent_status::error_file_ssl_ctx) return "SSL Context";
-		if (file == torrent_status::error_file_metadata) return "metadata (from user load function)";
+		switch (file)
+		{
+			case torrent_status::error_file_none: return "";
+			case torrent_status::error_file_url: return m_url;
+			case torrent_status::error_file_ssl_ctx: return "SSL Context";
+			case torrent_status::error_file_metadata: return "metadata (from user load function)";
+			case torrent_status::error_file_partfile: return "partfile";
+		}
 
 		if (m_storage && file >= 0)
 		{
@@ -9575,13 +9656,6 @@ namespace {
 		return a - b;
 	}
 
-	int clamped_subtract_s16(int a, int b)
-	{
-		if (a + (std::numeric_limits<boost::int16_t>::min)() < b)
-			return (std::numeric_limits<boost::int16_t>::min)();
-		return a - b;
-	}
-
 	} // anonymous namespace
 
 	// this is called every time the session timer takes a step back. Since the
@@ -9635,10 +9709,6 @@ namespace {
 			m_finished_time += lost_seconds;
 		}
 		m_became_finished = clamped_subtract(m_became_finished, seconds);
-
-		m_last_upload = clamped_subtract_s16(m_last_upload, seconds);
-		m_last_download = clamped_subtract_s16(m_last_download, seconds);
-		m_last_scrape = clamped_subtract_s16(m_last_scrape, seconds);
 
 		m_last_saved_resume = clamped_subtract(m_last_saved_resume, seconds);
 		m_upload_mode_time = clamped_subtract(m_upload_mode_time, seconds);
@@ -9812,17 +9882,17 @@ namespace {
 		}
 		inc_refcount("release_files");
 		m_ses.disk_thread().async_release_files(m_storage.get()
-			, boost::bind(&torrent::on_cache_flushed, shared_from_this(), _1));
+			, boost::bind(&torrent::on_cache_flushed, shared_from_this(), _1, true));
 	}
 
-	void torrent::on_cache_flushed(disk_io_job const*)
+	void torrent::on_cache_flushed(disk_io_job const*, bool const manually_triggered)
 	{
 		dec_refcount("release_files");
 		TORRENT_ASSERT(is_single_thread());
 
 		if (m_ses.is_aborted()) return;
 
-		if (alerts().should_post<cache_flushed_alert>())
+		if (manually_triggered || alerts().should_post<cache_flushed_alert>())
 			alerts().emplace_alert<cache_flushed_alert>(get_handle());
 	}
 
@@ -10192,7 +10262,7 @@ namespace {
 			}
 			else
 			{
-				time_point next_tracker_announce = (std::max)(i->next_announce, i->min_announce);
+				time_point const next_tracker_announce = std::max(i->next_announce, i->min_announce);
 				if (next_tracker_announce < next_announce
 					&& (!found_working || i->is_working()))
 					next_announce = next_tracker_announce;
@@ -10216,7 +10286,7 @@ namespace {
 		// if m_waiting_tracker is false, expires_at() is undefined
 		if (m_waiting_tracker && m_tracker_timer.expires_at() == next_announce) return;
 
-		m_waiting_tracker = true;
+		++m_waiting_tracker;
 		error_code ec;
 		boost::weak_ptr<torrent> self(shared_from_this());
 
@@ -11931,29 +12001,6 @@ namespace {
 		if (m_peer_list) m_peer_list->clear_peer_prio();
 	}
 
-	namespace
-	{
-		bool is_downloading_state(int st)
-		{
-			switch (st)
-			{
-				case torrent_status::checking_files:
-				case torrent_status::allocating:
-				case torrent_status::checking_resume_data:
-					return false;
-				case torrent_status::downloading_metadata:
-				case torrent_status::downloading:
-				case torrent_status::finished:
-				case torrent_status::seeding:
-					return true;
-				default:
-					// unexpected state
-					TORRENT_ASSERT_VAL(false, st);
-					return false;
-			}
-		}
-	}
-
 	void torrent::stop_when_ready(bool b)
 	{
 		m_stop_when_ready = b;
@@ -12130,8 +12177,8 @@ namespace {
 		st->added_time = m_added_time;
 		st->completed_time = m_completed_time;
 
-		st->last_scrape = m_last_scrape == (std::numeric_limits<boost::int16_t>::min)() ? -1
-			: clamped_subtract(m_ses.session_time(), m_last_scrape);
+		st->last_scrape = m_last_scrape == unset ? -1
+			: total_seconds(clock_type::now() - time_point(seconds(m_last_scrape)));
 
 		st->share_mode = m_share_mode;
 		st->upload_mode = m_upload_mode;
@@ -12153,10 +12200,10 @@ namespace {
 		st->finished_time = finished_time();
 		st->active_time = active_time();
 		st->seeding_time = seeding_time();
-		st->time_since_upload = m_last_upload == (std::numeric_limits<boost::int16_t>::min)() ? -1
-			: clamped_subtract(m_ses.session_time(), m_last_upload);
-		st->time_since_download = m_last_download == (std::numeric_limits<boost::int16_t>::min)() ? -1
-			: clamped_subtract(m_ses.session_time(), m_last_download);
+		st->time_since_upload = m_last_upload == unset ? -1
+			: total_seconds(clock_type::now() - time_point(seconds(m_last_upload)));
+		st->time_since_download = m_last_download == unset ? -1
+			: total_seconds(clock_type::now() - time_point(seconds(m_last_download)));
 
 		st->storage_mode = static_cast<storage_mode_t>(m_storage_mode);
 
@@ -12193,10 +12240,10 @@ namespace {
 		st->download_payload_rate = m_stat.download_payload_rate();
 		st->upload_payload_rate = m_stat.upload_payload_rate();
 
-		if (m_waiting_tracker && !is_paused())
-			st->next_announce = next_announce() - now;
-		else
+		if (is_paused() || m_tracker_timer.expires_at() < now)
 			st->next_announce = seconds(0);
+		else
+			st->next_announce = m_tracker_timer.expires_at() - now;
 
 		if (st->next_announce.count() < 0)
 			st->next_announce = seconds(0);

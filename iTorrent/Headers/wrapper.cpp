@@ -96,74 +96,6 @@ extern "C" int load_file(std::string const& filename, std::vector<char>& v
     return 0;
 }
 
-extern "C" int print_torrent_info(libtorrent::torrent_info t) {
-    using namespace libtorrent;
-    namespace lt = libtorrent;
-    
-    // print info about torrent
-    printf("\n\n----- torrent file info -----\n\n"
-           "nodes:\n");
-    
-    typedef std::vector<std::pair<std::string, int> > node_vec;
-    node_vec const& nodes = t.nodes();
-    for (node_vec::const_iterator i = nodes.begin(), end(nodes.end());
-         i != end; ++i)
-    {
-        printf("%s: %d\n", i->first.c_str(), i->second);
-    }
-    puts("trackers:\n");
-    for (std::vector<announce_entry>::const_iterator i = t.trackers().begin();
-         i != t.trackers().end(); ++i)
-    {
-        printf("%2d: %s\n", i->tier, i->url.c_str());
-    }
-    
-    char ih[41];
-    to_hex((char const*)&t.info_hash()[0], 20, ih);
-    printf("number of pieces: %d\n"
-           "piece length: %d\n"
-           "info hash: %s\n"
-           "comment: %s\n"
-           "created by: %s\n"
-           "magnet link: %s\n"
-           "name: %s\n"
-           "number of files: %d\n"
-           "files:\n"
-           , t.num_pieces()
-           , t.piece_length()
-           , ih
-           , t.comment().c_str()
-           , t.creator().c_str()
-           , make_magnet_uri(t).c_str()
-           , t.name().c_str()
-           , t.num_files());
-    file_storage const& st = t.files();
-    for (int i = 0; i < st.num_files(); ++i)
-    {
-        printf("%s\n"
-               , st.file_path(i).c_str());
-        
-//        int first = st.map_file(i, 0, 0).piece;
-//        int last = st.map_file(i, (std::max)(boost::int64_t(st.file_size(i))-1, boost::int64_t(0)), 0).piece;
-//        int flags = st.file_flags(i);
-//
-//        printf(" %8" PRIx64 " %11" PRId64 " %c%c%c%c [ %5d, %5d ] %7u %s %s %s%s\n"
-//               , st.file_offset(i)
-//               , st.file_size(i)
-//               , ((flags & file_storage::flag_pad_file)?'p':'-')
-//               , ((flags & file_storage::flag_executable)?'x':'-')
-//               , ((flags & file_storage::flag_hidden)?'h':'-')
-//               , ((flags & file_storage::flag_symlink)?'l':'-')
-//               , first, last
-//               , boost::uint32_t(st.mtime(i))
-//               , st.hash(i) != sha1_hash(0) ? to_hex(st.hash(i).to_string()).c_str() : ""
-//               , st.file_path(i).c_str()
-//               , (flags & file_storage::flag_symlink) ? "-> " : ""
-//               , (flags & file_storage::flag_symlink) ? st.symlink(i).c_str() : "");
-    }
-    return 0;
-}
-
 libtorrent::torrent_info* get_torrent(std::string file_path) {
     using namespace libtorrent;
     namespace lt = libtorrent;
@@ -210,12 +142,15 @@ class Engine {
 public:
     static Engine *standart;
     session *s;
-    std::string root_path;
+    //std::string root_path;
+	std::string config_path;
+	std::string download_path;
     vector<torrent_handle> handlers;
     
-    Engine(std::string root_path) {
+    Engine(std::string download_path, std::string config_path) {
         Engine::standart = this;
-        this->root_path = root_path;
+        this->download_path = download_path;
+		this->config_path = config_path;
         
         settings_pack sett;
         sett.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
@@ -225,8 +160,7 @@ public:
                      | lt::alert::status_notification);
         s = new lt::session(sett);
         
-        
-        std::ifstream in((Engine::standart->root_path + "/_Config/state.fastresume").c_str(), std::ios_base::binary);
+        std::ifstream in((Engine::standart->config_path + "/state.fastresume").c_str(), std::ios_base::binary);
         std::vector<char> buffer;
         
         if (!in.eof() && !in.fail())
@@ -246,44 +180,46 @@ public:
     char* addTorrent(torrent_info *torrent) {
         lt::error_code ec;
         add_torrent_params p;
-        p.save_path = root_path;
+        p.save_path = download_path;
         p.ti = boost::shared_ptr<torrent_info>(torrent);
-        std::string path = Engine::standart->root_path + "/_Config/.FastResumes/" + torrent->hash_to_string() + ".fastresume";
+		torrent->info_hash();
+        std::string path = Engine::standart->config_path + "/.FastResumes/" + hash_to_string(torrent->info_hash()) + ".fastresume";
         std::ifstream ifs(path, std::ios_base::binary);
         ifs.unsetf(std::ios_base::skipws);
         p.resume_data.assign(std::istream_iterator<char>(ifs), std::istream_iterator<char>());
         torrent_handle h = s->add_torrent(p, ec);
         handlers.push_back(h);
 		
-		char* res = new char[h.status().hash_to_string().length() + 1];
-		strcpy(res, h.status().hash_to_string().c_str());
+		char* res = new char[hash_to_string(h.status().info_hash).length() + 1];
+		strcpy(res, hash_to_string(h.status().info_hash).c_str());
 		return res;
     }
     
     void addTorrentWithStates(torrent_info *torrent, int states[]) {
         lt::error_code ec;
         add_torrent_params p;
-        p.save_path = root_path;
+        p.save_path = download_path;
         p.ti = boost::shared_ptr<torrent_info>(torrent);
         torrent_handle handle = s->add_torrent(p, ec);
 		handle.stop_when_ready(false);
         handlers.push_back(handle);
-        for (int i = 0; i < torrent->num_files(); i++) {
-            handle.file_priority(i, states[i] ? 4 : 0);
-        }
+		handle.prioritize_files(vector<int>(&states[0], &states[torrent->num_files()]));
+//        for (int i = 0; i < torrent->num_files(); i++) {
+//            handle.file_priority(i, states[i] ? 4 : 0);
+//        }
     }
     
     char* addMagnet(char* magnetLink) {
         lt::error_code ec;
         add_torrent_params p;
-        p.save_path = root_path;
+        p.save_path = download_path;
         p.url = std::string(magnetLink);
 		torrent_handle handle = s->add_torrent(p, ec);
 		handle.stop_when_ready(false);
 		//handlers.push_back(handle);
 		handlers = s->get_torrents();
 		
-		std::string hash = handle.status().hash_to_string();
+		std::string hash = hash_to_string(handle.status().info_hash);
 		char* res = new char[hash.length() + 1];
 		strcpy(res, hash.c_str());
 		return res;
@@ -291,7 +227,7 @@ public:
     
     torrent_handle* getHandleByHash(char* torrent_hash) {
         for (int i = 0; i < handlers.size(); i++) {
-			std::string s = handlers[i].status().hash_to_string();
+			std::string s = hash_to_string(handlers[i].status().info_hash);
             if (strcmp(s.c_str(), torrent_hash) == 0) {
                 return &(handlers[i]);
             }
@@ -310,8 +246,8 @@ public:
 };
 
 Engine *Engine::standart = NULL;
-extern "C" int init_engine(char* save_path) {
-    new Engine(save_path);
+extern "C" int init_engine(char* download_path, char* config_path) {
+    new Engine(download_path, config_path);
     return 0;
 }
 
@@ -355,7 +291,7 @@ extern "C" void remove_torrent(char* torrent_hash, int remove_files) {
 extern "C" char* get_torrent_file_hash(char* torrent_path) {
     lt::torrent_info* info = get_torrent(torrent_path);
     if (info != NULL) {
-        std::string s = info->hash_to_string();
+        std::string s = hash_to_string(info->info_hash());
         char* res = new char[s.length() + 1];
         strcpy(res, s.c_str());
         return res;
@@ -368,7 +304,7 @@ extern "C" char* get_magnet_hash(char* magnet_link) {
 	add_torrent_params params;
 	lt::error_code ec;
 	parse_magnet_uri(magnet_link, params, ec);
-	std::string s = params.hash_to_string();
+	std::string s = hash_to_string(params.info_hash);
 	char* res = new char[s.length() + 1];
 	strcpy(res, s.c_str());
 	return res;
@@ -396,9 +332,12 @@ extern "C" Files get_files_of_torrent(torrent_info* info) {
 extern "C" void set_torrent_files_priority(char* torrent_hash, int states[]) {
     torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
     torrent_info* info = (torrent_info*)&handle->get_torrent_info();
-    for (int i = 0; i < info->num_files(); i++) {
-        handle->file_priority(i, states[i]);
-    }
+	handle->prioritize_files(vector<int>(&states[0], &states[info->num_files()]));
+//    for (int i = 0; i < info->num_files(); i++) {
+//        handle->file_priority(i, states[i]);
+//		printf("%d : %d\n", i, states[i]);
+//		printf("%d : %d\n------\n", i, handle->file_priority(i));
+//    }
 //    printf("SETTED! %d\n", states[0]);
 //    printf("%d\n", Engine::standart->getHandleByHash(torrent_hash)->file_priority(0));
 }
@@ -495,7 +434,7 @@ extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
 		trackers.working[i] = trackers_list[i].is_working() ? 1 : 0;
 		trackers.verified[i] = trackers_list[i].verified ? 1 : 0;
 		
-		trackers.seeders[i] = trackers_list[i].scrape_downloaded;
+		trackers.seeders[i] = 0; //trackers_list[i].see;
 		trackers.peers[i] = 0; //trackers_list[i].next_announce_in();
 	}
 	
@@ -517,7 +456,7 @@ extern "C" void save_magnet_to_file(char* hash) {
 	torrent_handle* handle = Engine::standart->getHandleByHash(hash);
 	torrent_info torinfo = handle->get_torrent_info();
 	
-	std::ofstream out((Engine::standart->root_path + "/_Config/" + handle->name().c_str() + ".torrent").c_str(), std::ios_base::binary);
+	std::ofstream out((Engine::standart->config_path + "/" + handle->name().c_str() + ".torrent").c_str(), std::ios_base::binary);
 	out.unsetf(std::ios_base::skipws);
 	create_torrent ct = create_torrent(torinfo);
 	ct.set_creator("iTorrent");
@@ -589,7 +528,7 @@ extern "C" void save_fast_resume() {
 			
 			torrent_handle h = rd->handle;
 			torrent_info info = h.get_torrent_info();
-			std::ofstream out((h.save_path() + "/_Config/.FastResumes/" + info.hash_to_string() + ".fastresume").c_str(), std::ios_base::binary);
+			std::ofstream out((Engine::standart->config_path + "/.FastResumes/" + hash_to_string(info.info_hash()) + ".fastresume").c_str(), std::ios_base::binary);
 			out.unsetf(std::ios_base::skipws);
 			bencode(std::ostream_iterator<char>(out), *rd->resume_data);
 			printf("FILE SAVED!!\n");
@@ -603,17 +542,17 @@ extern "C" void save_fast_resume() {
 
 extern "C" void set_download_limit(int limit_in_bytes) {
 	session* ses = Engine::standart->s;
-	session_settings ss = ses->settings();
-	ss.download_rate_limit = limit_in_bytes;
-	ses->set_settings(ss);
+	settings_pack ss = ses->get_settings();
+	ss.set_int(settings_pack::int_types::download_rate_limit, limit_in_bytes);
+	ses->apply_settings(ss);
 	//ses->set_download_rate_limit(limit_in_bytes);
 }
 
 extern "C" void set_upload_limit(int limit_in_bytes) {
 	session* ses = Engine::standart->s;
-	session_settings ss = ses->settings();
-	ss.upload_rate_limit = limit_in_bytes;
-	ses->set_settings(ss);
+	settings_pack ss = ses->get_settings();
+	ss.set_int(settings_pack::int_types::upload_rate_limit, limit_in_bytes);
+	ses->apply_settings(ss);
 	//ses->set_upload_rate_limit(limit_in_bytes);
 }
 
@@ -659,7 +598,7 @@ extern "C" Result getTorrentInfo() {
         res.state[i] = new char[state_str[stat.state].length() + 1];
         strcpy((char*)res.state[i], state_str[stat.state].c_str());
         
-        std::string hash = stat.hash_to_string();
+        std::string hash = hash_to_string(stat.info_hash);
         res.hash[i] = new char[hash.length() + 1];
         strcpy(res.hash[i], hash.c_str());
         

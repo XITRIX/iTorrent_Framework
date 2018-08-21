@@ -34,7 +34,7 @@
 #if !defined(BOOST_ASIO_HEADER_ONLY)
 # if !defined(BOOST_ASIO_SEPARATE_COMPILATION)
 #  if !defined(BOOST_ASIO_DYN_LINK)
-#   define BOOST_ASIO_HEADER_ONLY___ 1
+#   define BOOST_ASIO_HEADER_ONLY 1
 #  endif // !defined(BOOST_ASIO_DYN_LINK)
 # endif // !defined(BOOST_ASIO_SEPARATE_COMPILATION)
 #endif // !defined(BOOST_ASIO_HEADER_ONLY)

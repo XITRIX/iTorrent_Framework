@@ -1,7 +1,7 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
-Copyright (c) 2007-2016, Arvid Norberg, Un Shyam
+Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2007-2018, Arvid Norberg, Un Shyam
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -76,8 +76,7 @@ namespace libtorrent
 		// this is the constructor where the we are the active part.
 		// The peer_connection should handshake and verify that the
 		// other end has the correct id
-		bt_peer_connection(peer_connection_args const& pack
-			, peer_id const& pid);
+		bt_peer_connection(peer_connection_args const& pack);
 
 		virtual void start() TORRENT_OVERRIDE;
 

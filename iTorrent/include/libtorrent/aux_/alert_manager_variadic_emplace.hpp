@@ -24,7 +24,7 @@
 			BOOST_PP_ENUM_PARAMS(I, typename A)>
 		void emplace_alert(BOOST_PP_ENUM_BINARY_PARAMS(I, A, const& a) )
 		{
-			mutex::scoped_lock lock(m_mutex);
+			recursive_mutex::scoped_lock lock(m_mutex);
 #ifndef TORRENT_NO_DEPRECATE
 			if (m_dispatch)
 			{
@@ -37,8 +37,8 @@
 			// don't add more than this number of alerts, unless it's a
 			// high priority alert, in which case we try harder to deliver it
 			// for high priority alerts, double the upper limit
-			if (m_alerts[m_generation].size() >= m_queue_size_limit
-				* (1 + T::priority))
+			if (m_alerts[m_generation].size() / (1 + T::priority)
+				>= m_queue_size_limit)
 				return;
 
 			T alert(m_allocations[m_generation]
@@ -46,7 +46,7 @@
 				BOOST_PP_ENUM_PARAMS(I, a));
 			m_alerts[m_generation].push_back(alert);
 
-			maybe_notify(&alert, lock);
+			maybe_notify(&alert);
 		}
 
 #undef I

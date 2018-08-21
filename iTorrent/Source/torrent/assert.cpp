@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2007-2016, Arvid Norberg
+Copyright (c) 2007-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -352,10 +352,14 @@ TORRENT_EXPORT void assert_fail(char const* expr, int line
 
 	// if production asserts are defined, don't abort, just print the error
 #ifndef TORRENT_PRODUCTION_ASSERTS
+	#ifdef _MSC_VER
+	__debugbreak();
+	#else
 	// send SIGINT to the current process
 	// to break into the debugger
 	raise(SIGABRT);
 	abort();
+	#endif
 #endif
 }
 

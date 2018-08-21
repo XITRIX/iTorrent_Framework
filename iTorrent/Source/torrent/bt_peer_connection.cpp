@@ -1,7 +1,7 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
-Copyright (c) 2007-2016, Arvid Norberg, Un Shyam
+Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2007-2018, Arvid Norberg, Un Shyam
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -100,9 +100,7 @@ namespace libtorrent
 #endif
 	};
 
-
-	bt_peer_connection::bt_peer_connection(peer_connection_args const& pack
-		, peer_id const& pid)
+	bt_peer_connection::bt_peer_connection(peer_connection_args const& pack)
 		: peer_connection(pack)
 		, m_state(read_protocol_identifier)
 		, m_supports_extensions(false)
@@ -116,7 +114,7 @@ namespace libtorrent
 		, m_rc4_encrypted(false)
 		, m_recv_buffer(peer_connection::m_recv_buffer)
 #endif
-		, m_our_peer_id(pid)
+		, m_our_peer_id(generate_peer_id(*pack.sett))
 #if !defined(TORRENT_DISABLE_ENCRYPTION) && !defined(TORRENT_DISABLE_EXTENSIONS)
 		, m_sync_bytes_read(0)
 #endif
@@ -837,17 +835,7 @@ namespace libtorrent
 		memcpy(ptr, &ih[0], 20);
 		ptr += 20;
 
-		// peer id
-		if (m_settings.get_bool(settings_pack::anonymous_mode))
-		{
-			// in anonymous mode, every peer connection
-			// has a unique peer-id
-			for (int i = 0; i < 20; ++i)
-				m_our_peer_id[i] = random() & 0xff;
-		}
-
 		memcpy(ptr, &m_our_peer_id[0], 20);
-		ptr += 20;
 
 #ifndef TORRENT_DISABLE_LOGGING
 		{
@@ -3381,7 +3369,7 @@ namespace libtorrent
 					// initiate connections. So, if our peer-id is greater than
 					// the others, we should close the incoming connection,
 					// if not, we should close the outgoing one.
-					if (pid < m_our_peer_id && is_outgoing())
+					if ((pid < m_our_peer_id) == is_outgoing())
 					{
 						p->disconnect(errors::duplicate_peer_id, op_bittorrent);
 					}
@@ -3394,16 +3382,6 @@ namespace libtorrent
 			}
 
 			set_pid(pid);
-
-			// disconnect if the peer has the same peer-id as ourself
-			// since it most likely is ourself then
-			if (pid == m_our_peer_id)
-			{
-				if (peer_info_struct()) t->ban_peer(peer_info_struct());
-				disconnect(errors::self_connection, op_bittorrent, 1);
-				return;
-			}
-
 			m_client_version = identify_client(pid);
 			if (pid[0] == '-' && pid[1] == 'B' && pid[2] == 'C' && pid[7] == '-')
 			{

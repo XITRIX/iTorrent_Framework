@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -257,7 +257,7 @@ namespace libtorrent
 		friend struct session_handle;
 		friend struct feed;
 		friend class torrent;
-		friend std::size_t hash_value(torrent_handle const& th);
+		friend TORRENT_EXPORT std::size_t hash_value(torrent_handle const& th);
 
 		// constructs a torrent handle that does not refer to a torrent.
 		// i.e. is_valid() will return false.
@@ -1022,9 +1022,8 @@ namespace libtorrent
 		// The default priority of pieces is 4.
 		// 
 		// Piece priorities can not be changed for torrents that have not
-		// downloaded the metadata yet. For instance, magnet links and torrents
-		// added by URL won't have metadata immediately. see the
-		// metadata_received_alert.
+		// downloaded the metadata yet. Magnet links won't have metadata
+		// immediately. see the metadata_received_alert.
 		// 
 		// ``piece_priority`` sets or gets the priority for an individual piece,
 		// specified by ``index``.
@@ -1041,6 +1040,10 @@ namespace libtorrent
 		// 
 		// ``piece_priorities`` returns a vector with one element for each piece
 		// in the torrent. Each element is the current priority of that piece.
+		// 
+		// It's possible to cancel the effect of *file* priorities by setting the
+		// priorities for the affected pieces. Care has to be taken when mixing
+		// usage of file- and piece priorities.
 		void piece_priority(int index, int priority) const;
 		int piece_priority(int index) const;
 		void prioritize_pieces(std::vector<int> const& pieces) const;
@@ -1069,6 +1072,16 @@ namespace libtorrent
 		// You cannot set the file priorities on a torrent that does not yet have
 		// metadata or a torrent that is a seed. ``file_priority(int, int)`` and
 		// prioritize_files() are both no-ops for such torrents.
+		// 
+		// Since changing file priorities may involve disk operations (of moving
+		// files in- and out of the part file), the internal accounting of file
+		// priorities happen asynchronously. i.e. setting file priorities and then
+		// immediately querying them may not yield the same priorities just set.
+		// However, the *piece* priorities are updated immediately.
+		// 
+		// when combining file- and piece priorities, the resume file will record
+		// both. When loading the resume data, the file priorities will be applied
+		// first, then the piece priorities.
 		void file_priority(int index, int priority) const;
 		int file_priority(int index) const;
 		void prioritize_files(std::vector<int> const& files) const;
@@ -1254,9 +1267,13 @@ namespace libtorrent
 		// fails, ask the user which mode to use. The client may then re-issue
 		// the ``move_storage`` call with one of the other modes.
 		// 
-		// ``dont_replace`` always takes the existing file in the target
+		// ``dont_replace`` always keeps the existing file in the target
 		// directory, if there is one. The source files will still be removed in
-		// that case.
+		// that case. Note that it won't automatically re-check files. If an
+		// incomplete torrent is moved into a directory with the complete files,
+		// pause, move, force-recheck and resume. Without the re-checking, the
+		// torrent will keep downloading and files in the new download directory
+		// will be overwritten.
 		// 
 		// Files that have been renamed to have absolute paths are not moved by
 		// this function. Keep in mind that files that don't belong to the
@@ -1303,9 +1320,9 @@ namespace libtorrent
 		boost::uint32_t id() const
 		{
 			uintptr_t ret = reinterpret_cast<uintptr_t>(m_torrent.lock().get());
-			// a torrent object is about 1024 bytes, so
-			// it's safe to shift 11 bits
-			return boost::uint32_t(ret >> 11);
+			// a torrent object is about 1024 (2^10) bytes, so
+			// it's safe to shift 10 bits
+			return boost::uint32_t(ret >> 10);
 		}
 
 		// This function is intended only for use by plugins and the alert

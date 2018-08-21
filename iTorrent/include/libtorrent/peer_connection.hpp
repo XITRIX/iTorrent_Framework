@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -501,11 +501,6 @@ namespace libtorrent
 		// finish the connection attempt
 		bool is_connecting() const { return m_connecting; }
 
-		// This is called for every peer right after the upload
-		// bandwidth has been distributed among them
-		// It will reset the used bandwidth to 0.
-		void reset_upload_quota();
-
 		// trust management.
 		virtual void received_valid_data(int index);
 		// returns false if the peer should not be
@@ -807,7 +802,6 @@ namespace libtorrent
 		peer_connection& operator=(peer_connection const&);
 
 		void do_update_interest();
-		int preferred_caching() const;
 		void fill_send_buffer();
 		void on_disk_read_complete(disk_io_job const* j, peer_request r
 			, time_point issue_time);

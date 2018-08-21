@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2012-2016, Arvid Norberg
+Copyright (c) 2012-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -148,7 +148,7 @@ namespace libtorrent
 		SET_NOPREV(proxy_username, "", &session_impl::update_proxy),
 		SET_NOPREV(proxy_password, "", &session_impl::update_proxy),
 		SET_NOPREV(i2p_hostname, "", &session_impl::update_i2p_bridge),
-		SET_NOPREV(peer_fingerprint, "-LT1160-", &session_impl::update_peer_fingerprint),
+		SET_NOPREV(peer_fingerprint, "-LT1190-", 0),
 		SET_NOPREV(dht_bootstrap_nodes, "dht.libtorrent.org:25401", &session_impl::update_dht_bootstrap_nodes)
 	};
 
@@ -165,8 +165,17 @@ namespace libtorrent
 		DEPRECATED_SET(use_write_cache, true, 0),
 		DEPRECATED_SET(dont_flush_write_cache, false, 0),
 		DEPRECATED_SET(explicit_read_cache, false, 0),
+#ifdef TORRENT_WINDOWS
+		// the emulation of preadv/pwritev uses overlapped reads/writes to be able
+		// to issue them all back to back. However, it appears windows fail to
+		// merge them. At least for people reporting performance issues in
+		// qBittorrent
+		SET(coalesce_reads, true, 0),
+		SET(coalesce_writes, true, 0),
+#else
 		SET(coalesce_reads, false, 0),
 		SET(coalesce_writes, false, 0),
+#endif
 		SET(auto_manage_prefer_seeds, false, 0),
 		SET(dont_count_slow_torrents, true, &session_impl::update_count_slow),
 		SET(close_redundant_connections, true, 0),
@@ -329,7 +338,7 @@ namespace libtorrent
 		SET(alert_queue_size, 1000, &session_impl::update_alert_queue_size),
 		SET(max_metadata_size, 3 * 1024 * 10240, 0),
 		DEPRECATED_SET(hashing_threads, 1, 0),
-		SET(checking_mem_usage, 256, 0),
+		SET(checking_mem_usage, 1024, 0),
 		SET(predictive_piece_announce, 0, 0),
 		SET(aio_threads, 4, &session_impl::update_disk_threads),
 		SET(aio_max, 300, 0),

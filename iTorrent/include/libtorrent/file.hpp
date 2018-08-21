@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -193,11 +193,8 @@ namespace libtorrent
 #endif
 #else
 		DIR* m_handle;
-		// the dirent struct contains a zero-sized
-		// array at the end, it will end up referring
-		// to the m_name field
-		struct dirent m_dirent;
-		char m_name[TORRENT_MAX_PATH + 1]; // +1 to make room for null
+		ino_t m_inode;
+		std::string m_name;
 #endif
 		bool m_done;
 	};
@@ -344,10 +341,6 @@ namespace libtorrent
 #endif
 
 		int m_open_mode;
-#if defined TORRENT_WINDOWS
-		static bool has_manage_volume_privs;
-#endif
-
 #ifdef TORRENT_DEBUG_FILE_LEAKS
 		std::string m_file_path;
 #endif

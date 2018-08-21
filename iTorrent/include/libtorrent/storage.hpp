@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -276,7 +276,7 @@ namespace libtorrent
 		// change the priorities of files. This is a fenced job and is
 		// guaranteed to be the only running function on this storage
 		// when called
-		virtual void set_file_priority(std::vector<boost::uint8_t> const& prio
+		virtual void set_file_priority(std::vector<boost::uint8_t>& prio
 			, storage_error& ec) = 0;
 
 		// This function should move all the files belonging to the storage to
@@ -427,7 +427,7 @@ namespace libtorrent
 		void finalize_file(int file, storage_error& ec) TORRENT_OVERRIDE;
 #endif
 		virtual bool has_any_file(storage_error& ec) TORRENT_OVERRIDE;
-		virtual void set_file_priority(std::vector<boost::uint8_t> const& prio
+		virtual void set_file_priority(std::vector<boost::uint8_t>& prio
 			, storage_error& ec) TORRENT_OVERRIDE;
 		virtual void rename_file(int index, std::string const& new_filename
 			, storage_error& ec) TORRENT_OVERRIDE;
@@ -475,9 +475,24 @@ namespace libtorrent
 		file_handle open_file(int file, int mode, storage_error& ec) const;
 		file_handle open_file_impl(int file, int mode, error_code& ec) const;
 
+		bool use_partfile(int index);
+		void use_partfile(int index, bool b);
+
 		std::vector<boost::uint8_t> m_file_priority;
 		std::string m_save_path;
 		std::string m_part_file_name;
+
+		// this this is an array indexed by file-index. Each slot represents
+		// whether this file has the part-file enabled for it. This is used for
+		// backwards compatibility with pre-partfile versions of libtorrent. If
+		// this vector is empty, the default is that files *do* use the partfile.
+		// on startup, any 0-priority file that's found in it's original location
+		// is expected to be an old-style (pre-partfile) torrent storage, and
+		// those files have their slot set to false in this vector.
+		// note that the vector is *sparse*, it's only allocated if a file has its
+		// entry set to false, and only indices up to that entry.
+		std::vector<bool> m_use_partfile;
+
 		// the file pool is typically stored in
 		// the session, to make all storage
 		// instances use the same pool
@@ -509,7 +524,7 @@ namespace libtorrent
 	{
 	public:
 		virtual bool has_any_file(storage_error&) TORRENT_OVERRIDE { return false; }
-		virtual void set_file_priority(std::vector<boost::uint8_t> const&
+		virtual void set_file_priority(std::vector<boost::uint8_t>&
 			, storage_error&) TORRENT_OVERRIDE {}
 		virtual void rename_file(int, std::string const&, storage_error&) TORRENT_OVERRIDE {}
 		virtual void release_files(storage_error&) TORRENT_OVERRIDE {}
@@ -540,7 +555,7 @@ namespace libtorrent
 			, int piece, int offset, int flags, storage_error& ec) TORRENT_OVERRIDE;
 
 		virtual bool has_any_file(storage_error&) TORRENT_OVERRIDE { return false; }
-		virtual void set_file_priority(std::vector<boost::uint8_t> const& /* prio */
+		virtual void set_file_priority(std::vector<boost::uint8_t>& /* prio */
 			, storage_error&) TORRENT_OVERRIDE {}
 		virtual int move_storage(std::string const& /* save_path */
 			, int /* flags */, storage_error&) TORRENT_OVERRIDE { return 0; }

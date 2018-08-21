@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2012-2016, Arvid Norberg
+Copyright (c) 2012-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -93,7 +93,7 @@ namespace libtorrent
 	//
 	struct TORRENT_EXPORT settings_pack
 	{
-		friend void apply_pack(settings_pack const* pack, aux::session_settings& sett, aux::session_impl* ses);
+		friend TORRENT_EXTRA_EXPORT void apply_pack(settings_pack const* pack, aux::session_settings& sett, aux::session_impl* ses);
 
 		void set_str(int name, std::string val);
 		void set_int(int name, int val);
@@ -227,7 +227,7 @@ namespace libtorrent
 
 			// this is the fingerprint for the client. It will be used as the
 			// prefix to the peer_id. If this is 20 bytes (or longer) it will be
-			// truncated at 20 bytes and used as the entire peer-id
+			// truncated to 20 bytes and used as the entire peer-id
 			// 
 			// There is a utility function, generate_fingerprint() that can be used
 			// to generate a standard client peer ID fingerprint prefix.
@@ -502,10 +502,10 @@ namespace libtorrent
 			no_recheck_incomplete_resume,
 
 			// ``anonymous_mode`` defaults to false. When set to true, the client
-			// tries to hide its identity to a certain degree. The peer-ID will no
-			// longer include the client's fingerprint. The user-agent will be
-			// reset to an empty string. Trackers will only be used if they are
-			// using a proxy server. The listen sockets are closed, and incoming
+			// tries to hide its identity to a certain degree. The user-agent will be
+			// reset to an empty string (except for private torrents). Trackers
+			// will only be used if they are using a proxy server.
+			// The listen sockets are closed, and incoming
 			// connections will only be accepted through a SOCKS5 or I2P proxy (if
 			// a peer proxy is set up and is run on the same machine as the
 			// tracker proxy). Since no incoming connections are accepted,
@@ -522,9 +522,9 @@ namespace libtorrent
 			// libtorrent API.
 			report_web_seed_downloads,
 
+#ifndef TORRENT_NO_DEPRECATE
 			// set to true if uTP connections should be rate limited This option
 			// is *DEPRECATED*, please use set_peer_class_filter() instead.
-#ifndef TORRENT_NO_DEPRECATE
 			rate_limit_utp TORRENT_DEPRECATED_ENUM,
 #else
 			deprecated2,

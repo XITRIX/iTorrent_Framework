@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2007-2016, Un Shyam, Arvid Norberg, Steven Siloti
+Copyright (c) 2007-2018, Un Shyam, Arvid Norberg, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -204,7 +204,9 @@ namespace libtorrent
 				{
 					*i = boost::asio::mutable_buffer(boost::asio::buffer_cast<void*>(*i), to_process);
 					iovec.erase(++i, iovec.end());
+#if defined TORRENT_DEBUG || defined TORRENT_RELEASE_ASSERTS
 					to_process = 0;
+#endif
 					break;
 				}
 				to_process -= boost::asio::buffer_size(*i);

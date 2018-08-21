@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2009-2016, Arvid Norberg
+Copyright (c) 2009-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -397,11 +397,6 @@ namespace libtorrent
 		// is the only known property of the torrent. i.e. you don't have a
 		// .torrent file nor a magnet link.
 		sha1_hash info_hash;
-		std::string hash_to_string() {
-			std::stringstream ss;
-			ss << info_hash;
-			return ss.str();
-		}
 
 		// ``max_uploads``, ``max_connections``, ``upload_limit``,
 		// ``download_limit`` correspond to the ``set_max_uploads()``,
@@ -413,8 +408,8 @@ namespace libtorrent
 		// -1 means unlimited on these settings just like their counterpart
 		// functions on torrent_handle
 		// 
-		// For fine grained control over rate limits, including making them apply
-		// to local peers, see peer-classes_.
+		// For fine grained control over rate limits depending on various
+		// properties of the peer connection, see peer-classes_.
 		int max_uploads;
 		int max_connections;
 		int upload_limit;

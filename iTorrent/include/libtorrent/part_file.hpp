@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2012-2016, Arvid Norberg
+Copyright (c) 2012-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -73,8 +73,11 @@ namespace libtorrent
 		void open_file(int mode, error_code& ec);
 		void flush_metadata_impl(error_code& ec);
 
+		boost::int64_t slot_offset(boost::int64_t const slot) const
+		{ return m_header_size + slot * m_piece_size; }
+
 		std::string m_path;
-		std::string m_name;
+		std::string const m_name;
 
 		// allocate a slot and return the slot index
 		int allocate_slot(int piece);
@@ -93,15 +96,15 @@ namespace libtorrent
 
 		// the max number of pieces in the torrent this part file is
 		// backing
-		int m_max_pieces;
+		int const m_max_pieces;
 
 		// number of bytes each piece contains
-		int m_piece_size;
+		int const m_piece_size;
 
 		// this is the size of the part_file header, it is added
 		// to offsets when calculating the offset to read and write
 		// payload data from
-		int m_header_size;
+		int const m_header_size;
 
 		// if this is true, the metadata in memory has changed since
 		// we last saved or read it from disk. It means that we
@@ -112,7 +115,9 @@ namespace libtorrent
 		boost::unordered_map<int, int> m_piece_map;
 
 		// this is the file handle to the part file
-		file m_file;
+		// it's allocated on the heap and reference counted, to allow it to be
+		// closed and re-opened while other threads are still using it
+		boost::shared_ptr<file> m_file;
 	};
 }
 

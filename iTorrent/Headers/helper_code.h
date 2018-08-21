@@ -12,8 +12,15 @@
 #include <stdio.h>
 #include <fstream>
 
+#include <libtorrent/sha1_hash.hpp>
+
 using namespace std;
 
+std::string hash_to_string(libtorrent::sha1_hash hash) {
+	std::stringstream ss;
+	ss << hash;
+	return ss.str();
+}
 
 bool exists (const std::string& name) {
 	return ( access( name.c_str(), F_OK ) != -1 );

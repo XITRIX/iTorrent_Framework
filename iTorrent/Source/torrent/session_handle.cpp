@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -580,12 +580,12 @@ namespace libtorrent
 		p.set_str(settings_pack::peer_fingerprint, id.to_string());
 		apply_settings(p);
 	}
-#endif
 
 	peer_id session_handle::id() const
 	{
-		return TORRENT_SYNC_CALL_RET(peer_id, get_peer_id);
+		return TORRENT_SYNC_CALL_RET(peer_id, deprecated_get_peer_id);
 	}
+#endif
 
 	void session_handle::set_key(int key)
 	{

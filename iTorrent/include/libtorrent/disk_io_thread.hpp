@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2007-2016, Arvid Norberg, Steven Siloti
+Copyright (c) 2007-2018, Arvid Norberg, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -388,6 +388,12 @@ namespace libtorrent
 			hasher_thread
 		};
 
+		enum
+		{
+			hasher_thread_mask = 3,
+			hasher_thread_divisor
+		};
+
 		void thread_fun(int thread_id, thread_type_t type
 			, boost::shared_ptr<io_service::work> w);
 
@@ -477,7 +483,8 @@ namespace libtorrent
 			, file::iovec_t* iov, int* flushing, int block_base_index = 0);
 		void flush_iovec(cached_piece_entry* pe, file::iovec_t const* iov, int const* flushing
 			, int num_blocks, storage_error& error);
-		void iovec_flushed(cached_piece_entry* pe
+		// returns true if the piece entry was freed
+		bool iovec_flushed(cached_piece_entry* pe
 			, int* flushing, int num_blocks, int block_offset
 			, storage_error const& error
 			, jobqueue_t& completed_jobs);
@@ -565,18 +572,6 @@ namespace libtorrent
 		// exceed m_cache_size
 
 		counters& m_stats_counters;
-
-		// average read time for cache misses (in microseconds)
-		average_accumulator m_read_time;
-
-		// average write time (in microseconds)
-		average_accumulator m_write_time;
-
-		// average hash time (in microseconds)
-		average_accumulator m_hash_time;
-
-		// average time to serve a job (any job) in microseconds
-		average_accumulator m_job_time;
 
 		// this is the main thread io_service. Callbacks are
 		// posted on this in order to have them execute in

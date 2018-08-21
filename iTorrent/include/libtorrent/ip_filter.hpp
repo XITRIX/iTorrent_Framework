@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2005-2016, Arvid Norberg
+Copyright (c) 2005-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,10 +41,15 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <vector>
 
 #include <boost/limits.hpp>
-#include <boost/utility.hpp>
-#include <boost/next_prior.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/tuple/tuple.hpp>
+
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106700
+#include <boost/next_prior.hpp>
+#else
+#include <boost/utility.hpp>
+#endif
 
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 
@@ -167,7 +172,7 @@ namespace detail
 
 			boost::uint32_t first_access = i->access;
 			boost::uint32_t last_access = boost::prior(j)->access;
-            
+
 			if (i->start != first && first_access != flags)
 			{
 				i = m_access_list.insert(i, range(first, flags));

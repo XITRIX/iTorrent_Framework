@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -163,6 +163,7 @@ namespace libtorrent
 			UTF8 sequence[5];
 			UTF8* start = sequence;
 			res = ConvertUTF32toUTF8(const_cast<const UTF32**>(&cp), cp + 1, &start, start + 5, lenientConversion);
+			TORRENT_UNUSED(res);
 			TORRENT_ASSERT(res == conversionOK);
 
 			for (int i = 0; i < std::min(5, int(start - sequence)); ++i)
@@ -722,8 +723,7 @@ namespace libtorrent
 	}
 
 #ifndef TORRENT_NO_DEPRECATE
-	torrent_info::torrent_info(lazy_entry const& torrent_file, error_code& ec
-		, int flags)
+	torrent_info::torrent_info(lazy_entry const& torrent_file, error_code& ec, int)
 		: m_piece_hashes(0)
 		, m_creation_date(0)
 		, m_info_section_size(0)
@@ -732,7 +732,6 @@ namespace libtorrent
 		, m_private(false)
 		, m_i2p(false)
 	{
-		TORRENT_UNUSED(flags);
 		std::pair<char const*, int> buf = torrent_file.data_section();
 		bdecode_node e;
 		if (bdecode(buf.first, buf.first + buf.second, e, ec) != 0)
@@ -740,7 +739,7 @@ namespace libtorrent
 		parse_torrent_file(e, ec, 0);
 	}
 
-	torrent_info::torrent_info(lazy_entry const& torrent_file, int flags)
+	torrent_info::torrent_info(lazy_entry const& torrent_file, int)
 		: m_piece_hashes(0)
 		, m_creation_date(0)
 		, m_info_section_size(0)
@@ -749,7 +748,6 @@ namespace libtorrent
 		, m_private(false)
 		, m_i2p(false)
 	{
-		TORRENT_UNUSED(flags);
 		std::pair<char const*, int> buf = torrent_file.data_section();
 		bdecode_node e;
 		error_code ec;
@@ -1258,8 +1256,15 @@ namespace libtorrent
 				m_files.set_piece_length(0);
 				return false;
 			}
-			int num_leafs = merkle_num_leafs(files.num_pieces());
-			int num_nodes = merkle_num_nodes(num_leafs);
+			if (files.num_pieces() <= 0)
+			{
+				ec = errors::no_files_in_torrent;
+				// mark the torrent as invalid
+				m_files.set_piece_length(0);
+				return false;
+			}
+			int const num_leafs = merkle_num_leafs(files.num_pieces());
+			int const num_nodes = merkle_num_nodes(num_leafs);
 			if (num_nodes - num_leafs >= (2<<24))
 			{
 				ec = errors::too_many_pieces_in_torrent;

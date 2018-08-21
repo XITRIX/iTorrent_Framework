@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2003-2018, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,7 +33,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef TORRENT_SHA1_HASH_HPP_INCLUDED
 #define TORRENT_SHA1_HASH_HPP_INCLUDED
 
-#include <sstream>
 #include <cctype>
 #include <algorithm>
 #include <string>
@@ -70,13 +69,6 @@ namespace libtorrent
 	{
 		enum { number_size = 5 };
 	public:
-        std::string get_hash_string() { //CUSTOM
-            std::stringstream ss;
-            ss << this;
-            //std::cout << this << "ПИДОР" << std::endl;
-            
-            return ss.str();
-        }
 		// internal
 		// the number of bytes of the number
 		static const int size = number_size * sizeof(boost::uint32_t);
