@@ -160,7 +160,7 @@ struct gcc_dcas_x86
         {
 #if defined(__clang__)
             // Clang cannot allocate eax:edx register pairs but it has sync intrinsics
-            value = __sync_val_compare_and_swap(&storage, (storage_type)0, (storage_type)0);
+            value = __sync_val_compare_and_swap(const_cast<storage_type volatile*>(&storage), (storage_type)0, (storage_type)0);
 #elif defined(BOOST_ATOMIC_DETAIL_X86_NO_ASM_AX_DX_PAIRS)
             uint32_t value_bits[2];
             // We don't care for comparison result here; the previous value will be stored into value anyway.
@@ -405,7 +405,7 @@ struct gcc_dcas_x86_64
 
         // Clang cannot allocate rax:rdx register pairs but it has sync intrinsics
         storage_type value = storage_type();
-        return __sync_val_compare_and_swap(&storage, value, value);
+        return __sync_val_compare_and_swap(const_cast<storage_type volatile*>(&storage), value, value);
 
 #elif defined(BOOST_ATOMIC_DETAIL_X86_NO_ASM_AX_DX_PAIRS)
 

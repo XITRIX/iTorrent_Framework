@@ -804,7 +804,7 @@
 #  if defined(__clang__)
 #   if (__cplusplus >= 201402)
 #    if __has_include(<experimental/string_view>)
-#     define BOOST_ASIO_HAS_STD_EXPERIMENTAL_STRING_VIEW 1
+//#     define BOOST_ASIO_HAS_STD_EXPERIMENTAL_STRING_VIEW 1
 #    endif // __has_include(<experimental/string_view>)
 #   endif // (__cplusplus >= 201402)
 #  endif // defined(__clang__)

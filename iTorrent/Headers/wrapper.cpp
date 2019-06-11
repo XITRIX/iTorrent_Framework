@@ -310,23 +310,40 @@ extern "C" char* get_magnet_hash(char* magnet_link) {
 	return res;
 }
 
+extern "C" char* get_torrent_magnet_link(char* torrent_hash) {
+    torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+    std::string sres = make_magnet_uri(handle->get_torrent_info()).c_str();
+    char* res = new char[sres.size() + 1];
+    strcpy(res, sres.c_str());
+    return res;
+}
+
 extern "C" Files get_files_of_torrent(torrent_info* info) {
     file_storage fs = info->files();
     Files files {
         .size = fs.num_files(),
-        .file_name = new char*[fs.num_files()],
-        .file_size = new long long[fs.num_files()],
-        .file_priority = new int[fs.num_files()]
+        .files = new File[fs.num_files()]
     };
     files.title = new char[info->name().length() + 1];
+    
     strcpy(files.title, info->name().c_str());
     for (int i = 0; i < fs.num_files(); i++) {
-        files.file_name[i] = new char[fs.file_path(i).length() + 1];
-        strcpy(files.file_name[i], fs.file_path(i).c_str());
+        files.files[i].file_name = new char[fs.file_path(i).length() + 1];
+        strcpy(files.files[i].file_name, fs.file_path(i).c_str());
         
-        files.file_size[i] = fs.file_size(i);
+        files.files[i].file_size = fs.file_size(i);
     }
     return files;
+}
+
+extern "C" int get_torrent_files_sequental(char* torrent_hash) {
+    torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+    return handle->is_sequential_download();
+}
+
+extern "C" void set_torrent_files_sequental(char* torrent_hash, int sequental) {
+    torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+    handle->set_sequential_download(sequental == 1);
 }
 
 extern "C" void set_torrent_files_priority(char* torrent_hash, int states[]) {
@@ -385,23 +402,46 @@ extern "C" Files get_files_of_torrent_by_hash(char* torrent_hash) {
         };
         return files;
     }
+    
+    vector<int64_t> progress;
     torrent_info* info = (torrent_info*)&handle->get_torrent_info();
     Files files = get_files_of_torrent(info);
-	files.file_downloaded = new long long[files.size];
-	files.file_path = new char*[files.size];
-	vector<int64_t> progress;
-	file_storage storage = handle->get_torrent_info().files();
-	handle->file_progress(progress);
+    file_storage storage = handle->get_torrent_info().files();
+    handle->file_progress(progress);
+    torrent_status stat = handle->status();
+    
     for (int i = 0; i < files.size; i++) {
-        files.file_priority[i] = handle->file_priority(i);
-		files.file_downloaded[i] = progress[i];
+        files.files[i].file_priority = handle->file_priority(i);
+        files.files[i].file_downloaded = progress[i];
 		
-		//cout << storage.file_path(i) << endl;
 		std::string s = storage.file_path(i);
-		files.file_path[i] = new char[s.length() + 1];
-		strcpy(files.file_path[i], s.c_str());
+		files.files[i].file_path = new char[s.length() + 1];
+		strcpy(files.files[i].file_path, s.c_str());
+        
+        const auto fileSize = storage.file_size(i);
+        const auto fileOffset = storage.file_offset(i);
+        
+        const int pieceLength = info->piece_length();
+        const long long beginIdx = (fileOffset / pieceLength);
+        const long long endIdx = fileSize > 0 ? ((fileOffset + fileSize - 1) / pieceLength) : 0;
+        
+        files.files[i].begin_idx = beginIdx;
+        files.files[i].end_idx = endIdx;
+        files.files[i].num_pieces = (int)(endIdx - beginIdx);
+        files.files[i].pieces = new int[files.files[i].num_pieces];
+        for (int j = 0; j < files.files[i].num_pieces; j++) {
+            files.files[i].pieces[j] = stat.pieces.get_bit(j + (int)beginIdx);
+        }
     }
     return files;
+}
+
+extern "C" void scrape_tracker(char* torrent_hash) {
+    torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+    int trackers = handle->trackers().size();
+    for (int i = 0; i < trackers; i++) {
+        handle->scrape_tracker(i);
+    }
 }
 
 extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
@@ -412,13 +452,13 @@ extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
 		};
 		return t;
 	}
-	torrent_info* info = (torrent_info*)&handle->get_torrent_info();
-	std::vector<announce_entry> trackers_list = info->trackers();
+	std::vector<announce_entry> trackers_list = handle->trackers();
 	Trackers trackers {
 		.size = static_cast<int>(trackers_list.size()),
 		.tracker_url = new char*[trackers_list.size()],
 		.messages = new char*[trackers_list.size()],
 		.seeders = new int[trackers_list.size()],
+        .leechs = new int[trackers_list.size()],
 		.peers = new int[trackers_list.size()],
 		.working = new int[trackers_list.size()],
 		.verified = new int[trackers_list.size()]
@@ -434,8 +474,9 @@ extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
 		trackers.working[i] = trackers_list[i].is_working() ? 1 : 0;
 		trackers.verified[i] = trackers_list[i].verified ? 1 : 0;
 		
-		trackers.seeders[i] = 0; //trackers_list[i].see;
-		trackers.peers[i] = 0; //trackers_list[i].next_announce_in();
+		trackers.seeders[i] = trackers_list[i].scrape_complete;
+		trackers.peers[i] = trackers_list[i].scrape_downloaded;
+        trackers.leechs[i] = trackers_list[i].scrape_incomplete;
 	}
 	
 	return trackers;
@@ -450,6 +491,34 @@ extern "C" int add_tracker_to_torrent(char* torrent_hash, char* tracker_url) {
 	handle->add_tracker(*entry);
 	
 	return 0;
+}
+
+extern "C" int remove_tracker_from_torrent(char* torrent_hash, char *const tracker_url[], int count) {
+    torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
+    if (handle == NULL) {
+        return -1;
+    }
+    
+    std::vector<announce_entry> trackers_list = handle->trackers();
+    std::vector<int> indexes;
+    for (int i = 0; i < count; i++) {
+        announce_entry* tempEntry = new announce_entry(std::string(tracker_url[i]));
+        for (int j = 0; j < trackers_list.size(); j++) {
+            if (trackers_list[j].url == tempEntry->url) {
+                indexes.push_back(j);
+            }
+        }
+    }
+    std::sort(indexes.begin(), indexes.end());
+    std::reverse(indexes.begin(), indexes.end());
+    
+    for (int i = 0; i < indexes.size(); i++) {
+        trackers_list.erase(trackers_list.begin() + indexes[i]);
+    }
+    
+    handle->replace_trackers(trackers_list);
+    
+    return 0;
 }
 
 extern "C" void save_magnet_to_file(char* hash) {
@@ -562,93 +631,85 @@ extern "C" Result getTorrentInfo() {
     int size = (int)Engine::standart->handlers.size();
     Result res{
         .count = size,
-        .name = new char*[size],
-        .state = new char*[size],
-        .hash = new char*[size],
-        .creator = new char*[size],
-        .comment = new char*[size],
-        .total_wanted = new long long[size],
-        .total_wanted_done = new long long[size],
-        .progress = new float[size],
-        .download_rate = new int[size],
-        .upload_rate = new int[size],
-        .total_download = new long long[size],
-        .total_upload = new long long[size],
-        .num_seeds = new int[size],
-        .num_peers = new int[size],
-        .total_size = new long long[size],
-        .total_done = new long long[size],
-        .creation_date = new time_t[size],
-        .is_paused = new int[size],
-        .is_finished = new int[size],
-        .is_seed = new int[size],
-		.has_metadata = new int[size]
+        .torrents = new TorrentInfo[size]
     };
     
-    for(int i = 0; i < Engine::standart->handlers.size(); i++) {
-        torrent_status stat = Engine::standart->handlers[i].status();
+    for (int i = 0; i < Engine::standart->handlers.size(); i++) {
+        torrent_handle handler = Engine::standart->handlers[i];
+        torrent_status stat = handler.status();
         torrent_info* info = NULL;
-        if (stat.has_metadata) {
-            info = (torrent_info*)&Engine::standart->handlers[i].get_torrent_info();
+        
+        if (handler.has_metadata()) {
+            info = (torrent_info*)&handler.get_torrent_info();
+            
+            res.torrents[i].num_pieces = info->num_pieces();
+            res.torrents[i].pieces = new int[res.torrents[i].num_pieces];
+            for (int j = 0; j < stat.pieces.size(); ++j) {
+                res.torrents[i].pieces[j] = stat.pieces.get_bit(j) ? 1 : 0;
+            }
+        } else {
+            res.torrents[i].num_pieces = 0;
+            res.torrents[i].pieces = new int[0];
         }
         
-        res.name[i] = new char[stat.name.length() + 1];
-        strcpy((char*)res.name[i], stat.name.c_str());
+        res.torrents[i].name = new char[stat.name.length() + 1];
+        strcpy((char*)res.torrents[i].name, stat.name.c_str());
         
-        res.state[i] = new char[state_str[stat.state].length() + 1];
-        strcpy((char*)res.state[i], state_str[stat.state].c_str());
+        res.torrents[i].state = new char[state_str[stat.state].length() + 1];
+        strcpy((char*)res.torrents[i].state, state_str[stat.state].c_str());
         
         std::string hash = hash_to_string(stat.info_hash);
-        res.hash[i] = new char[hash.length() + 1];
-        strcpy(res.hash[i], hash.c_str());
+        res.torrents[i].hash = new char[hash.length() + 1];
+        strcpy(res.torrents[i].hash, hash.c_str());
         
         if (info != NULL) {
-            res.creator[i] = new char[info->creator().length() + 1];
-            strcpy((char*)res.creator[i], info->creator().c_str());
+            res.torrents[i].creator = new char[info->creator().length() + 1];
+            strcpy((char*)res.torrents[i].creator, info->creator().c_str());
         } else {
-            res.creator[i] = new char[1];
+            res.torrents[i].creator = new char[1];
         }
         
         if (info != NULL) {
-            res.comment[i] = new char[info->comment().length() + 1];
-            strcpy(res.comment[i], info->comment().c_str());
+            res.torrents[i].comment = new char[info->comment().length() + 1];
+            strcpy(res.torrents[i].comment, info->comment().c_str());
         } else {
-            res.comment[i] = new char[1];
+            res.torrents[i].comment = new char[1];
         }
         
-        res.progress[i] = stat.progress;
+        res.torrents[i].progress = stat.progress;
         
-        res.total_wanted[i] = stat.total_wanted;
+        res.torrents[i].total_wanted = stat.total_wanted;
         
-        res.total_wanted_done[i] = stat.total_wanted_done;
+        res.torrents[i].total_wanted_done = stat.total_wanted_done;
         
-        res.total_size[i] = info != NULL ? info->total_size() : 0;
+        res.torrents[i].total_size = info != NULL ? info->total_size() : 0;
         
-        res.total_done[i] = stat.total_done;
+        res.torrents[i].total_done = stat.total_done;
         
-        res.download_rate[i] = stat.download_rate;
+        res.torrents[i].download_rate = stat.download_rate;
         
-        res.upload_rate[i] = stat.upload_rate;
+        res.torrents[i].upload_rate = stat.upload_rate;
         
-        res.total_download[i] = stat.total_download;
+        res.torrents[i].total_download = stat.total_download;
         
-        res.total_upload[i] = stat.total_upload;
+        res.torrents[i].total_upload = stat.total_upload;
         
-        res.num_seeds[i] = stat.num_seeds;
+        res.torrents[i].num_seeds = stat.num_seeds;
         
-        res.num_peers[i] = stat.num_peers;
+        res.torrents[i].num_peers = stat.num_peers;
+        
+        res.torrents[i].sequential_download = stat.sequential_download ? 1 : 0;
 		
 		try {
-        	res.creation_date[i] = info != NULL ? info->creation_date().value() : 0;
+        	res.torrents[i].creation_date = info != NULL ? info->creation_date().value() : 0;
 		} catch (...) {
-			res.creation_date[i] = 0;
+			res.torrents[i].creation_date = 0;
 		}
         
-        torrent_handle handle = Engine::standart->handlers[i];
-        res.is_paused[i] = handle.is_paused();
-        res.is_finished[i] = handle.is_finished();
-        res.is_seed[i] = handle.is_seed();
-		res.has_metadata[i] = handle.has_metadata();
+        res.torrents[i].is_paused = handler.is_paused();
+        res.torrents[i].is_finished = handler.is_finished();
+        res.torrents[i].is_seed = handler.is_seed();
+		res.torrents[i].has_metadata = handler.has_metadata();
     }
     
     return res;
