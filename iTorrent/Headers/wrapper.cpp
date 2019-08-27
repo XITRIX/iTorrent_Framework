@@ -23,6 +23,7 @@
 #include "libtorrent/session.hpp"
 #include "libtorrent/torrent_info.hpp"
 #include "libtorrent/torrent_status.hpp"
+#include "libtorrent/read_resume_data.hpp"
 #include <boost/make_shared.hpp>
 #include "result_struct.h"
 #include "file_struct.h"
@@ -179,9 +180,10 @@ public:
     
     char* addTorrent(torrent_info *torrent) {
         lt::error_code ec;
-        add_torrent_params p;
+        
+        add_torrent_params p;// = read_resume_data(<#const bdecode_node &rd#>, ec);
         p.save_path = download_path;
-        p.ti = boost::shared_ptr<torrent_info>(torrent);
+        p.ti = std::make_shared<torrent_info>(torrent);
 		torrent->info_hash();
         std::string path = Engine::standart->config_path + "/.FastResumes/" + hash_to_string(torrent->info_hash()) + ".fastresume";
         std::ifstream ifs(path, std::ios_base::binary);
@@ -199,7 +201,7 @@ public:
         lt::error_code ec;
         add_torrent_params p;
         p.save_path = download_path;
-        p.ti = boost::shared_ptr<torrent_info>(torrent);
+        p.ti = std::make_shared<torrent_info>(torrent);
         torrent_handle handle = s->add_torrent(p, ec);
 		handle.stop_when_ready(false);
         handlers.push_back(handle);
@@ -211,9 +213,8 @@ public:
     
     char* addMagnet(char* magnetLink) {
         lt::error_code ec;
-        add_torrent_params p;
+        add_torrent_params p = parse_magnet_uri(magnetLink);
         p.save_path = download_path;
-        p.url = std::string(magnetLink);
 		torrent_handle handle = s->add_torrent(p, ec);
 		handle.stop_when_ready(false);
 		//handlers.push_back(handle);
@@ -474,9 +475,15 @@ extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
 		trackers.working[i] = trackers_list[i].is_working() ? 1 : 0;
 		trackers.verified[i] = trackers_list[i].verified ? 1 : 0;
 		
-		trackers.seeders[i] = trackers_list[i].scrape_complete;
-		trackers.peers[i] = trackers_list[i].scrape_downloaded;
-        trackers.leechs[i] = trackers_list[i].scrape_incomplete;
+        trackers.seeders[i] = -1;
+        trackers.peers[i] = -1;
+        trackers.leechs[i] = -1;
+        
+        for (const lt::announce_endpoint &endpoint : trackers_list[i].endpoints) {
+            trackers.seeders[i] = std::max(trackers.seeders[i], endpoint.scrape_complete);
+            trackers.peers[i] = std::max(trackers.peers[i], endpoint.scrape_incomplete);
+            trackers.leechs[i] = std::max(trackers.leechs[i], endpoint.scrape_downloaded);
+        }
 	}
 	
 	return trackers;
@@ -698,10 +705,10 @@ extern "C" Result getTorrentInfo() {
         
         res.torrents[i].num_peers = stat.num_peers;
         
-        res.torrents[i].sequential_download = stat.sequential_download ? 1 : 0;
+        res.torrents[i].sequential_download = bool {stat.flags & lt::torrent_flags::sequential_download} ? 1 : 0;
 		
 		try {
-        	res.torrents[i].creation_date = info != NULL ? info->creation_date().value() : 0;
+        	res.torrents[i].creation_date = info != NULL ? info->creation_date() : 0;
 		} catch (...) {
 			res.torrents[i].creation_date = 0;
 		}
