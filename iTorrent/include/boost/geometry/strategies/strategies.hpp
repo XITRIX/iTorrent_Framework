@@ -63,12 +63,14 @@
 #include <boost/geometry/strategies/cartesian/distance_pythagoras_box_box.hpp>
 #include <boost/geometry/strategies/cartesian/distance_projected_point.hpp>
 #include <boost/geometry/strategies/cartesian/distance_projected_point_ax.hpp>
+#include <boost/geometry/strategies/cartesian/distance_segment_box.hpp>
 #include <boost/geometry/strategies/cartesian/envelope_segment.hpp>
 #include <boost/geometry/strategies/cartesian/intersection.hpp>
 #include <boost/geometry/strategies/cartesian/point_in_box.hpp>
 #include <boost/geometry/strategies/cartesian/point_in_poly_franklin.hpp>
 #include <boost/geometry/strategies/cartesian/point_in_poly_crossings_multiply.hpp>
 #include <boost/geometry/strategies/cartesian/point_in_poly_winding.hpp>
+#include <boost/geometry/strategies/cartesian/line_interpolate.hpp>
 #include <boost/geometry/strategies/cartesian/side_by_triangle.hpp>
 
 #include <boost/geometry/strategies/spherical/area.hpp>
@@ -79,14 +81,17 @@
 #include <boost/geometry/strategies/spherical/distance_cross_track.hpp>
 #include <boost/geometry/strategies/spherical/distance_cross_track_box_box.hpp>
 #include <boost/geometry/strategies/spherical/distance_cross_track_point_box.hpp>
+#include <boost/geometry/strategies/spherical/distance_segment_box.hpp>
 #include <boost/geometry/strategies/spherical/compare.hpp>
 #include <boost/geometry/strategies/spherical/envelope_segment.hpp>
 #include <boost/geometry/strategies/spherical/intersection.hpp>
 #include <boost/geometry/strategies/spherical/point_in_poly_winding.hpp>
+#include <boost/geometry/strategies/spherical/line_interpolate.hpp>
 #include <boost/geometry/strategies/spherical/ssf.hpp>
 
 #include <boost/geometry/strategies/geographic/area.hpp>
 #include <boost/geometry/strategies/geographic/azimuth.hpp>
+#include <boost/geometry/strategies/geographic/buffer_point_circle.hpp>
 #include <boost/geometry/strategies/geographic/densify.hpp>
 #include <boost/geometry/strategies/geographic/disjoint_segment_box.hpp>
 #include <boost/geometry/strategies/geographic/distance.hpp>
@@ -94,12 +99,14 @@
 #include <boost/geometry/strategies/geographic/distance_cross_track.hpp>
 #include <boost/geometry/strategies/geographic/distance_cross_track_box_box.hpp>
 #include <boost/geometry/strategies/geographic/distance_cross_track_point_box.hpp>
+#include <boost/geometry/strategies/geographic/distance_segment_box.hpp>
 #include <boost/geometry/strategies/geographic/distance_thomas.hpp>
 #include <boost/geometry/strategies/geographic/distance_vincenty.hpp>
 #include <boost/geometry/strategies/geographic/envelope_segment.hpp>
 #include <boost/geometry/strategies/geographic/intersection.hpp>
 //#include <boost/geometry/strategies/geographic/intersection_elliptic.hpp>
 #include <boost/geometry/strategies/geographic/point_in_poly_winding.hpp>
+#include <boost/geometry/strategies/geographic/line_interpolate.hpp>
 #include <boost/geometry/strategies/geographic/side.hpp>
 #include <boost/geometry/strategies/geographic/side_andoyer.hpp>
 #include <boost/geometry/strategies/geographic/side_thomas.hpp>

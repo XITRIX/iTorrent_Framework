@@ -528,10 +528,14 @@ namespace libtorrent {
 		// offset to add to any pointers to make them point into the new buffer
 		void apply_pointer_offset(std::ptrdiff_t off);
 
+		// validate any symlinks, to ensure they all point to
+		// other files or directories inside this storage. Any invalid symlinks
+		// are updated to point to themselves.
 		void sanitize_symlinks();
 
 	private:
 
+		std::string internal_file_path(file_index_t index) const;
 		file_index_t last_file() const noexcept;
 
 		int get_or_add_path(string_view path);

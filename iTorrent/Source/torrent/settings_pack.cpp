@@ -123,7 +123,7 @@ constexpr int CLOSE_FILE_INTERVAL = 0;
 		SET(proxy_username, "", &session_impl::update_proxy),
 		SET(proxy_password, "", &session_impl::update_proxy),
 		SET(i2p_hostname, "", &session_impl::update_i2p_bridge),
-		SET(peer_fingerprint, "-LT1210-", nullptr),
+		SET(peer_fingerprint, "-LT1220-", nullptr),
 		SET(dht_bootstrap_nodes, "dht.libtorrent.org:25401", &session_impl::update_dht_bootstrap_nodes)
 	}});
 
@@ -207,6 +207,8 @@ constexpr int CLOSE_FILE_INTERVAL = 0;
 		SET(auto_sequential, true, &session_impl::update_auto_sequential),
 		SET(proxy_tracker_connections, true, nullptr),
 		SET(enable_ip_notifier, true, &session_impl::update_ip_notifier),
+		SET(dht_prefer_verified_node_ids, true, &session_impl::update_dht_settings),
+		SET(piece_extent_affinity, false, nullptr),
 	}});
 
 	aux::array<int_setting_entry_t, settings_pack::num_int_settings> const int_settings
@@ -269,6 +271,7 @@ constexpr int CLOSE_FILE_INTERVAL = 0;
 		SET(min_announce_interval, 5 * 60, nullptr),
 		SET(auto_manage_startup, 60, nullptr),
 		SET(seeding_piece_quota, 20, nullptr),
+		// TODO: deprecate this
 		SET(max_rejects, 50, nullptr),
 		SET(recv_socket_buffer_size, 0, &session_impl::update_socket_buffer_size),
 		SET(send_socket_buffer_size, 0, &session_impl::update_socket_buffer_size),
