@@ -13,6 +13,7 @@ namespace orianne {
 	private:
 		
 		boost::asio::ip::tcp::acceptor acceptor;
+        boost::asio::io_service& io_context;
 	};
 	
 }

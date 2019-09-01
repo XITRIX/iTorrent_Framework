@@ -8,7 +8,7 @@ using boost::asio::ip::tcp;
 using namespace std;
 
 orianne::ftp_server::ftp_server(boost::asio::io_service& io_service, int port, std::string path)
-: acceptor(io_service, tcp::endpoint(tcp::v4(), port)) {
+: io_context(io_service), acceptor(io_service, tcp::endpoint(tcp::v4(), port)) {
 	this->path = path;
 	start();
 }
@@ -93,7 +93,7 @@ void orianne::ftp_server::start() {
 	cout << "start()" << endl;
 	
 	connection_handler::ptr handler =
-	connection_handler::create(acceptor.get_io_service(), path);
+	connection_handler::create(io_context, path);
 	boost::shared_ptr<connection_handler>& sptr(handler);
 	
 	acceptor.async_accept(handler->socket,

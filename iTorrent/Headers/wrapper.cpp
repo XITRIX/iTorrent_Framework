@@ -24,118 +24,13 @@
 #include "libtorrent/torrent_info.hpp"
 #include "libtorrent/torrent_status.hpp"
 #include "libtorrent/read_resume_data.hpp"
+#include "libtorrent/write_resume_data.hpp"
 #include <boost/make_shared.hpp>
 #include "result_struct.h"
 #include "file_struct.h"
+#include "torrentHandle.h"
 
 #include "helper_code.h"
-
-extern "C" int load_file(std::string const& filename, std::vector<char>& v
-              , libtorrent::error_code& ec, int limit = 8000000)
-{
-    ec.clear();
-    FILE* f = fopen(filename.c_str(), "rb");
-    if (f == NULL)
-    {
-        ec.assign(errno, boost::system::system_category());
-        fprintf(stderr, "err 1\n");
-        return -1;
-    }
-    
-    int r = fseek(f, 0, SEEK_END);
-    if (r != 0)
-    {
-        ec.assign(errno, boost::system::system_category());
-        fclose(f);
-        fprintf(stderr, "err 2\n");
-        return -1;
-    }
-    long s = ftell(f);
-    if (s < 0)
-    {
-        ec.assign(errno, boost::system::system_category());
-        fclose(f);
-        fprintf(stderr, "err 3\n");
-        return -1;
-    }
-    
-    if (s > limit)
-    {
-        fclose(f);
-        fprintf(stderr, "err 4\n");
-        return -2;
-    }
-    
-    r = fseek(f, 0, SEEK_SET);
-    if (r != 0)
-    {
-        ec.assign(errno, boost::system::system_category());
-        fclose(f);
-        fprintf(stderr, "err 5\n");
-        return -1;
-    }
-    
-    v.resize(s);
-    if (s == 0)
-    {
-        fclose(f);
-        return 0;
-    }
-    
-    r = fread(&v[0], 1, v.size(), f);
-    if (r < 0)
-    {
-        ec.assign(errno, boost::system::system_category());
-        fclose(f);
-        return -1;
-    }
-    
-    fclose(f);
-    
-    if (r != s) return -3;
-    
-    return 0;
-}
-
-libtorrent::torrent_info* get_torrent(std::string file_path) {
-    using namespace libtorrent;
-    namespace lt = libtorrent;
-    
-    //printf("%s\n", file_path.c_str());
-    
-    int item_limit = 1000000;
-    int depth_limit = 1000;
-    
-    std::vector<char> buf;
-	lt::error_code ec;
-    int ret = load_file(file_path, buf, ec, 40 * 1000000);
-    if (ret == -1)
-    {
-        fprintf(stderr, "file too big, aborting\n");
-        return NULL;
-    }
-    
-    if (ret != 0)
-    {
-        fprintf(stderr, "failed to load file: %s\n", ec.message().c_str());
-        return NULL;
-    }
-    bdecode_node e;
-    int pos = -1;
-    //printf("decoding. recursion limit: %d total item count limit: %d\n", depth_limit, item_limit);
-    ret = bdecode(&buf[0], &buf[0] + buf.size(), e, ec, &pos
-                  , depth_limit, item_limit);
-    
-    //printf("\n\n----- raw info -----\n\n%s\n", print_entry(e).c_str());
-    
-    if (ret != 0)
-    {
-        fprintf(stderr, "failed to decode: '%s' at character: %d\n", ec.message().c_str(), pos);
-        return NULL;
-    }
-    
-    return new torrent_info(e, ec);
-}
 
 using namespace libtorrent;
 using namespace std;
@@ -153,62 +48,50 @@ public:
         this->download_path = download_path;
 		this->config_path = config_path;
         
-        settings_pack sett;
-        sett.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
-        sett.set_int(lt::settings_pack::alert_mask
+        settings_pack pack;
+        pack.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
+        pack.set_int(lt::settings_pack::alert_mask
                      , lt::alert::error_notification
                      | lt::alert::storage_notification
                      | lt::alert::status_notification);
-        s = new lt::session(sett);
-        
-        std::ifstream in((Engine::standart->config_path + "/state.fastresume").c_str(), std::ios_base::binary);
-        std::vector<char> buffer;
-        
-        if (!in.eof() && !in.fail())
-        {
-            in.seekg(0, std::ios_base::end);
-            std::streampos fileSize = in.tellg();
-            buffer.resize(fileSize);
-            
-            in.seekg(0, std::ios_base::beg);
-            in.read(&buffer[0], fileSize);
-        }
-        
-        lt::entry save = bdecode(buffer.begin(), buffer.end());
-        s->save_state(save);
+        s = new lt::session(pack);
     }
     
-    char* addTorrent(torrent_info *torrent) {
-        lt::error_code ec;
-        
-        add_torrent_params p;// = read_resume_data(<#const bdecode_node &rd#>, ec);
-        p.save_path = download_path;
-        p.ti = std::make_shared<torrent_info>(torrent);
-		torrent->info_hash();
-        std::string path = Engine::standart->config_path + "/.FastResumes/" + hash_to_string(torrent->info_hash()) + ".fastresume";
-        std::ifstream ifs(path, std::ios_base::binary);
-        ifs.unsetf(std::ios_base::skipws);
-        p.resume_data.assign(std::istream_iterator<char>(ifs), std::istream_iterator<char>());
-        torrent_handle h = s->add_torrent(p, ec);
-        handlers.push_back(h);
+    char* addTorrentByName(char* torrent) {
+        auto handle = addTorrent(torrent);
 		
-		char* res = new char[hash_to_string(h.status().info_hash).length() + 1];
-		strcpy(res, hash_to_string(h.status().info_hash).c_str());
+		char* res = new char[hash_to_string(handle.status().info_hash).length() + 1];
+		strcpy(res, hash_to_string(handle.status().info_hash).c_str());
 		return res;
     }
     
-    void addTorrentWithStates(torrent_info *torrent, int states[]) {
+    void addTorrentWithStates(char* torrent, int states[]) {
+        auto handle = addTorrent(torrent);
+        std::shared_ptr<torrent_info> sti = std::make_shared<torrent_info>(torrent);
+		handle.prioritize_files(vector<int>(&states[0], &states[sti->num_files()]));
+    }
+    
+    torrent_handle addTorrent(char* torrent) {
         lt::error_code ec;
-        add_torrent_params p;
+               
+        std::shared_ptr<torrent_info> sti = std::make_shared<torrent_info>(torrent);
+        std::string path = Engine::standart->config_path + "/.FastResumes/" + hash_to_string(sti->info_hash()) + ".fastresume";
+
+        lt::add_torrent_params p;
+        std::ifstream ifs(path, std::ios_base::binary);
+        if (ifs.good()) {
+            ifs.unsetf(std::ios_base::skipws);
+            std::vector<char> buf{std::istream_iterator<char>(ifs)
+            , std::istream_iterator<char>()};
+
+            p = lt::read_resume_data(buf);
+        }
+        p.ti = sti;
         p.save_path = download_path;
-        p.ti = std::make_shared<torrent_info>(torrent);
         torrent_handle handle = s->add_torrent(p, ec);
-		handle.stop_when_ready(false);
         handlers.push_back(handle);
-		handle.prioritize_files(vector<int>(&states[0], &states[torrent->num_files()]));
-//        for (int i = 0; i < torrent->num_files(); i++) {
-//            handle.file_priority(i, states[i] ? 4 : 0);
-//        }
+        
+        return handle;
     }
     
     char* addMagnet(char* magnetLink) {
@@ -216,7 +99,7 @@ public:
         add_torrent_params p = parse_magnet_uri(magnetLink);
         p.save_path = download_path;
 		torrent_handle handle = s->add_torrent(p, ec);
-		handle.stop_when_ready(false);
+        handle.unset_flags(lt::torrent_flags::stop_when_ready);
 		//handlers.push_back(handle);
 		handlers = s->get_torrents();
 		
@@ -253,19 +136,11 @@ extern "C" int init_engine(char* download_path, char* config_path) {
 }
 
 extern "C" char* add_torrent(char* torrent_path) {
-	libtorrent::torrent_info* torrent = get_torrent(torrent_path);
-	if (torrent == NULL) {
-		return (char*)"-1";
-	}
-	return Engine::standart->addTorrent(torrent);
+	return Engine::standart->addTorrentByName(torrent_path);
 }
 
 extern "C" void add_torrent_with_states(char* torrent_path, int states[]) {
-	libtorrent::torrent_info* torrent = get_torrent(torrent_path);
-	if (torrent == NULL) {
-		return;
-	}
-    Engine::standart->addTorrentWithStates(torrent, states);
+    Engine::standart->addTorrentWithStates(torrent_path, states);
 }
 
 extern "C" char* add_magnet(char* magnet_link) {
@@ -275,12 +150,8 @@ extern "C" char* add_magnet(char* magnet_link) {
 extern "C" void remove_torrent(char* torrent_hash, int remove_files) {
 	torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
 	
-//	if (remove_files == 1) {
-//		for (int i = 0; i < handle->torrent_file()->num_files(); i++) {
-//			std::string path = handle->torrent_file()->files().file_path(i);
-//			remove(path.c_str());
-//		}
-//	}
+    std::string path = Engine::standart->config_path + "/.FastResumes/" + torrent_hash + ".fastresume";
+    remove(path.c_str());
 	if (remove_files == 1) {
 		Engine::standart->s->remove_torrent(*handle, session::delete_files);
 	} else {
@@ -290,13 +161,18 @@ extern "C" void remove_torrent(char* torrent_hash, int remove_files) {
 }
 
 extern "C" char* get_torrent_file_hash(char* torrent_path) {
-    lt::torrent_info* info = get_torrent(torrent_path);
-    if (info != NULL) {
-        std::string s = hash_to_string(info->info_hash());
-        char* res = new char[s.length() + 1];
-        strcpy(res, s.c_str());
-        return res;
-    } else {
+    try {
+        std::shared_ptr<torrent_info> sti = std::make_shared<torrent_info>(torrent_path);
+        if (sti != NULL) {
+                std::string s = hash_to_string(sti->info_hash());
+                char* res = new char[s.length() + 1];
+                strcpy(res, s.c_str());
+                return res;
+        } else {
+            return (char*)"-1";
+        }
+    } catch (boost::system::system_error const & e) {
+        printf("%s: %i - %s", e.what(), e.code().value(), e.code().message().c_str());
         return (char*)"-1";
     }
 }
@@ -367,32 +243,40 @@ extern "C" void set_torrent_file_priority(char* torrent_hash, int file_number, i
 
 extern "C" void start_torrent(char* torrent_hash) {
     torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
-	printf("Started");
-	handle->stop_when_ready(false);
+    handle->unset_flags(lt::torrent_flags::stop_when_ready);
+    setAutoManaged(*handle, true);
 	handle->resume();
+    printf("Started");
 }
 
 extern "C" void stop_torrent(char* torrent_hash) {
     torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
-	printf("Stopped");
-	handle->stop_when_ready(true);
+    
+    if (TorrentHandle::isChecking(*handle)) {
+        handle->set_flags(lt::torrent_flags::stop_when_ready);
+    }
+    
+    setAutoManaged(*handle, false);
 	handle->pause();
+    printf("Stopped");
 }
 
 extern "C" void rehash_torrent(char* torrent_hash) {
 	torrent_handle* handle = Engine::standart->getHandleByHash(torrent_hash);
-	handle->force_recheck();
+    if (!handle->has_metadata()) return;
+    handle->force_recheck();
+    setAutoManaged(*handle, true);
 }
 
 extern "C" Files get_files_of_torrent_by_path(char* torrent_path) {
-    torrent_info* info = get_torrent(torrent_path);
-	if (info == NULL) {
+    shared_ptr<torrent_info> sti = std::make_shared<torrent_info>(torrent_path);
+	if (sti == NULL) {
 		Files files {
 			.size = -1
 		};
 		return files;
 	}
-    return get_files_of_torrent(info);
+    return get_files_of_torrent(sti.get());
 }
 
 extern "C" Files get_files_of_torrent_by_hash(char* torrent_hash) {
@@ -419,13 +303,13 @@ extern "C" Files get_files_of_torrent_by_hash(char* torrent_hash) {
 		files.files[i].file_path = new char[s.length() + 1];
 		strcpy(files.files[i].file_path, s.c_str());
         
-        const auto fileSize = storage.file_size(i);
+        const auto fileSize = storage.file_size(i) > 0 ? storage.file_size(i) - 1 : 0;
         const auto fileOffset = storage.file_offset(i);
         
         const int pieceLength = info->piece_length();
         const long long beginIdx = (fileOffset / pieceLength);
-        const long long endIdx = fileSize > 0 ? ((fileOffset + fileSize - 1) / pieceLength) : 0;
-        
+        const long long endIdx = ((fileOffset + fileSize) / pieceLength);
+
         files.files[i].begin_idx = beginIdx;
         files.files[i].end_idx = endIdx;
         files.files[i].num_pieces = (int)(endIdx - beginIdx);
@@ -544,76 +428,94 @@ extern "C" void resume_to_app() {
 	ses->resume();
 }
 
+int generateResumeData(const bool final)
+{
+    int m_numResumeData = 0;
+    session* ses = Engine::standart->s;
+    std::vector<torrent_handle> handles = ses->get_torrents();
+    for (std::vector<torrent_handle>::iterator torrent = handles.begin();
+         torrent != handles.end(); ++torrent)
+    {
+        if (!torrent->is_valid()) {
+            printf("Not valid\n");
+            continue;
+        }
+        if (!torrent->has_metadata()) {
+            printf("No metadata\n");
+            continue;
+        }
+        if (!final && !torrent->need_save_resume_data()) {
+            printf("Not need to save ");
+            continue;
+        }
+
+        if (!final && !torrent->need_save_resume_data()) continue;
+        if (torrent->status().state == torrent_status::checking_files
+            || torrent->status().state == torrent_status::checking_resume_data //
+            //|| torrent->is_paused()
+            || (torrent->status().flags & torrent_flags::paused && torrent->status().errc)) { // HasError
+            printf("Error in %s is occured", torrent->status().name.c_str());
+            continue;
+        }
+
+        torrent->save_resume_data();
+        m_numResumeData++;
+        
+        printf("%s - ADDED!!\n", torrent->name().c_str());
+    }
+    
+    return m_numResumeData;
+}
+
+void getPendingAlerts(std::vector<lt::alert *> &out, const u_long time)
+{
+    TORRENT_ASSERT(out.empty());
+    session* ses = Engine::standart->s;
+
+    if (time > 0)
+        ses->wait_for_alert(lt::milliseconds(time));
+    ses->pop_alerts(&out);
+}
+
 extern "C" void save_fast_resume() {
     session* ses = Engine::standart->s;
-	ses->pause();
-
-    int outstanding_resume_data = 0; // global counter of outstanding resume data
-
-	std::vector<torrent_handle> handles = ses->get_torrents();
-    for (std::vector<torrent_handle>::iterator i = handles.begin();
-         i != handles.end(); ++i)
-    {
-        torrent_handle& h = *i;
-		if (!h.is_valid()) {
-			printf("Not valid\n");
-			continue;
-		}
-        torrent_status s = h.status();
-		if (!s.has_metadata) {
-			printf("No metadata\n");
-			continue;
-		}
-		if (!s.need_save_resume) {
-			printf("Not need to save ");
-			continue;
-		}
-
-        h.save_resume_data();
-        ++outstanding_resume_data;
+    // Pause session
+    ses->pause();
+    
+    int m_numResumeData = generateResumeData(true);
+    
+    //sleep(500);
+    printf("Start with count %d!!\n", m_numResumeData);
+    while (m_numResumeData > 0) {
+        std::vector<lt::alert *> alerts;
+        getPendingAlerts(alerts, 30 * 1000);
+        if (alerts.empty()) {
+            printf(" aborting with %d outstanding torrents to save resume data for\n", m_numResumeData);
+            break;
+        }
         
-        printf("FILE ADDED!!\n");
+        for (const auto a : alerts) {
+            printf("Type: %d!!\n", a->type());
+            
+            if (lt::alert_cast<lt::save_resume_data_failed_alert>(a)) {
+                printf("Error!!\n");
+                --m_numResumeData;
+                continue;
+            }
+            
+            // when resume data is ready, save it
+            if (auto rd = lt::alert_cast<lt::save_resume_data_alert>(a)) {
+                lt::torrent_handle h = static_cast<const lt::torrent_alert*>(a)->handle;
+                auto path = Engine::standart->config_path + "/.FastResumes/" + hash_to_string(h.info_hash()) + ".fastresume";
+                std::ofstream of(path, std::ios_base::binary);
+                auto const b = write_resume_data_buf(rd->params);
+                of.write(b.data(), b.size());
+                printf("%s - SAVED!!\n", h.name().c_str());
+                --m_numResumeData;
+            }
+        }
     }
-	
-	sleep(500);
-
-    while (outstanding_resume_data > 0)
-    {
-        alert const* a = ses->wait_for_alert(seconds(10));
-
-        // if we don't get an alert within 10 seconds, abort
-        if (a == 0) break;
-
-		std::vector<alert*> alerts;
-		ses->pop_alerts(&alerts);
-		
-		for (alert* i : alerts) {
-			if (alert_cast<save_resume_data_failed_alert>(i))
-			{
-				//process_alert(a);
-				--outstanding_resume_data;
-				continue;
-			}
-			
-			save_resume_data_alert const* rd = alert_cast<save_resume_data_alert>(i);
-			if (rd == 0)
-			{
-				//process_alert(a);
-				continue;
-			}
-			
-			torrent_handle h = rd->handle;
-			torrent_info info = h.get_torrent_info();
-			std::ofstream out((Engine::standart->config_path + "/.FastResumes/" + hash_to_string(info.info_hash()) + ".fastresume").c_str(), std::ios_base::binary);
-			out.unsetf(std::ios_base::skipws);
-			bencode(std::ostream_iterator<char>(out), *rd->resume_data);
-			printf("FILE SAVED!!\n");
-			
-			--outstanding_resume_data;
-			sleep(10);
-		}
-    }
-    printf("SAVED!!\n");
+    printf("Done!!\n");
 }
 
 extern "C" void set_download_limit(int limit_in_bytes) {
@@ -621,7 +523,6 @@ extern "C" void set_download_limit(int limit_in_bytes) {
 	settings_pack ss = ses->get_settings();
 	ss.set_int(settings_pack::int_types::download_rate_limit, limit_in_bytes);
 	ses->apply_settings(ss);
-	//ses->set_download_rate_limit(limit_in_bytes);
 }
 
 extern "C" void set_upload_limit(int limit_in_bytes) {
@@ -629,7 +530,6 @@ extern "C" void set_upload_limit(int limit_in_bytes) {
 	settings_pack ss = ses->get_settings();
 	ss.set_int(settings_pack::int_types::upload_rate_limit, limit_in_bytes);
 	ses->apply_settings(ss);
-	//ses->set_upload_rate_limit(limit_in_bytes);
 }
 
 extern "C" Result getTorrentInfo() {
@@ -714,7 +614,7 @@ extern "C" Result getTorrentInfo() {
 		}
         
         res.torrents[i].is_paused = handler.is_paused();
-        res.torrents[i].is_finished = handler.is_finished();
+        res.torrents[i].is_finished = stat.total_wanted == stat.total_wanted_done;
         res.torrents[i].is_seed = handler.is_seed();
 		res.torrents[i].has_metadata = handler.has_metadata();
     }

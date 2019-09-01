@@ -12,7 +12,8 @@
 #include <stdio.h>
 #include <fstream>
 
-#include <libtorrent/sha1_hash.hpp>
+#include "libtorrent/sha1_hash.hpp"
+#include "libtorrent/torrent_handle.hpp"
 
 using namespace std;
 
@@ -24,6 +25,14 @@ std::string hash_to_string(libtorrent::sha1_hash hash) {
 
 bool exists (const std::string& name) {
 	return ( access( name.c_str(), F_OK ) != -1 );
+}
+
+void setAutoManaged(libtorrent::torrent_handle m_nativeHandle, const bool enable)
+{
+    if (enable)
+        m_nativeHandle.set_flags(lt::torrent_flags::auto_managed);
+    else
+        m_nativeHandle.unset_flags(lt::torrent_flags::auto_managed);
 }
 
 #endif /* helper_code_h */
