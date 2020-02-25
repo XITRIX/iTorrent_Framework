@@ -7,11 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		7C0624A220BD688800C7466C /* stdafx.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADDA20B5CB4600ED9C84 /* stdafx.cpp */; };
-		7C0624A320BD688B00C7466C /* ftp_session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADD920B5CB4600ED9C84 /* ftp_session.cpp */; };
-		7C0624A420BD688D00C7466C /* ftp_console.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADD820B5CB4600ED9C84 /* ftp_console.cpp */; };
-		7C0624A520BD688F00C7466C /* ftp_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADD720B5CB4600ED9C84 /* ftp_server.cpp */; };
-		7C0624A620BD689100C7466C /* ftp_wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */; };
 		7C0624A720BD689300C7466C /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
 		7C346A8A2315D11100C917C8 /* file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3469E82315D10300C917C8 /* file.cpp */; };
 		7C346A8B2315D11100C917C8 /* packet_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C3469E92315D10300C917C8 /* packet_buffer.cpp */; };
@@ -351,11 +346,6 @@
 		7C346A872315D11000C917C8 /* add_torrent_params.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = add_torrent_params.cpp; sourceTree = "<group>"; };
 		7C346A882315D11100C917C8 /* socks5_stream.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = socks5_stream.cpp; sourceTree = "<group>"; };
 		7C346A892315D11100C917C8 /* socket_io.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = socket_io.cpp; sourceTree = "<group>"; };
-		7C4FADD720B5CB4600ED9C84 /* ftp_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_server.cpp; sourceTree = "<group>"; };
-		7C4FADD820B5CB4600ED9C84 /* ftp_console.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_console.cpp; sourceTree = "<group>"; };
-		7C4FADD920B5CB4600ED9C84 /* ftp_session.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_session.cpp; sourceTree = "<group>"; };
-		7C4FADDA20B5CB4600ED9C84 /* stdafx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = stdafx.cpp; sourceTree = "<group>"; };
-		7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = ftp_wrapper.cpp; sourceTree = "<group>"; };
 		7C5505FC20B3370A00175D8F /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C5505FF20B3370A00175D8F /* iTorrent_Framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent_Framework.h; sourceTree = "<group>"; };
 		7C55060020B3370A00175D8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -438,17 +428,6 @@
 			path = ed25519;
 			sourceTree = "<group>";
 		};
-		7C4FADD620B5CB4600ED9C84 /* ftp */ = {
-			isa = PBXGroup;
-			children = (
-				7C4FADD720B5CB4600ED9C84 /* ftp_server.cpp */,
-				7C4FADD820B5CB4600ED9C84 /* ftp_console.cpp */,
-				7C4FADD920B5CB4600ED9C84 /* ftp_session.cpp */,
-				7C4FADDA20B5CB4600ED9C84 /* stdafx.cpp */,
-			);
-			path = ftp;
-			sourceTree = "<group>";
-		};
 		7C5505F220B3370A00175D8F = {
 			isa = PBXGroup;
 			children = (
@@ -481,7 +460,6 @@
 		7C553DB620B3379C00175D8F /* Source */ = {
 			isa = PBXGroup;
 			children = (
-				7C4FADD620B5CB4600ED9C84 /* ftp */,
 				7C55744120B3426C00175D8F /* boost_filesystem */,
 				7C55744B20B3426D00175D8F /* boost_system */,
 				7C553DC620B3379C00175D8F /* torrent */,
@@ -633,7 +611,6 @@
 				7C554E9720B3525500175D8F /* iTorrent-Bridging-Header.h */,
 				7C554E9820B3525500175D8F /* result_struct.h */,
 				7C554E9920B3525500175D8F /* wrapper.cpp */,
-				7C4FADDF20B5CDB900ED9C84 /* ftp_wrapper.cpp */,
 				7CBC7767231B328D0075A685 /* torrentHandle.h */,
 			);
 			path = Headers;
@@ -797,18 +774,14 @@
 				7C346A992315D11100C917C8 /* ConvertUTF.cpp in Sources */,
 				7C346AA82315D11100C917C8 /* dht_settings.cpp in Sources */,
 				7C346A922315D11100C917C8 /* disk_buffer_pool.cpp in Sources */,
-				7C0624A620BD689100C7466C /* ftp_wrapper.cpp in Sources */,
 				7C346AAB2315D11100C917C8 /* put_data.cpp in Sources */,
 				7C346B0D2315D11100C917C8 /* add_scalar.cpp in Sources */,
 				7C346B242315D11100C917C8 /* torrent_status.cpp in Sources */,
 				7C346B012315D11100C917C8 /* http_connection.cpp in Sources */,
 				7C346AC02315D11100C917C8 /* version.cpp in Sources */,
 				7C346A952315D11100C917C8 /* storage_utils.cpp in Sources */,
-				7C0624A520BD688F00C7466C /* ftp_server.cpp in Sources */,
-				7C0624A420BD688D00C7466C /* ftp_console.cpp in Sources */,
 				7C346ADE2315D11100C917C8 /* peer_class_set.cpp in Sources */,
 				7C346B162315D11100C917C8 /* ffs.cpp in Sources */,
-				7C0624A320BD688B00C7466C /* ftp_session.cpp in Sources */,
 				7C346ADC2315D11100C917C8 /* resolve_links.cpp in Sources */,
 				7C346AF62315D11100C917C8 /* gzip.cpp in Sources */,
 				7C346AB72315D11100C917C8 /* dht_tracker.cpp in Sources */,
@@ -828,7 +801,6 @@
 				7C346AF92315D11100C917C8 /* block_cache.cpp in Sources */,
 				7C346AEE2315D11100C917C8 /* time.cpp in Sources */,
 				7C346AAF2315D11100C917C8 /* node_entry.cpp in Sources */,
-				7C0624A220BD688800C7466C /* stdafx.cpp in Sources */,
 				7C346A9F2315D11100C917C8 /* session_udp_sockets.cpp in Sources */,
 				7C346AFD2315D11100C917C8 /* puff.cpp in Sources */,
 				7C346A902315D11100C917C8 /* bloom_filter.cpp in Sources */,
