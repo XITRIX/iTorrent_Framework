@@ -182,6 +182,18 @@
 		7C55745520B3426D00175D8F /* windows_file_codecvt.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 7C55744A20B3426C00175D8F /* windows_file_codecvt.hpp */; };
 		7C55745620B3426D00175D8F /* error_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744C20B3426D00175D8F /* error_code.cpp */; };
 		7C74B7072125932700988F1C /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C74B7062125932700988F1C /* SystemConfiguration.framework */; };
+		7CA9DD0C240BB67800D95CD4 /* libssl-armv7.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD02240BB67700D95CD4 /* libssl-armv7.a */; };
+		7CA9DD0D240BB67800D95CD4 /* libssl-armv7s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD03240BB67700D95CD4 /* libssl-armv7s.a */; };
+		7CA9DD0E240BB67800D95CD4 /* libssl-x86_64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD04240BB67700D95CD4 /* libssl-x86_64.a */; };
+		7CA9DD0F240BB67800D95CD4 /* libcrypto-arm64e.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD05240BB67700D95CD4 /* libcrypto-arm64e.a */; };
+		7CA9DD10240BB67800D95CD4 /* libcrypto-armv7.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD06240BB67700D95CD4 /* libcrypto-armv7.a */; };
+		7CA9DD11240BB67800D95CD4 /* libcrypto-x86_64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD07240BB67700D95CD4 /* libcrypto-x86_64.a */; };
+		7CA9DD12240BB67800D95CD4 /* libssl-arm64e.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD08240BB67700D95CD4 /* libssl-arm64e.a */; };
+		7CA9DD13240BB67800D95CD4 /* libssl-arm64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD09240BB67700D95CD4 /* libssl-arm64.a */; };
+		7CA9DD14240BB67800D95CD4 /* libcrypto-arm64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD0A240BB67700D95CD4 /* libcrypto-arm64.a */; };
+		7CA9DD15240BB67800D95CD4 /* libcrypto-armv7s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD0B240BB67800D95CD4 /* libcrypto-armv7s.a */; };
+		7CA9DD18240BBBCC00D95CD4 /* libssl-i386.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */; };
+		7CA9DD19240BBBCC00D95CD4 /* libcrypto-i386.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD17240BBBCB00D95CD4 /* libcrypto-i386.a */; };
 		7CBC7764231831F30075A685 /* ip_notifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C346A422315D10A00C917C8 /* ip_notifier.cpp */; };
 /* End PBXBuildFile section */
 
@@ -366,6 +378,18 @@
 		7C55744C20B3426D00175D8F /* error_code.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = error_code.cpp; sourceTree = "<group>"; };
 		7C57FBBC20B93D320060D862 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		7C74B7062125932700988F1C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		7CA9DD02240BB67700D95CD4 /* libssl-armv7.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-armv7.a"; path = "iTorrent/Libraries/libssl-armv7.a"; sourceTree = "<group>"; };
+		7CA9DD03240BB67700D95CD4 /* libssl-armv7s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-armv7s.a"; path = "iTorrent/Libraries/libssl-armv7s.a"; sourceTree = "<group>"; };
+		7CA9DD04240BB67700D95CD4 /* libssl-x86_64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-x86_64.a"; path = "iTorrent/Libraries/libssl-x86_64.a"; sourceTree = "<group>"; };
+		7CA9DD05240BB67700D95CD4 /* libcrypto-arm64e.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-arm64e.a"; path = "iTorrent/Libraries/libcrypto-arm64e.a"; sourceTree = "<group>"; };
+		7CA9DD06240BB67700D95CD4 /* libcrypto-armv7.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-armv7.a"; path = "iTorrent/Libraries/libcrypto-armv7.a"; sourceTree = "<group>"; };
+		7CA9DD07240BB67700D95CD4 /* libcrypto-x86_64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-x86_64.a"; path = "iTorrent/Libraries/libcrypto-x86_64.a"; sourceTree = "<group>"; };
+		7CA9DD08240BB67700D95CD4 /* libssl-arm64e.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-arm64e.a"; path = "iTorrent/Libraries/libssl-arm64e.a"; sourceTree = "<group>"; };
+		7CA9DD09240BB67700D95CD4 /* libssl-arm64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-arm64.a"; path = "iTorrent/Libraries/libssl-arm64.a"; sourceTree = "<group>"; };
+		7CA9DD0A240BB67700D95CD4 /* libcrypto-arm64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-arm64.a"; path = "iTorrent/Libraries/libcrypto-arm64.a"; sourceTree = "<group>"; };
+		7CA9DD0B240BB67800D95CD4 /* libcrypto-armv7s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-armv7s.a"; path = "iTorrent/Libraries/libcrypto-armv7s.a"; sourceTree = "<group>"; };
+		7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-i386.a"; path = "iTorrent/Libraries/libssl-i386.a"; sourceTree = "<group>"; };
+		7CA9DD17240BBBCB00D95CD4 /* libcrypto-i386.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-i386.a"; path = "iTorrent/Libraries/libcrypto-i386.a"; sourceTree = "<group>"; };
 		7CBC7767231B328D0075A685 /* torrentHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torrentHandle.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -375,6 +399,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				7C74B7072125932700988F1C /* SystemConfiguration.framework in Frameworks */,
+				7CA9DD0C240BB67800D95CD4 /* libssl-armv7.a in Frameworks */,
+				7CA9DD0D240BB67800D95CD4 /* libssl-armv7s.a in Frameworks */,
+				7CA9DD0E240BB67800D95CD4 /* libssl-x86_64.a in Frameworks */,
+				7CA9DD0F240BB67800D95CD4 /* libcrypto-arm64e.a in Frameworks */,
+				7CA9DD10240BB67800D95CD4 /* libcrypto-armv7.a in Frameworks */,
+				7CA9DD11240BB67800D95CD4 /* libcrypto-x86_64.a in Frameworks */,
+				7CA9DD12240BB67800D95CD4 /* libssl-arm64e.a in Frameworks */,
+				7CA9DD13240BB67800D95CD4 /* libssl-arm64.a in Frameworks */,
+				7CA9DD18240BBBCC00D95CD4 /* libssl-i386.a in Frameworks */,
+				7CA9DD19240BBBCC00D95CD4 /* libcrypto-i386.a in Frameworks */,
+				7CA9DD14240BB67800D95CD4 /* libcrypto-arm64.a in Frameworks */,
+				7CA9DD15240BB67800D95CD4 /* libcrypto-armv7s.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -643,6 +679,18 @@
 		7C74B7052125932600988F1C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7CA9DD17240BBBCB00D95CD4 /* libcrypto-i386.a */,
+				7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */,
+				7CA9DD0A240BB67700D95CD4 /* libcrypto-arm64.a */,
+				7CA9DD05240BB67700D95CD4 /* libcrypto-arm64e.a */,
+				7CA9DD06240BB67700D95CD4 /* libcrypto-armv7.a */,
+				7CA9DD0B240BB67800D95CD4 /* libcrypto-armv7s.a */,
+				7CA9DD07240BB67700D95CD4 /* libcrypto-x86_64.a */,
+				7CA9DD09240BB67700D95CD4 /* libssl-arm64.a */,
+				7CA9DD08240BB67700D95CD4 /* libssl-arm64e.a */,
+				7CA9DD02240BB67700D95CD4 /* libssl-armv7.a */,
+				7CA9DD03240BB67700D95CD4 /* libssl-armv7s.a */,
+				7CA9DD04240BB67700D95CD4 /* libssl-x86_64.a */,
 				7C74B7062125932700988F1C /* SystemConfiguration.framework */,
 			);
 			name = Frameworks;
@@ -1039,6 +1087,13 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_NO_COMMON_BLOCKS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+					NDEBUG,
+				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
 				INFOPLIST_FILE = iTorrent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1047,10 +1102,16 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/iTorrent/Libraries",
+				);
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = driverkit;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_VERSION = 4.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1071,6 +1132,11 @@
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
 				GCC_NO_COMMON_BLOCKS = NO;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TORRENT_USE_OPENSSL,
+					TORRENT_USE_LIBCRYPTO,
+					NDEBUG,
+				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
 				INFOPLIST_FILE = iTorrent/Info.plist;
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
@@ -1079,9 +1145,15 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/iTorrent/Libraries",
+				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				SDKROOT = driverkit;
 				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_VERSION = 4.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
