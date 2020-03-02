@@ -41,14 +41,17 @@ public:
     //std::string root_path;
 	std::string config_path;
 	std::string download_path;
+    std::string client_name;
     vector<torrent_handle> handlers;
     
-    Engine(std::string download_path, std::string config_path) {
+    Engine(std::string client_name, std::string download_path, std::string config_path) {
         Engine::standart = this;
         this->download_path = download_path;
 		this->config_path = config_path;
+        this->client_name = client_name;
         
         settings_pack pack;
+        pack.set_str(settings_pack::handshake_client_version, client_name);
         pack.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
         pack.set_int(lt::settings_pack::alert_mask
                      , lt::alert::error_notification
@@ -130,8 +133,8 @@ public:
 };
 
 Engine *Engine::standart = NULL;
-extern "C" int init_engine(char* download_path, char* config_path) {
-    new Engine(download_path, config_path);
+extern "C" int init_engine(char* client_name, char* download_path, char* config_path) {
+    new Engine(client_name, download_path, config_path);
     return 0;
 }
 
@@ -419,7 +422,7 @@ extern "C" void save_magnet_to_file(char* hash) {
 	std::ofstream out((Engine::standart->config_path + "/" + handle->name().c_str() + ".torrent").c_str(), std::ios_base::binary);
 	out.unsetf(std::ios_base::skipws);
 	create_torrent ct = create_torrent(torinfo);
-	ct.set_creator("iTorrent");
+	ct.set_creator(Engine::standart->client_name.c_str());
 	bencode(std::ostream_iterator<char>(out), ct.generate());
 }
 

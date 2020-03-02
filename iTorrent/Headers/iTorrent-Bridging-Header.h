@@ -7,7 +7,7 @@
 #include "file_struct.h"
 
 //TORRENT
-int init_engine(const char* download_path, const char* config_path);
+int init_engine(const char* client_name, const char* download_path, const char* config_path);
 Result getTorrentInfo();
 char* add_torrent(const char* torrent_path);
 void add_torrent_with_states(const char* torrent_path, int* states);
