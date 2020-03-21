@@ -155,6 +155,10 @@ namespace libtorrent {
 #ifdef TORRENT_PICKER_LOG
 		std::cerr << "[" << this << "] " << "piece_picker::resize()" << std::endl;
 #endif
+
+		if (blocks_per_piece > max_blocks_per_piece)
+			throw system_error(errors::invalid_piece_size);
+
 		// allocate the piece_map to cover all pieces
 		// and make them invalid (as if we don't have a single piece)
 		m_piece_map.resize(total_num_pieces, piece_pos(0, 0));
@@ -191,9 +195,9 @@ namespace libtorrent {
 			m_reverse_cursor > piece_index_t(0) && (i->have() || i->filtered());
 			++i, --m_reverse_cursor);
 
-		m_blocks_per_piece = std::uint16_t(blocks_per_piece);
-		m_blocks_in_last_piece = std::uint16_t(blocks_in_last_piece);
-		if (m_blocks_in_last_piece == 0) m_blocks_in_last_piece = std::uint16_t(blocks_per_piece);
+		m_blocks_per_piece = aux::numeric_cast<std::uint16_t>(blocks_per_piece);
+		m_blocks_in_last_piece = aux::numeric_cast<std::uint16_t>(blocks_in_last_piece);
+		if (m_blocks_in_last_piece == 0) m_blocks_in_last_piece = aux::numeric_cast<std::uint16_t>(blocks_per_piece);
 
 		TORRENT_ASSERT(m_blocks_in_last_piece <= m_blocks_per_piece);
 	}
@@ -1696,6 +1700,37 @@ namespace libtorrent {
 		if (m_dirty) return;
 		remove(priority, info_index);
 		TORRENT_ASSERT(p.priority(this) == -1);
+	}
+
+	void piece_picker::we_have_all()
+	{
+		INVARIANT_CHECK;
+#ifdef TORRENT_PICKER_LOG
+		std::cerr << "[" << this << "] " << "piece_picker::we_have_all()\n";
+#endif
+
+		m_priority_boundaries.clear();
+		m_priority_boundaries.resize(1, prio_index_t(0));
+		m_block_info.clear();
+		m_free_block_infos.clear();
+		m_pieces.clear();
+
+		m_dirty = false;
+		m_num_have_filtered += m_num_filtered;
+		m_num_filtered = 0;
+		m_have_filtered_pad_blocks += m_filtered_pad_blocks;
+		m_filtered_pad_blocks = 0;
+		m_cursor = m_piece_map.end_index();
+		m_reverse_cursor = piece_index_t{0};
+		m_num_passed = num_pieces();
+		m_num_have = num_pieces();
+
+		for (auto& queue : m_downloads) queue.clear();
+		for (auto& p : m_piece_map)
+		{
+			p.set_have();
+			p.state(piece_pos::piece_open);
+		}
 	}
 
 	bool piece_picker::set_piece_priority(piece_index_t const index

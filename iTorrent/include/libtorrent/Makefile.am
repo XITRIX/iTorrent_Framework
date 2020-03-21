@@ -164,6 +164,7 @@ nobase_include_HEADERS = \
   aux_/aligned_storage.hpp          \
   aux_/aligned_union.hpp            \
   aux_/bind_to_device.hpp           \
+  aux_/keepalive.hpp                \
   aux_/block_cache_reference.hpp    \
   aux_/container_wrapper.hpp        \
   aux_/cpuid.hpp                    \
@@ -171,6 +172,7 @@ nobase_include_HEADERS = \
   aux_/disable_warnings_pop.hpp     \
   aux_/disk_job_fence.hpp           \
   aux_/deferred_handler.hpp         \
+  aux_/deprecated.hpp               \
   aux_/dev_random.hpp               \
   aux_/deque.hpp                    \
   aux_/escape_string.hpp            \

@@ -35,7 +35,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "libtorrent/socket.hpp"
 #include "libtorrent/error_code.hpp"
-#include "libtorrent/broadcast_socket.hpp"
 #include "libtorrent/deadline_timer.hpp"
 #include "libtorrent/enum_net.hpp"
 #include "libtorrent/resolver.hpp"
@@ -69,7 +68,7 @@ namespace libtorrent {
 			// The source IP address cannot be wild-carded, but
 			// must be fully specified
 			source_ip_cannot_be_wildcarded = 715,
-			// The external port cannot be wildcarded, but must
+			// The external port cannot be a wildcard, but must
 			// be specified
 			external_port_cannot_be_wildcarded = 716,
 			// The port mapping entry specified conflicts with a
@@ -150,7 +149,9 @@ struct TORRENT_EXTRA_EXPORT upnp final
 	upnp(io_service& ios
 		, std::string const& user_agent
 		, aux::portmap_callback& cb
-		, bool ignore_nonrouters);
+		, address_v4 const& listen_address
+		, address_v4 const& netmask
+		, std::string listen_device);
 	~upnp();
 
 	void set_user_agent(std::string const& v) { m_user_agent = v; }
@@ -183,7 +184,6 @@ struct TORRENT_EXTRA_EXPORT upnp final
 	bool get_mapping(port_mapping_t mapping_index, tcp::endpoint& local_ep, int& external_port
 		, portmap_protocol& protocol) const;
 
-	void discover_device();
 	void close();
 
 	// This is only available for UPnP routers. If the model is advertised by
@@ -198,12 +198,15 @@ private:
 
 	std::shared_ptr<upnp> self() { return shared_from_this(); }
 
+	void open_multicast_socket(udp::socket& s, error_code& ec);
+	void open_unicast_socket(udp::socket& s, error_code& ec);
+
 	void map_timer(error_code const& ec);
-	void try_map_upnp(bool timer = false);
+	void try_map_upnp();
 	void discover_device_impl();
 
 	void resend_request(error_code const& e);
-	void on_reply(udp::endpoint const& from, span<char const> buffer);
+	void on_reply(udp::socket& s, error_code const& ec);
 
 	struct rootdevice;
 	void next(rootdevice& d, port_mapping_t i);
@@ -297,13 +300,6 @@ private:
 
 		bool disabled = false;
 
-		// this is true if the IP of this device is not
-		// one of our default routes. i.e. it may be someone
-		// else's router, we just happen to have multicast
-		// enabled across networks
-		// this is only relevant if ignore_non_routers is set.
-		bool non_router = false;
-
 		mutable std::shared_ptr<http_connection> upnp_connection;
 
 #if TORRENT_USE_ASSERTS
@@ -330,7 +326,7 @@ private:
 	aux::portmap_callback& m_callback;
 
 	// current retry count
-	int m_retry_count;
+	int m_retry_count = 0;
 
 	io_service& m_io_service;
 
@@ -338,7 +334,8 @@ private:
 
 	// the udp socket used to send and receive
 	// multicast messages on the network
-	broadcast_socket m_socket;
+	udp::socket m_multicast_socket;
+	udp::socket m_unicast_socket;
 
 	// used to resend udp packets in case
 	// they time out
@@ -354,15 +351,16 @@ private:
 	// map them anyway.
 	deadline_timer m_map_timer;
 
-	bool m_disabled;
-	bool m_closing;
-	bool m_ignore_non_routers;
+	bool m_disabled = false;
+	bool m_closing = false;
 
 	std::string m_model;
 
-	// cache of interfaces
-	mutable std::vector<ip_interface> m_interfaces;
-	mutable time_point m_last_if_update;
+	// the network this UPnP mapper is associated with. Don't talk to any other
+	// network
+	address_v4 m_listen_address;
+	address_v4 m_netmask;
+	std::string m_device;
 };
 
 }

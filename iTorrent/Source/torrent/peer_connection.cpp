@@ -1604,8 +1604,9 @@ namespace libtorrent {
 		{
 			if (request_a_block(*t, *this))
 				m_counters.inc_stats_counter(counters::reject_piece_picks);
-			send_block_requests();
 		}
+
+		send_block_requests();
 	}
 
 	// -----------------------------
@@ -3999,13 +4000,6 @@ namespace libtorrent {
 					m_download_queue.push_back(block);
 					if (m_queued_time_critical) --m_queued_time_critical;
 
-#ifndef TORRENT_DISABLE_LOGGING
-					peer_log(peer_log_alert::info, "MERGING_REQUEST"
-						, "piece: %d block: %d"
-						, static_cast<int>(block.block.piece_index)
-						, block.block.block_index);
-#endif
-
 					block_offset = block.block.block_index * t->block_size();
 					bs = std::min(t->torrent_file().piece_size(
 						block.block.piece_index) - block_offset, t->block_size());
@@ -4018,6 +4012,13 @@ namespace libtorrent {
 					check_invariant();
 #endif
 				}
+
+#ifndef TORRENT_DISABLE_LOGGING
+				peer_log(peer_log_alert::info, "MERGING_REQUESTS"
+					, "piece: %d start: %d length: %d", static_cast<int>(r.piece)
+					, r.start, r.length);
+#endif
+
 			}
 
 			// the verification will fail for coalesced blocks
@@ -4085,7 +4086,7 @@ namespace libtorrent {
 		if (m_connecting)
 		{
 			m_counters.inc_stats_counter(counters::num_peers_half_open, -1);
-			if (t) t->dec_num_connecting(m_peer_info);
+			if (t && m_peer_info) t->dec_num_connecting(m_peer_info);
 			m_connecting = false;
 		}
 

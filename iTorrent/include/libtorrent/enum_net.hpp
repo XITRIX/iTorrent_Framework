@@ -50,6 +50,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/error_code.hpp"
 #include "libtorrent/socket.hpp"
 #include "libtorrent/aux_/bind_to_device.hpp"
+#include "libtorrent/span.hpp"
 
 #include <vector>
 
@@ -60,9 +61,9 @@ namespace libtorrent {
 	{
 		address interface_address;
 		address netmask;
-		char name[64];
-		char friendly_name[128];
-		char description[128];
+		char name[64]{};
+		char friendly_name[128]{};
+		char description[128]{};
 		// an interface is preferred if its address is
 		// not tentative/duplicate/deprecated
 		bool preferred = true;
@@ -73,7 +74,8 @@ namespace libtorrent {
 		address destination;
 		address netmask;
 		address gateway;
-		char name[64];
+		address source_hint;
+		char name[64]{};
 		int mtu;
 	};
 
@@ -89,19 +91,15 @@ namespace libtorrent {
 	TORRENT_EXTRA_EXPORT bool match_addr_mask(address const& a1
 		, address const& a2, address const& mask);
 
-	// returns true if the specified address is on the same
-	// local network as us
-	TORRENT_EXTRA_EXPORT bool in_local_network(io_service& ios, address const& addr
-		, error_code& ec);
-	TORRENT_EXTRA_EXPORT bool in_local_network(std::vector<ip_interface> const& net
-		, address const& addr);
+	// return a netmask with the specified address family and the specified
+	// number of prefix bit set, of the most significant bits in the resulting
+	// netmask
+	TORRENT_EXTRA_EXPORT address build_netmask(int bits, int family);
 
-	TORRENT_EXTRA_EXPORT boost::optional<ip_route> get_default_route(io_service& ios
-		, string_view device, bool v6, error_code& ec);
-
-	// returns the first default gateway found if device is empty
-	TORRENT_EXTRA_EXPORT address get_default_gateway(io_service& ios
-		, string_view device, bool v6, error_code& ec);
+	// return the gateway for the given ip_interface, if there is one. Otherwise
+	// return nullopt.
+	TORRENT_EXTRA_EXPORT boost::optional<address> get_gateway(
+		ip_interface const& iface, span<ip_route const> routes);
 
 	// attempt to bind socket to the device with the specified name. For systems
 	// that don't support SO_BINDTODEVICE the socket will be bound to one of the

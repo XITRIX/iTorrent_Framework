@@ -74,6 +74,7 @@ namespace libtorrent {
 
 		using headers_t = std::vector<std::pair<std::string, std::string>>;
 
+		// hidden
 		web_seed_entry(std::string const& url_, type_t type_
 			, std::string const& auth_ = std::string()
 			, headers_t const& extra_headers_ = headers_t());
@@ -125,6 +126,7 @@ namespace libtorrent {
 		int max_decode_tokens = 2000000;
 	};
 
+	// the torrent_info class holds the information found in a .torrent file.
 	class TORRENT_EXPORT torrent_info
 	{
 	public:
@@ -392,8 +394,26 @@ namespace libtorrent {
 		file_iterator file_at_offset(std::int64_t offset) const
 		{ return m_files.file_at_offset_deprecated(offset); }
 
+#ifdef _MSC_VER
+#pragma warning(push, 1)
+// warning C4996: X: was declared deprecated
+#pragma warning( disable : 4996 )
+#endif
+#if defined __GNUC__
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
+#endif
+
 		TORRENT_DEPRECATED
 		file_entry file_at(int index) const { return m_files.at_deprecated(index); }
+
+#if defined __GNUC__
+#pragma GCC diagnostic pop
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #endif // TORRENT_ABI_VERSION
 
 		// If you need index-access to files you can use the ``num_files()`` along
@@ -564,10 +584,15 @@ namespace libtorrent {
 			, piece_index_t piece);
 		std::map<int, sha1_hash> build_merkle_list(piece_index_t piece) const;
 
+		// internal
+		void internal_set_creator(string_view const);
+		void internal_set_creation_date(std::time_t);
+		void internal_set_comment(string_view const);
+
 		// returns whether or not this is a merkle torrent.
 		// see `BEP 30`__.
 		//
-		// __ http://bittorrent.org/beps/bep_0030.html
+		// __ https://www.bittorrent.org/beps/bep_0030.html
 		bool is_merkle_torrent() const { return !m_merkle_tree.empty(); }
 
 	private:

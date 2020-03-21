@@ -105,6 +105,7 @@ namespace libtorrent {
 
 	using web_seed_flag_t = flags::bitfield_flag<std::uint8_t, struct web_seed_flag_tag>;
 
+	// internal
 	enum class waste_reason
 	{
 		piece_timed_out, piece_cancelled, piece_unknown, piece_seed
@@ -172,6 +173,12 @@ namespace libtorrent {
 		// the removed flag to true, to make the resolver
 		// callback remove it
 		bool removed = false;
+
+		// this indicates whether this web seed has any files. A server that only
+		// redirects to other servers for instance, may not have any files and
+		// once we've seen all redirects, there's no point in connecting to it
+		// again.
+		bool interesting = true;
 
 		// if this is true, this URL was created by a redirect and should not be
 		// saved in the resume data
@@ -569,7 +576,7 @@ namespace libtorrent {
 		download_priority_t file_priority(file_index_t index) const;
 
 		void on_file_priority(storage_error const& err, aux::vector<download_priority_t, file_index_t> prios);
-		void prioritize_files(aux::vector<download_priority_t, file_index_t> const& files);
+		void prioritize_files(aux::vector<download_priority_t, file_index_t> files);
 		void file_priorities(aux::vector<download_priority_t, file_index_t>*) const;
 
 		void cancel_non_critical();
@@ -617,7 +624,7 @@ namespace libtorrent {
 // --------------------------------------------
 		// PEER MANAGEMENT
 
-		constexpr static web_seed_flag_t ephemeral = 0_bit;
+		static constexpr web_seed_flag_t ephemeral = 0_bit;
 
 		// add_web_seed won't add duplicates. If we have already added an entry
 		// with this URL, we'll get back the existing entry
@@ -1192,7 +1199,6 @@ namespace libtorrent {
 		void set_limit_impl(int limit, int channel, bool state_update = true);
 		int limit_impl(int channel) const;
 
-		int prioritize_tracker(int tracker_index);
 		int deprioritize_tracker(int tracker_index);
 
 		void update_peer_interest(bool was_finished);
@@ -1266,6 +1272,12 @@ namespace libtorrent {
 		// implicitly means the file has priority 4.
 		// TODO: this wastes 5 bits per file
 		aux::vector<download_priority_t, file_index_t> m_file_priority;
+
+		// any file priority updates attempted while another file priority update
+		// is in-progress/outstanding with the disk I/O thread, are queued up in
+		// this dictionary. Once the outstanding update comes back, all of these
+		// are applied in one batch
+		std::map<file_index_t, download_priority_t> m_deferred_file_priorities;
 
 		// this object is used to track download progress of individual files
 		aux::file_progress m_file_progress;
@@ -1577,9 +1589,7 @@ namespace libtorrent {
 		// the number of unchoked peers in this torrent
 		unsigned int m_num_uploads:24;
 
-		// rotating sequence number for LSD announces sent out.
-		// used to only use IP broadcast for every 8th lsd announce
-		std::uint8_t m_lsd_seq:3;
+		// 3 unused bits
 
 		// when this is true, this torrent supports peer exchange
 		bool m_enable_pex:1;
@@ -1692,6 +1702,18 @@ namespace libtorrent {
 		// progress parts per million (the number of
 		// millionths of completeness)
 		std::uint32_t m_progress_ppm:20;
+
+		// set to true once init() completes successfully. This is important to
+		// track in case it fails and need to be retried if the client clears
+		// the torrent error
+		bool m_torrent_initialized:1;
+
+		// this is set to true while waiting for an async_set_file_priority
+		bool m_outstanding_file_priority:1;
+
+		// set to true if we've sent an event=completed to any tracker. This will
+		// prevent us from sending it again to anyone
+		bool m_complete_sent:1;
 
 #if TORRENT_USE_ASSERTS
 		// set to true when torrent is start()ed. It may only be started once

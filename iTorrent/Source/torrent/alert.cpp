@@ -895,6 +895,8 @@ namespace {
 			case o::partfile_write: return -1;
 			case o::hostname_lookup: return -1;
 			case o::symlink: return -1;
+			case o::handshake: return -1;
+			case o::sock_option: return -1;
 		}
 		return -1;
 	}
@@ -1560,7 +1562,9 @@ namespace {
 			"partfile_read",
 			"partfile_write",
 			"hostname_lookup",
-			"symlink"
+			"symlink",
+			"handshake",
+			"sock_option"
 		};
 
 		int const idx = static_cast<int>(op);
@@ -2492,7 +2496,7 @@ namespace {
 		aux::vector<sha1_hash> samples;
 		samples.resize(m_num_samples);
 
-		const char *ptr = m_alloc.get().ptr(m_samples_idx);
+		char const* ptr = m_alloc.get().ptr(m_samples_idx);
 		std::memcpy(samples.data(), ptr, samples.size() * 20);
 
 		return std::move(samples);
@@ -2582,7 +2586,7 @@ namespace {
 		"dht_pkt", "dht_get_peers_reply", "dht_direct_response",
 		"picker_log", "session_error", "dht_live_nodes",
 		"session_stats_header", "dht_sample_infohashes",
-		"block_uploaded", "alerts_dropped"
+		"block_uploaded", "alerts_dropped", "socks5"
 		}};
 
 		TORRENT_ASSERT(alert_type >= 0);
@@ -2603,6 +2607,21 @@ namespace {
 		}
 
 		return ret;
+	}
+
+	socks5_alert::socks5_alert(aux::stack_allocator&
+		, tcp::endpoint const& ep, operation_t operation, error_code const& ec)
+		: error(ec)
+		, op(operation)
+		, ip(ep)
+	{}
+
+	std::string socks5_alert::message() const
+	{
+		char buf[512];
+		std::snprintf(buf, sizeof(buf), "SOCKS5 error. op: %s ec: %s ep: %s"
+			, operation_name(op), error.message().c_str(), print_endpoint(ip).c_str());
+		return buf;
 	}
 
 	// this will no longer be necessary in C++17
@@ -2693,6 +2712,7 @@ namespace {
 	constexpr alert_category_t dht_sample_infohashes_alert::static_category;
 	constexpr alert_category_t block_uploaded_alert::static_category;
 	constexpr alert_category_t alerts_dropped_alert::static_category;
+	constexpr alert_category_t socks5_alert::static_category;
 #if TORRENT_ABI_VERSION == 1
 	constexpr alert_category_t anonymous_mode_alert::static_category;
 	constexpr alert_category_t mmap_cache_alert::static_category;

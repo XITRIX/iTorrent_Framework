@@ -147,8 +147,6 @@ namespace aux {
 		static constexpr ip_source_t source_tracker = 3_bit;
 		static constexpr ip_source_t source_router = 4_bit;
 
-		virtual void set_external_address(address const& ip
-			, ip_source_t source_type, address const& source) = 0;
 		virtual void set_external_address(tcp::endpoint const& local_endpoint
 			, address const& ip
 			, ip_source_t source_type, address const& source) = 0;
@@ -210,7 +208,6 @@ namespace aux {
 		virtual void for_each_listen_socket(std::function<void(aux::listen_socket_handle const&)> f) = 0;
 
 		// ask for which interface and port to bind outgoing peer connections on
-		virtual bool has_udp_outgoing_sockets() const = 0;
 		virtual tcp::endpoint bind_outgoing_socket(socket_type& s, address const&
 			remote_address, error_code& ec) const = 0;
 		virtual bool verify_bound_address(address const& addr, bool utp
@@ -290,7 +287,7 @@ namespace aux {
 		virtual aux::vector<torrent*>& torrent_list(torrent_list_index_t i) = 0;
 
 		virtual bool has_lsd() const = 0;
-		virtual void announce_lsd(sha1_hash const& ih, int port, bool broadcast = false) = 0;
+		virtual void announce_lsd(sha1_hash const& ih, int port) = 0;
 		virtual libtorrent::utp_socket_manager* utp_socket_manager() = 0;
 		virtual void inc_boost_connections() = 0;
 		virtual std::vector<block_info>& block_info_storage() = 0;

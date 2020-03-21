@@ -115,6 +115,15 @@ namespace {
 				{
 					ec = err;
 				}
+				else
+				{
+					// time_t might be 32 bit if we're unlucky, but there isn't
+					// much to do about it
+					ret.ti->internal_set_creation_date(static_cast<std::time_t>(
+						rd.dict_find_int_value("creation date", 0)));
+					ret.ti->internal_set_creator(rd.dict_find_string_value("created by", ""));
+					ret.ti->internal_set_comment(rd.dict_find_string_value("comment", ""));
+				}
 			}
 		}
 
@@ -147,6 +156,7 @@ namespace {
 		apply_flag(ret.flags, rd, "auto_managed", torrent_flags::auto_managed);
 		apply_flag(ret.flags, rd, "sequential_download", torrent_flags::sequential_download);
 		apply_flag(ret.flags, rd, "paused", torrent_flags::paused);
+		apply_flag(ret.flags, rd, "stop_when_ready", torrent_flags::stop_when_ready);
 
 		ret.save_path = rd.dict_find_string_value("save_path").to_string();
 

@@ -95,7 +95,11 @@ namespace libtorrent {
 			// the number of priority levels
 			priority_levels = 8,
 			// priority factor
-			prio_factor = 3
+			prio_factor = 3,
+			// max blocks per piece
+			// there are counters in downloading_piece that only have 15 bits to
+			// count blocks per piece, that's restricting this
+			max_blocks_per_piece = (1 << 15) - 1
 		};
 
 		struct block_info
@@ -223,6 +227,10 @@ namespace libtorrent {
 		// or leave the swarm.
 		void inc_refcount_all(const torrent_peer* peer);
 		void dec_refcount_all(const torrent_peer* peer);
+
+		// we have every piece. This is used when creating a piece picker for a
+		// seed
+		void we_have_all();
 
 		// This indicates that we just received this piece
 		// it means that the refcounter will indicate that
@@ -434,8 +442,24 @@ namespace libtorrent {
 		// been flushed to disk yet)
 		int num_passed() const { return m_num_passed; }
 
-		// return true if we have all the pieces we wanted
-		bool is_finished() const { return m_num_have - m_num_have_filtered == num_pieces() - m_num_filtered; }
+		// return true if all the pieces we want have passed the hash check (but
+		// may not have been written to disk yet)
+		bool is_finished() const
+		{
+			// this expression warrants some explanation:
+			// if the number of pieces we *want* to download
+			// is less than or (more likely) equal to the number of pieces that
+			// have passed the hash check (discounting the pieces that have passed
+			// the check but then had their priority set to 0). Then we're
+			// finished. Note that any piece we *have* implies it's both passed the
+			// hash check *and* been written to disk.
+			// num_pieces() - m_num_filtered - m_num_have_filtered
+			//   <= (num_passed() - m_num_have_filtered)
+			// this can be simplified. Note how m_num_have_filtered appears on both
+			// side of the equation.
+			//
+			return num_pieces() - m_num_filtered <= num_passed();
+		}
 
 		bool is_seeding() const { return m_num_have == num_pieces(); }
 
@@ -572,7 +596,7 @@ namespace libtorrent {
 			// (availability)
 			std::uint32_t peer_count : 26;
 
-			// one of the enums from state_t. This indicates whether this piece
+			// one of the download_queue_t values. This indicates whether this piece
 			// is currently being downloaded or not, and what state it's in if
 			// it is. Specifically, as an optimization, pieces that have all blocks
 			// requested from them are separated out into separate lists to make

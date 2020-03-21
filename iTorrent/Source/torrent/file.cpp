@@ -403,7 +403,6 @@ static_assert(!(open_mode::sparse & open_mode::attribute_mask), "internal flags 
 			if (err != ERROR_NO_MORE_FILES)
 				ec.assign(err, system_category());
 		}
-		++m_inode;
 #else
 		struct dirent* de;
 		errno = 0;
@@ -1174,9 +1173,8 @@ namespace {
 			fstore_t f = {F_ALLOCATECONTIG, F_PEOFPOSMODE, 0, s, 0};
 			if (fcntl(native_handle(), F_PREALLOCATE, &f) < 0)
 			{
-				// It appears Apple's new filesystem (APFS) does not
-				// support this control message and fails with EINVAL
-				// if so, just skip it
+				// MacOS returns EINVAL if the file already has the space
+				// pre-allocated. In which case we can just move on.
 				if (errno != EINVAL)
 				{
 					if (errno != ENOSPC)

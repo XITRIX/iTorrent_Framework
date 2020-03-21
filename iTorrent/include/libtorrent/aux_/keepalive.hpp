@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Arvid Norberg
+Copyright (c) 2020, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -30,83 +30,73 @@ POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef TORRENT_BIND_TO_DEVICE_HPP_INCLUDED
-#define TORRENT_BIND_TO_DEVICE_HPP_INCLUDED
+#ifndef TORRENT_KEEP_ALIVE_HPP_INCLUDED
+#define TORRENT_KEEP_ALIVE_HPP_INCLUDED
+
+#if !defined _WIN32
 
 #include "libtorrent/config.hpp"
-#include "libtorrent/socket.hpp"
 
-#if TORRENT_USE_IFCONF || TORRENT_USE_NETLINK || TORRENT_USE_SYSCTL
-#include <sys/socket.h> // for SO_BINDTODEVICE
-#include <netinet/in.h>
-#endif
+#include <netinet/in.h> // for IPPROTO_TCP
 
-namespace libtorrent { namespace aux {
+namespace libtorrent {
+namespace aux {
 
-#if defined SO_BINDTODEVICE
-
-	struct bind_to_device
+#if defined TCP_KEEPIDLE
+#define TORRENT_HAS_KEEPALIVE_IDLE
+	struct tcp_keepalive_idle
 	{
-		explicit bind_to_device(char const* device): m_value(device) {}
+		explicit tcp_keepalive_idle(int seconds): m_value(seconds) {}
 		template<class Protocol>
-		int level(Protocol const&) const { return SOL_SOCKET; }
+		int level(Protocol const&) const { return IPPROTO_TCP; }
 		template<class Protocol>
-		int name(Protocol const&) const { return SO_BINDTODEVICE; }
-		template<class Protocol>
-		char const* data(Protocol const&) const { return m_value; }
-		template<class Protocol>
-		size_t size(Protocol const&) const { return strlen(m_value) + 1; }
-	private:
-		char const* m_value;
-	};
-
-#define TORRENT_HAS_BINDTODEVICE 1
-
-#elif defined IP_BOUND_IF
-
-	struct bind_to_device
-	{
-		explicit bind_to_device(char const* device): m_value(if_nametoindex(device)) {}
-		template<class Protocol>
-		int level(Protocol const&) const { return IPPROTO_IP; }
-		template<class Protocol>
-		int name(Protocol const&) const { return IP_BOUND_IF; }
+		int name(Protocol const&) const { return TCP_KEEPIDLE; }
 		template<class Protocol>
 		char const* data(Protocol const&) const { return reinterpret_cast<char const*>(&m_value); }
 		template<class Protocol>
 		size_t size(Protocol const&) const { return sizeof(m_value); }
 	private:
-		unsigned int m_value;
+		int m_value;
 	};
-
-#define TORRENT_HAS_BINDTODEVICE 1
-
-#elif defined IP_FORCE_OUT_IFP
-
-	struct bind_to_device
+#elif defined TCP_KEEPALIVE
+#define TORRENT_HAS_KEEPALIVE_IDLE
+	struct tcp_keepalive_idle
 	{
-		explicit bind_to_device(char const* device): m_value(device) {}
+		explicit tcp_keepalive_idle(int seconds): m_value(seconds) {}
 		template<class Protocol>
-		int level(Protocol const&) const { return SOL_SOCKET; }
+		int level(Protocol const&) const { return IPPROTO_TCP; }
 		template<class Protocol>
-		int name(Protocol const&) const { return IP_FORCE_OUT_IFP; }
+		int name(Protocol const&) const { return TCP_KEEPALIVE; }
 		template<class Protocol>
-		char const* data(Protocol const&) const { return m_value; }
+		char const* data(Protocol const&) const { return reinterpret_cast<char const*>(&m_value); }
 		template<class Protocol>
-		size_t size(Protocol const&) const { return strlen(m_value) + 1; }
+		size_t size(Protocol const&) const { return sizeof(m_value); }
 	private:
-		char const* m_value;
+		int m_value;
 	};
-
-#define TORRENT_HAS_BINDTODEVICE 1
-
-#else
-
-#define TORRENT_HAS_BINDTODEVICE 0
-
 #endif
 
-} }
+#ifdef TCP_KEEPINTVL
+#define TORRENT_HAS_KEEPALIVE_INTERVAL
+	struct tcp_keepalive_interval
+	{
+		explicit tcp_keepalive_interval(int seconds): m_value(seconds) {}
+		template<class Protocol>
+		int level(Protocol const&) const { return IPPROTO_TCP; }
+		template<class Protocol>
+		int name(Protocol const&) const { return TCP_KEEPINTVL; }
+		template<class Protocol>
+		char const* data(Protocol const&) const { return reinterpret_cast<char const*>(&m_value); }
+		template<class Protocol>
+		size_t size(Protocol const&) const { return sizeof(m_value); }
+	private:
+		int m_value;
+	};
+#endif
+}
+}
+
+#endif // _WIN32
 
 #endif
 

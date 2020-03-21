@@ -96,9 +96,11 @@ namespace libtorrent {
 
 	void peer_list::clear()
 	{
+		INVARIANT_CHECK;
 		for (auto const p : m_peers)
 			m_peer_allocator.free_peer_entry(p);
 		m_peers.clear();
+		m_num_connect_candidates = 0;
 	}
 
 	peer_list::~peer_list()
@@ -109,6 +111,7 @@ namespace libtorrent {
 
 	void peer_list::set_max_failcount(torrent_state* state)
 	{
+		INVARIANT_CHECK;
 		if (state->max_failcount == m_max_failcount) return;
 
 		recalculate_connect_candidates(state);
@@ -171,6 +174,7 @@ namespace libtorrent {
 
 	void peer_list::clear_peer_prio()
 	{
+		INVARIANT_CHECK;
 		for (auto& p : m_peers)
 			p->peer_rank = 0;
 	}
@@ -405,6 +409,7 @@ namespace libtorrent {
 
 	void peer_list::inc_failcount(torrent_peer* p)
 	{
+		INVARIANT_CHECK;
 		// failcount is a 5 bit value
 		if (p->failcount == 31) return;
 
@@ -708,9 +713,9 @@ namespace libtorrent {
 			if (p == nullptr) return false;
 
 			if (is_v6)
-				new (p) ipv6_peer(c.remote(), false, {});
+				p = new (p) ipv6_peer(c.remote(), false, {});
 			else
-				new (p) ipv4_peer(c.remote(), false, {});
+				p = new (p) ipv4_peer(c.remote(), false, {});
 
 			iter = m_peers.insert(iter, p);
 
@@ -979,7 +984,7 @@ namespace libtorrent {
 		torrent_peer* p = m_peer_allocator.allocate_peer_entry(
 			torrent_peer_allocator_interface::i2p_peer_type);
 		if (p == nullptr) return nullptr;
-		new (p) i2p_peer(destination, true, src);
+		p = new (p) i2p_peer(destination, true, src);
 
 		if (!insert_peer(p, iter, flags, state))
 		{
@@ -1041,9 +1046,9 @@ namespace libtorrent {
 			if (p == nullptr) return nullptr;
 
 			if (is_v6)
-				new (p) ipv6_peer(remote, true, src);
+				p = new (p) ipv6_peer(remote, true, src);
 			else
-				new (p) ipv4_peer(remote, true, src);
+				p = new (p) ipv4_peer(remote, true, src);
 
 			try
 			{

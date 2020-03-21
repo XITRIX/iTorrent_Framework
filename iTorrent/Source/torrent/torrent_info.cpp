@@ -1028,6 +1028,10 @@ namespace {
 		m_files.swap(ti.m_files);
 		m_orig_files.swap(ti.m_orig_files);
 		m_nodes.swap(ti.m_nodes);
+		m_similar_torrents.swap(ti.m_similar_torrents);
+		m_owned_similar_torrents.swap(ti.m_owned_similar_torrents);
+		m_collections.swap(ti.m_collections);
+		m_owned_collections.swap(ti.m_owned_collections);
 		swap(m_info_hash, ti.m_info_hash);
 		swap(m_creation_date, ti.m_creation_date);
 		m_comment.swap(ti.m_comment);
@@ -1342,6 +1346,15 @@ namespace {
 		}
 		return true;
 	}
+
+	void torrent_info::internal_set_creator(string_view const c)
+	{ m_created_by = std::string(c); }
+
+	void torrent_info::internal_set_creation_date(std::time_t const t)
+	{ m_creation_date = t; }
+
+	void torrent_info::internal_set_comment(string_view const s)
+	{ m_comment = std::string(s); }
 
 	// builds a list of nodes that are required to verify
 	// the given piece

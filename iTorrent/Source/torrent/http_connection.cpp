@@ -384,11 +384,11 @@ void http_connection::start(std::string const& hostname, int port
 		}
 		else
 #endif
+		m_hostname = hostname;
 		if (ps && ps->proxy_hostnames
 			&& (ps->type == settings_pack::socks5
 				|| ps->type == settings_pack::socks5_pw))
 		{
-			m_hostname = hostname;
 			m_port = std::uint16_t(port);
 			m_endpoints.emplace_back(address(), m_port);
 			connect();
@@ -400,7 +400,6 @@ void http_connection::start(std::string const& hostname, int port
 				, std::bind(&http_connection::on_resolve
 				, me, _1, _2));
 		}
-		m_hostname = hostname;
 		m_port = std::uint16_t(port);
 	}
 }
@@ -530,21 +529,9 @@ void http_connection::on_resolve(error_code const& e
 	// only connect to addresses of the same family
 	if (m_bind_addr)
 	{
-		auto new_end = std::partition(m_endpoints.begin(), m_endpoints.end()
-			, [this] (tcp::endpoint const& ep)
-		{
-			if (is_v4(ep) != m_bind_addr->is_v4())
-				return false;
-			if (is_v4(ep) && m_bind_addr->is_v4())
-				return true;
-			TORRENT_ASSERT(is_v6(ep) && m_bind_addr->is_v6());
-			// don't try to connect to a global address with a local source address
-			// this is mainly needed to prevent attempting to connect to a global
-			// address using a ULA as the source
-			if (!is_local(ep.address()) && is_local(*m_bind_addr))
-				return false;
-			return ep.address().to_v6().scope_id() == m_bind_addr->to_v6().scope_id();
-		});
+		auto const new_end = std::remove_if(m_endpoints.begin(), m_endpoints.end()
+			, [&](tcp::endpoint const& ep) { return is_v4(ep) != m_bind_addr->is_v4(); });
+
 		m_endpoints.erase(new_end, m_endpoints.end());
 		if (m_endpoints.empty())
 		{

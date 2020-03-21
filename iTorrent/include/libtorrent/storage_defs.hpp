@@ -61,9 +61,9 @@ namespace libtorrent {
 		storage_mode_sparse
 	};
 
+	// return values from check_fastresume, and move_storage
 	enum class status_t : std::uint8_t
 	{
-		// return values from check_fastresume, and move_storage
 		no_error,
 		fatal_disk_error,
 		need_full_check,
@@ -135,7 +135,7 @@ namespace libtorrent {
 	TORRENT_EXPORT storage_interface* disabled_storage_constructor(storage_params const&, file_pool&);
 
 	// the constructor function for the "zero" storage. This will always read
-	// zeroes and ignore all writes.
+	// zeros and ignore all writes.
 	TORRENT_EXPORT storage_interface* zero_storage_constructor(storage_params const&, file_pool&);
 }
 

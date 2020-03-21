@@ -40,6 +40,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/deadline_timer.hpp"
 #include "libtorrent/aux_/numeric_cast.hpp"
 #include "libtorrent/broadcast_socket.hpp" // for is_v4
+#include "libtorrent/alert_manager.hpp"
+#include "libtorrent/socks5_stream.hpp" // for socks_error
+#include "libtorrent/aux_/keepalive.hpp"
 
 #include <cstdlib>
 #include <functional>
@@ -47,6 +50,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/aux_/disable_warnings_push.hpp"
 #include <boost/asio/ip/v6_only.hpp>
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
+
+#ifdef _WIN32
+// for SIO_KEEPALIVE_VALS
+#include <mstcpip.h>
+#endif
 
 namespace libtorrent {
 
@@ -56,7 +64,7 @@ using namespace std::placeholders;
 std::size_t const tmp_buffer_size = 270;
 
 // used for SOCKS5 UDP wrapper header
-std::size_t const max_header_size = 25;
+std::size_t const max_header_size = 255;
 
 // this class hold the state of the SOCKS5 connection to maintain the UDP
 // ASSOCIATE tunnel. It's instantiated on the heap for two reasons:
@@ -67,13 +75,14 @@ std::size_t const max_header_size = 25;
 //    the common case cheaper by not allocating this space unconditionally
 struct socks5 : std::enable_shared_from_this<socks5>
 {
-	explicit socks5(io_service& ios)
+	explicit socks5(io_service& ios, aux::listen_socket_handle ls
+		, alert_manager& alerts)
 		: m_socks5_sock(ios)
 		, m_resolver(ios)
 		, m_timer(ios)
 		, m_retry_timer(ios)
-		, m_abort(false)
-		, m_active(false)
+		, m_alerts(alerts)
+		, m_listen_socket(std::move(ls))
 	{}
 
 	void start(aux::proxy_settings const& ps);
@@ -103,6 +112,8 @@ private:
 	tcp::resolver m_resolver;
 	deadline_timer m_timer;
 	deadline_timer m_retry_timer;
+	alert_manager& m_alerts;
+	aux::listen_socket_handle m_listen_socket;
 	std::array<char, tmp_buffer_size> m_tmp_buf;
 
 	aux::proxy_settings m_proxy_settings;
@@ -111,7 +122,7 @@ private:
 	// when performing a UDP associate, we get another
 	// endpoint (presumably on the same IP) where we're
 	// supposed to send UDP packets.
-	udp::endpoint m_proxy_addr;
+	tcp::endpoint m_proxy_addr;
 
 	// this is where UDP packets that are to be forwarded
 	// are sent. The result from UDP ASSOCIATE is stored
@@ -119,10 +130,10 @@ private:
 	udp::endpoint m_udp_proxy_addr;
 
 	// set to true when we've been asked to shut down
-	bool m_abort;
+	bool m_abort = false;
 
 	// set to true once the tunnel is established
-	bool m_active;
+	bool m_active = false;
 };
 
 #ifdef TORRENT_HAS_DONT_FRAGMENT
@@ -155,9 +166,10 @@ struct set_dont_frag
 { set_dont_frag(udp::socket&, int) {} };
 #endif
 
-udp_socket::udp_socket(io_service& ios)
+udp_socket::udp_socket(io_service& ios, aux::listen_socket_handle ls)
 	: m_socket(ios)
 	, m_buf(new receive_buffer())
+	, m_listen_socket(std::move(ls))
 	, m_bind_port(0)
 	, m_abort(true)
 {}
@@ -331,8 +343,7 @@ void udp_socket::wrap(udp::endpoint const& ep, span<char const> p
 	iovec[1] = boost::asio::const_buffer(p.data(), static_cast<std::size_t>(p.size()));
 
 	// set the DF flag for the socket and clear it again in the destructor
-	set_dont_frag df(m_socket, (flags & dont_fragment)
-		&& is_v4(ep));
+	set_dont_frag df(m_socket, (flags & dont_fragment) && is_v4(ep));
 
 	m_socket.send_to(iovec, m_socks5_connection->target(), 0, ec);
 }
@@ -348,7 +359,7 @@ void udp_socket::wrap(char const* hostname, int const port, span<char const> p
 	write_uint16(0, h); // reserved
 	write_uint8(0, h); // fragment
 	write_uint8(3, h); // atyp
-	std::size_t const hostlen = std::min(std::strlen(hostname), std::size_t(255));
+	std::size_t const hostlen = std::min(std::strlen(hostname), max_header_size - 7);
 	write_uint8(hostlen, h); // hostname len
 	std::memcpy(h, hostname, hostlen);
 	h += hostlen;
@@ -473,7 +484,8 @@ void udp_socket::bind(udp::endpoint const& ep, error_code& ec)
 	if (err) m_bind_port = ep.port();
 }
 
-void udp_socket::set_proxy_settings(aux::proxy_settings const& ps)
+void udp_socket::set_proxy_settings(aux::proxy_settings const& ps
+	, alert_manager& alerts)
 {
 	TORRENT_ASSERT(is_single_thread());
 
@@ -491,8 +503,8 @@ void udp_socket::set_proxy_settings(aux::proxy_settings const& ps)
 		|| ps.type == settings_pack::socks5_pw)
 	{
 		// connect to socks5 server and open up the UDP tunnel
-
-		m_socks5_connection = std::make_shared<socks5>(lt::get_io_service(m_socket));
+		m_socks5_connection = std::make_shared<socks5>(lt::get_io_service(m_socket)
+			, m_listen_socket, alerts);
 		m_socks5_connection->start(ps);
 	}
 }
@@ -518,19 +530,106 @@ void socks5::on_name_lookup(error_code const& e, tcp::resolver::iterator i)
 
 	if (e == boost::asio::error::operation_aborted) return;
 
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_listen_socket.get_local_endpoint()
+				, operation_t::hostname_lookup, e);
+		return;
+	}
 
-	m_proxy_addr.address(i->endpoint().address());
-	m_proxy_addr.port(i->endpoint().port());
+	// only set up a SOCKS5 tunnel for sockets with the same address family
+	// as the proxy
+	// this is a hack to mitigate excessive SOCKS5 tunnels, until this can get
+	// fixed properly.
+	for (;;)
+	{
+		if (i == tcp::resolver::iterator{})
+		{
+			if (m_alerts.should_post<socks5_alert>())
+				m_alerts.emplace_alert<socks5_alert>(m_listen_socket.get_local_endpoint()
+					, operation_t::hostname_lookup
+					, error_code(boost::system::errc::host_unreachable, generic_category()));
+			return;
+		}
+
+		// we found a match
+		if (m_listen_socket.can_route(i->endpoint().address()))
+			break;
+		++i;
+	}
+
+	m_proxy_addr = i->endpoint();
 
 	error_code ec;
 	m_socks5_sock.open(is_v4(m_proxy_addr) ? tcp::v4() : tcp::v6(), ec);
+	if (ec)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_open, ec);
+		return;
+	}
 
 	// enable keepalives
 	m_socks5_sock.set_option(boost::asio::socket_base::keep_alive(true), ec);
+	if (ec)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_option, ec);
+		ec.clear();
+	}
+
+#if defined _WIN32 && !defined TORRENT_BUILD_SIMULATOR
+	SOCKET sock = m_socks5_sock.native_handle();
+	DWORD bytes = 0;
+	tcp_keepalive timeout{};
+	timeout.onoff = TRUE;
+	timeout.keepalivetime = 30;
+	timeout.keepaliveinterval = 30;
+	auto const ret = WSAIoctl(sock, SIO_KEEPALIVE_VALS, &timeout, sizeof(timeout)
+		, nullptr, 0, &bytes, nullptr, nullptr);
+	if (ret != 0)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_option
+				, error_code(WSAGetLastError(), system_category()));
+	}
+#else
+#if defined TORRENT_HAS_KEEPALIVE_IDLE
+	// set keepalive timeouts
+	m_socks5_sock.set_option(aux::tcp_keepalive_idle(30), ec);
+	if (ec)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_option, ec);
+		ec.clear();
+	}
+#endif
+#ifdef TORRENT_HAS_KEEPALIVE_INTERVAL
+	m_socks5_sock.set_option(aux::tcp_keepalive_interval(1), ec);
+	if (ec)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_option, ec);
+		ec.clear();
+	}
+#endif
+#endif
+
+	tcp::endpoint const bind_ep(m_listen_socket.get_local_endpoint().address(), 0);
+	m_socks5_sock.bind(bind_ep, ec);
+	if (ec)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_bind, ec);
+		return;
+	}
+
+	// TODO: perhaps an attempt should be made to bind m_socks5_sock to the
+	// device of m_listen_socket
 
 	ADD_OUTSTANDING_ASYNC("socks5::on_connected");
-	m_socks5_sock.async_connect(tcp::endpoint(m_proxy_addr.address(), m_proxy_addr.port())
+	m_socks5_sock.async_connect(m_proxy_addr
 		, std::bind(&socks5::on_connected, self(), _1));
 
 	ADD_OUTSTANDING_ASYNC("socks5::on_connect_timeout");
@@ -547,6 +646,9 @@ void socks5::on_connect_timeout(error_code const& e)
 
 	if (m_abort) return;
 
+	if (m_alerts.should_post<socks5_alert>())
+		m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::connect, errors::timed_out);
+
 	error_code ignore;
 	m_socks5_sock.close(ignore);
 }
@@ -562,7 +664,12 @@ void socks5::on_connected(error_code const& e)
 	if (m_abort) return;
 
 	// we failed to connect to the proxy
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::connect, e);
+		return;
+	}
 
 	using namespace libtorrent::detail;
 
@@ -592,7 +699,12 @@ void socks5::handshake1(error_code const& e)
 {
 	COMPLETE_ASYNC("socks5::on_handshake1");
 	if (m_abort) return;
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake, e);
+		return;
+	}
 
 	ADD_OUTSTANDING_ASYNC("socks5::on_handshake2");
 	boost::asio::async_read(m_socks5_sock, boost::asio::buffer(m_tmp_buf.data(), 2)
@@ -604,7 +716,12 @@ void socks5::handshake2(error_code const& e)
 	COMPLETE_ASYNC("socks5::on_handshake2");
 	if (m_abort) return;
 
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake, e);
+		return;
+	}
 
 	using namespace libtorrent::detail;
 
@@ -614,6 +731,9 @@ void socks5::handshake2(error_code const& e)
 
 	if (version < 5)
 	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake
+				, socks_error::unsupported_version);
 		error_code ec;
 		m_socks5_sock.close(ec);
 		return;
@@ -627,6 +747,9 @@ void socks5::handshake2(error_code const& e)
 	{
 		if (m_proxy_settings.username.empty())
 		{
+			if (m_alerts.should_post<socks5_alert>())
+				m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake
+					, socks_error::username_required);
 			error_code ec;
 			m_socks5_sock.close(ec);
 			return;
@@ -649,6 +772,10 @@ void socks5::handshake2(error_code const& e)
 	}
 	else
 	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake
+				, socks_error::unsupported_authentication_method);
+
 		error_code ec;
 		m_socks5_sock.close(ec);
 		return;
@@ -659,7 +786,12 @@ void socks5::handshake3(error_code const& e)
 {
 	COMPLETE_ASYNC("socks5::on_handshake3");
 	if (m_abort) return;
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake, e);
+		return;
+	}
 
 	ADD_OUTSTANDING_ASYNC("socks5::on_handshake4");
 	boost::asio::async_read(m_socks5_sock, boost::asio::buffer(m_tmp_buf.data(), 2)
@@ -670,7 +802,12 @@ void socks5::handshake4(error_code const& e)
 {
 	COMPLETE_ASYNC("socks5::on_handshake4");
 	if (m_abort) return;
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake, e);
+		return;
+	}
 
 	using namespace libtorrent::detail;
 
@@ -706,7 +843,12 @@ void socks5::connect1(error_code const& e)
 {
 	COMPLETE_ASYNC("socks5::connect1");
 	if (m_abort) return;
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::connect, e);
+		return;
+	}
 
 	ADD_OUTSTANDING_ASYNC("socks5::connect2");
 	boost::asio::async_read(m_socks5_sock, boost::asio::buffer(m_tmp_buf.data(), 10)
@@ -718,7 +860,12 @@ void socks5::connect2(error_code const& e)
 	COMPLETE_ASYNC("socks5::connect2");
 
 	if (m_abort) return;
-	if (e) return;
+	if (e)
+	{
+		if (m_alerts.should_post<socks5_alert>())
+			m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::handshake, e);
+		return;
+	}
 
 	using namespace libtorrent::detail;
 
@@ -757,6 +904,9 @@ void socks5::hung_up(error_code const& e)
 	m_active = false;
 
 	if (e == boost::asio::error::operation_aborted || m_abort) return;
+
+	if (e && m_alerts.should_post<socks5_alert>())
+		m_alerts.emplace_alert<socks5_alert>(m_proxy_addr, operation_t::sock_read, e);
 
 	// the socks connection was closed, re-open it in a bit
 	m_retry_timer.expires_from_now(seconds(5));
