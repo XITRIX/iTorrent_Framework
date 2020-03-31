@@ -8,7 +8,7 @@
 
 //TORRENT
 int init_engine(const char* client_name, const char* download_path, const char* config_path);
-Result getTorrentInfo();
+Result get_torrent_info();
 char* add_torrent(const char* torrent_path);
 void add_torrent_with_states(const char* torrent_path, int* states);
 char* add_magnet(const char* magnet_link);
@@ -35,3 +35,7 @@ void set_upload_limit(int limit_in_bytes);
 
 void set_torrent_files_sequental(const char* torrent_hash, int sequental);
 int get_torrent_files_sequental(const char* torrent_hash);
+
+//memory management
+void set_storage_preallocation(int preallocate);
+int get_storage_preallocation();

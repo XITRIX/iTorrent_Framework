@@ -44,6 +44,8 @@ public:
     std::string client_name;
     vector<torrent_handle> handlers;
     
+    bool isPreallocationEnabled = false;
+    
     Engine(std::string client_name, std::string download_path, std::string config_path) {
         Engine::standart = this;
         this->download_path = download_path;
@@ -91,6 +93,10 @@ public:
         }
         p.ti = sti;
         p.save_path = download_path;
+        
+        p.storage_mode = isPreallocationEnabled
+            ? lt::storage_mode_allocate : lt::storage_mode_sparse;
+        
         torrent_handle handle = s->add_torrent(p, ec);
         handlers.push_back(handle);
         
@@ -101,9 +107,12 @@ public:
         lt::error_code ec;
         add_torrent_params p = parse_magnet_uri(magnetLink);
         p.save_path = download_path;
+        
+        p.storage_mode = isPreallocationEnabled
+            ? lt::storage_mode_allocate : lt::storage_mode_sparse;
+        
 		torrent_handle handle = s->add_torrent(p, ec);
         handle.unset_flags(lt::torrent_flags::stop_when_ready);
-		//handlers.push_back(handle);
 		handlers = s->get_torrents();
 		
 		std::string hash = hash_to_string(handle.status().info_hash);
@@ -137,6 +146,16 @@ extern "C" int init_engine(char* client_name, char* download_path, char* config_
     new Engine(client_name, download_path, config_path);
     return 0;
 }
+
+// Parameters
+extern "C" void set_storage_preallocation(int preallocate) {
+    Engine::standart->isPreallocationEnabled = preallocate == 1;
+}
+
+extern "C" int get_storage_preallocation() {
+    return Engine::standart->isPreallocationEnabled;
+}
+// Parameters
 
 extern "C" char* add_torrent(char* torrent_path) {
 	return Engine::standart->addTorrentByName(torrent_path);
@@ -535,7 +554,7 @@ extern "C" void set_upload_limit(int limit_in_bytes) {
 	ses->apply_settings(ss);
 }
 
-extern "C" Result getTorrentInfo() {
+extern "C" Result get_torrent_info() {
     std::string state_str[] = {"Queued", "Hashing", "Metadata", "Downloading", "Finished", "Seeding", "Allocating", "Checking fastresume"};
     
     int size = (int)Engine::standart->handlers.size();
