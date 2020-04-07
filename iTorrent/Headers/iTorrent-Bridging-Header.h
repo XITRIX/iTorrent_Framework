@@ -39,3 +39,8 @@ int get_torrent_files_sequental(const char* torrent_hash);
 //memory management
 void set_storage_preallocation(int preallocate);
 int get_storage_preallocation();
+
+//destructors
+void free_result(Result res);
+void free_files(Files files);
+void free_trackers(Trackers trackers);

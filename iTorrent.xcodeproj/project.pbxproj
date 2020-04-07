@@ -35,6 +35,7 @@
 		7CA9DD15240BB67800D95CD4 /* libcrypto-armv7s.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD0B240BB67800D95CD4 /* libcrypto-armv7s.a */; };
 		7CA9DD18240BBBCC00D95CD4 /* libssl-i386.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */; };
 		7CA9DD19240BBBCC00D95CD4 /* libcrypto-i386.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD17240BBBCB00D95CD4 /* libcrypto-i386.a */; };
+		7CCD02CD243A36E000B1669F /* wrapper_destructors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */; };
 		7CE61C0A242673C90038717C /* request_blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE61B69242673C80038717C /* request_blocks.cpp */; };
 		7CE61C0B242673C90038717C /* http_tracker_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE61B6A242673C80038717C /* http_tracker_connection.cpp */; };
 		7CE61C0C242673C90038717C /* choker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CE61B6B242673C80038717C /* choker.cpp */; };
@@ -230,6 +231,7 @@
 		7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-i386.a"; path = "iTorrent/Libraries/libssl-i386.a"; sourceTree = "<group>"; };
 		7CA9DD17240BBBCB00D95CD4 /* libcrypto-i386.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-i386.a"; path = "iTorrent/Libraries/libcrypto-i386.a"; sourceTree = "<group>"; };
 		7CBC7767231B328D0075A685 /* torrentHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torrentHandle.h; sourceTree = "<group>"; };
+		7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wrapper_destructors.cpp; sourceTree = "<group>"; };
 		7CE61B69242673C80038717C /* request_blocks.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = request_blocks.cpp; sourceTree = "<group>"; };
 		7CE61B6A242673C80038717C /* http_tracker_connection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = http_tracker_connection.cpp; sourceTree = "<group>"; };
 		7CE61B6B242673C80038717C /* choker.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = choker.cpp; sourceTree = "<group>"; };
@@ -462,6 +464,7 @@
 				7C554E9720B3525500175D8F /* iTorrent-Bridging-Header.h */,
 				7C554E9820B3525500175D8F /* result_struct.h */,
 				7C554E9920B3525500175D8F /* wrapper.cpp */,
+				7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */,
 				7CBC7767231B328D0075A685 /* torrentHandle.h */,
 			);
 			path = Headers;
@@ -825,6 +828,7 @@
 				7CE61C68242673CA0038717C /* bdecode.cpp in Sources */,
 				7CE61C34242673C90038717C /* fingerprint.cpp in Sources */,
 				7CE61C32242673C90038717C /* read_resume_data.cpp in Sources */,
+				7CCD02CD243A36E000B1669F /* wrapper_destructors.cpp in Sources */,
 				7C55744F20B3426D00175D8F /* path.cpp in Sources */,
 				7CE61C5D242673CA0038717C /* storage_utils.cpp in Sources */,
 				7CE61C87242673CA0038717C /* proxy_base.cpp in Sources */,

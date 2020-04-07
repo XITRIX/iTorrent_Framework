@@ -231,6 +231,7 @@ extern "C" Files get_files_of_torrent(torrent_info* info) {
         strcpy(files.files[i].file_name, fs.file_path(i).c_str());
         
         files.files[i].file_size = fs.file_size(i);
+        files.files[i].pieces = NULL;
     }
     return files;
 }
@@ -320,10 +321,6 @@ extern "C" Files get_files_of_torrent_by_hash(char* torrent_hash) {
     for (int i = 0; i < files.size; i++) {
         files.files[i].file_priority = handle->file_priority(i);
         files.files[i].file_downloaded = progress[i];
-		
-		std::string s = storage.file_path(i);
-		files.files[i].file_path = new char[s.length() + 1];
-		strcpy(files.files[i].file_path, s.c_str());
         
         const auto fileSize = storage.file_size(i) > 0 ? storage.file_size(i) - 1 : 0;
         const auto fileOffset = storage.file_offset(i);
@@ -360,35 +357,30 @@ extern "C" Trackers get_trackers_by_hash(char* torrent_hash) {
 		return t;
 	}
 	std::vector<announce_entry> trackers_list = handle->trackers();
+    int size = static_cast<int>(trackers_list.size());
 	Trackers trackers {
-		.size = static_cast<int>(trackers_list.size()),
-		.tracker_url = new char*[trackers_list.size()],
-		.messages = new char*[trackers_list.size()],
-		.seeders = new int[trackers_list.size()],
-        .leechs = new int[trackers_list.size()],
-		.peers = new int[trackers_list.size()],
-		.working = new int[trackers_list.size()],
-		.verified = new int[trackers_list.size()]
+		.size = size,
+        .trackers = new Tracker[size]
 	};
 	
 	for (int i = 0; i < trackers_list.size(); i++) {
-		trackers.tracker_url[i] = new char[trackers_list[i].url.length() + 1];
-		strcpy(trackers.tracker_url[i], trackers_list[i].url.c_str());
+		trackers.trackers[i].tracker_url = new char[trackers_list[i].url.length() + 1];
+		strcpy(trackers.trackers[i].tracker_url, trackers_list[i].url.c_str());
 		
-		trackers.messages[i] = new char[strlen("MSG") + 1];
-		strcpy(trackers.messages[i], "MSG");
+		trackers.trackers[i].messages = new char[strlen("MSG") + 1];
+		strcpy(trackers.trackers[i].messages, "MSG");
 		
-		trackers.working[i] = trackers_list[i].is_working() ? 1 : 0;
-		trackers.verified[i] = trackers_list[i].verified ? 1 : 0;
+		trackers.trackers[i].working = trackers_list[i].is_working() ? 1 : 0;
+		trackers.trackers[i].verified = trackers_list[i].verified ? 1 : 0;
 		
-        trackers.seeders[i] = -1;
-        trackers.peers[i] = -1;
-        trackers.leechs[i] = -1;
+        trackers.trackers[i].seeders = -1;
+        trackers.trackers[i].peers = -1;
+        trackers.trackers[i].leechs = -1;
         
         for (const lt::announce_endpoint &endpoint : trackers_list[i].endpoints) {
-            trackers.seeders[i] = std::max(trackers.seeders[i], endpoint.scrape_complete);
-            trackers.peers[i] = std::max(trackers.peers[i], endpoint.scrape_incomplete);
-            trackers.leechs[i] = std::max(trackers.leechs[i], endpoint.scrape_downloaded);
+            trackers.trackers[i].seeders = std::max(trackers.trackers[i].seeders, endpoint.scrape_complete);
+            trackers.trackers[i].peers = std::max(trackers.trackers[i].peers, endpoint.scrape_incomplete);
+            trackers.trackers[i].leechs = std::max(trackers.trackers[i].leechs, endpoint.scrape_downloaded);
         }
 	}
 	
