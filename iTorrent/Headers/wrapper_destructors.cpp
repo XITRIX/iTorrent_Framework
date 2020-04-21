@@ -10,7 +10,7 @@
 #include "result_struct.h"
 #include "file_struct.h"
 
-extern "C" void free_result(Result res) {
+extern "C" void free_result(TorrentResult res) {
     for (int i = 0; i < res.count; i++) {
         delete[] res.torrents[i].name;
         delete[] res.torrents[i].state;

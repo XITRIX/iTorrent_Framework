@@ -546,11 +546,11 @@ extern "C" void set_upload_limit(int limit_in_bytes) {
 	ses->apply_settings(ss);
 }
 
-extern "C" Result get_torrent_info() {
+extern "C" TorrentResult get_torrent_info() {
     std::string state_str[] = {"Queued", "Hashing", "Metadata", "Downloading", "Finished", "Seeding", "Allocating", "Checking fastresume"};
     
     int size = (int)Engine::standart->handlers.size();
-    Result res{
+    TorrentResult res{
         .count = size,
         .torrents = new TorrentInfo[size]
     };
