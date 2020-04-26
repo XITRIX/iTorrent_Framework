@@ -142,13 +142,18 @@ namespace aux {
 		// we accept incoming connections on this interface
 		static constexpr listen_socket_flags_t accept_incoming = 0_bit;
 
-		// this interface has a gateway associated with it, and can
-		// route to the internet (of the same address family)
-		static constexpr listen_socket_flags_t has_gateway = 1_bit;
+		// this interface was specified to be just the local network. If this flag
+		// is not set, this interface is assumed to have a path to the internet
+		// (i.e. have a gateway configured)
+		static constexpr listen_socket_flags_t local_network = 1_bit;
 
 		// this interface was expanded from the user requesting to
 		// listen on an unspecified address (either IPv4 or IPv6)
 		static constexpr listen_socket_flags_t was_expanded = 2_bit;
+
+		// there's a proxy configured, and this is the only one interface
+		// representing that one proxy
+		static constexpr listen_socket_flags_t proxy = 3_bit;
 
 		listen_socket_t() = default;
 
@@ -260,7 +265,11 @@ namespace aux {
 
 			bool operator==(listen_endpoint_t const& o) const
 			{
-				return addr == o.addr && port == o.port && device == o.device && ssl == o.ssl;
+				return addr == o.addr
+					&& port == o.port
+					&& device == o.device
+					&& ssl == o.ssl
+					&& flags == o.flags;
 			}
 
 			address addr;
@@ -283,13 +292,19 @@ namespace aux {
 			std::vector<listen_endpoint_t>& eps
 			, std::vector<std::shared_ptr<aux::listen_socket_t>>& sockets);
 
+		TORRENT_EXTRA_EXPORT void interface_to_endpoints(
+			listen_interface_t const& iface
+			, listen_socket_flags_t flags
+			, span<ip_interface const> const ifs
+			, std::vector<listen_endpoint_t>& eps);
+
 		// expand [::] to all IPv6 interfaces for BEP 45 compliance
 		TORRENT_EXTRA_EXPORT void expand_unspecified_address(
 			span<ip_interface const> ifs
+			, span<ip_route const> routes
 			, std::vector<listen_endpoint_t>& eps);
 
 		TORRENT_EXTRA_EXPORT void expand_devices(span<ip_interface const>
-			, span<ip_route const> routes
 			, std::vector<listen_endpoint_t>& eps);
 
 		// this is the link between the main thread and the
@@ -629,8 +644,6 @@ namespace aux {
 			// ``num_peers_half_open`` instead.
 			int num_connections() const override { return int(m_connections.size()); }
 
-			int peak_up_rate() const { return m_peak_up_rate; }
-
 			void trigger_unchoke() noexcept override
 			{
 				TORRENT_ASSERT(is_single_thread());
@@ -643,8 +656,10 @@ namespace aux {
 			}
 
 #if TORRENT_ABI_VERSION == 1
+#include "libtorrent/aux_/disable_warnings_push.hpp"
 			session_status status() const;
 			peer_id deprecated_get_peer_id() const;
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 #endif
 
 			void get_cache_info(torrent_handle h, cache_status* ret, int flags) const;
@@ -783,13 +798,13 @@ namespace aux {
 
 #if TORRENT_ABI_VERSION == 1
 			void update_ssl_listen();
-			void update_dht_upload_rate_limit();
 			void update_local_download_rate();
 			void update_local_upload_rate();
 			void update_rate_limit_utp();
 			void update_ignore_rate_limits_on_local_network();
 #endif
 
+			void update_dht_upload_rate_limit();
 			void update_proxy();
 			void update_i2p_bridge();
 			void update_peer_tos();
@@ -818,11 +833,11 @@ namespace aux {
 
 			void update_socket_buffer_size();
 			void update_dht_announce_interval();
-			void update_anonymous_mode();
 			void update_download_rate();
 			void update_upload_rate();
 			void update_connections_limit();
 			void update_alert_mask();
+			void update_validate_https();
 
 			void trigger_auto_manage() override;
 
@@ -851,9 +866,6 @@ namespace aux {
 			void set_external_address(std::shared_ptr<listen_socket_t> const& sock, address const& ip
 				, ip_source_t source_type, address const& source);
 
-			void interface_to_endpoints(std::string const& device, int port
-				, transport ssl, listen_socket_flags_t flags, std::vector<listen_endpoint_t>& eps);
-
 			counters m_stats_counters;
 
 			// this is a pool allocator for torrent_peer objects
@@ -869,9 +881,14 @@ namespace aux {
 			io_service& m_io_service;
 
 #ifdef TORRENT_USE_OPENSSL
-			// this is a generic SSL context used when talking to
-			// unauthenticated HTTPS servers
+			// this is a generic SSL context used when talking to HTTPS servers
 			ssl::context m_ssl_ctx;
+
+			// this is the SSL context used for SSL listen sockets. It doesn't
+			// verify peers, but it has the servername callback set on it. Once it
+			// knows which torrent a peer is connecting to, it will switch the
+			// socket over to the torrent specific context, which does verify peers
+			ssl::context m_peer_ssl_ctx;
 #endif
 
 			// handles delayed alerts
@@ -1064,8 +1081,9 @@ namespace aux {
 			void sent_syn(bool ipv6) override;
 			void received_synack(bool ipv6) override;
 
+#if TORRENT_ABI_VERSION == 1
 			int m_peak_up_rate = 0;
-			int m_peak_down_rate = 0;
+#endif
 
 			void on_tick(error_code const& e);
 
@@ -1088,7 +1106,8 @@ namespace aux {
 				std::int64_t const ret = total_seconds(aux::time_now()
 					- m_created) + 1;
 				TORRENT_ASSERT(ret >= 0);
-				TORRENT_ASSERT(ret <= (std::numeric_limits<std::uint16_t>::max)());
+				if (ret > (std::numeric_limits<std::uint16_t>::max)())
+					return (std::numeric_limits<std::uint16_t>::max)();
 				return static_cast<std::uint16_t>(ret);
 			}
 			time_point session_start_time() const override

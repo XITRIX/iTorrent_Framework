@@ -39,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/add_torrent_params.hpp"
 #include "libtorrent/disk_io_thread.hpp" // for cached_piece_info
-#include "libtorrent/alert.hpp" // alert::error_notification
+#include "libtorrent/alert.hpp" // alert_category::error
 #include "libtorrent/peer_class.hpp"
 #include "libtorrent/peer_class_type_filter.hpp"
 #include "libtorrent/peer_id.hpp"
@@ -82,6 +82,11 @@ namespace libtorrent {
 		session_handle(session_handle&& t) noexcept = default;
 		session_handle& operator=(session_handle const&) = default;
 		session_handle& operator=(session_handle&&) noexcept = default;
+
+#if TORRENT_ABI_VERSION == 1
+		using save_state_flags_t = libtorrent::save_state_flags_t;
+		using session_flags_t = libtorrent::session_flags_t;
+#endif
 
 		// returns true if this handle refers to a valid session object. If the
 		// session has been destroyed, all session_handle objects will expire and
@@ -303,11 +308,15 @@ namespace libtorrent {
 		TORRENT_DEPRECATED
 		void set_load_function(user_load_function_t fun);
 
+#include "libtorrent/aux_/disable_warnings_push.hpp"
+
 		// deprecated in libtorrent 1.1, use performance_counters instead
 		// returns session wide-statistics and status. For more information, see
 		// the ``session_status`` struct.
 		TORRENT_DEPRECATED
 		session_status status() const;
+
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 
 		// deprecated in libtorrent 1.1
 		// fills out the supplied vector with information for each piece that is
@@ -821,6 +830,11 @@ namespace libtorrent {
 
 #if TORRENT_ABI_VERSION == 1
 
+#ifdef _MSC_VER
+#pragma warning(push, 1)
+// warning C4996: X: was declared deprecated
+#pragma warning( disable : 4996 )
+#endif
 #if defined __GNUC__
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wdeprecated-declarations"
@@ -834,6 +848,9 @@ namespace libtorrent {
 
 #if defined __GNUC__
 #pragma GCC diagnostic pop
+#endif
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 		// ``set_i2p_proxy`` sets the i2p_ proxy, and tries to open a persistent

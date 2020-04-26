@@ -38,6 +38,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define _FILE_OFFSET_BITS 64
 
 #include <boost/config.hpp>
+#include <boost/version.hpp>
 
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 

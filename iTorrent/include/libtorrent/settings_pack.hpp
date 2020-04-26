@@ -54,6 +54,11 @@ POSSIBILITY OF SUCH DAMAGE.
 // that will be sent to the tracker. The user-agent will also be used to identify the
 // client with other peers.
 //
+// Each configuration option is named with an enum value inside the
+// settings_pack class. These are the available settings:
+//
+// .. include:: settings-ref.rst
+//
 namespace libtorrent {
 
 namespace aux {
@@ -73,6 +78,7 @@ namespace aux {
 		, aux::session_settings_single_thread& sett
 		, std::vector<void(aux::session_impl::*)()>* callbacks = nullptr);
 	TORRENT_EXTRA_EXPORT void run_all_updates(aux::session_impl& ses);
+	TORRENT_EXTRA_EXPORT int default_int_value(int const name);
 
 	// converts a setting integer (from the enums string_types, int_types or
 	// bool_types) to a string, and vice versa.
@@ -86,11 +92,6 @@ namespace aux {
 	// enum values. These values are passed in to the ``set_str()``,
 	// ``set_int()``, ``set_bool()`` functions, to specify the setting to
 	// change.
-	//
-	// These are the available settings:
-	//
-	// .. include:: settings-ref.rst
-	//
 	struct TORRENT_EXPORT settings_pack
 	{
 		friend TORRENT_EXTRA_EXPORT void apply_pack_impl(settings_pack const*
@@ -144,8 +145,7 @@ namespace aux {
 			index_mask =       0x3fff
 		};
 
-		// enumeration values naming string settings in the pack. To be used with
-		// get_str() and set_str().
+		// hidden
 		enum string_types
 		{
 			// this is the client identification to the tracker. The recommended
@@ -158,6 +158,12 @@ namespace aux {
 			// ``announce_ip`` is the ip address passed along to trackers as the
 			// ``&ip=`` parameter. If left as the default, that parameter is
 			// omitted.
+			//
+			// .. note::
+			//    This setting is only meant for very special cases where a seed is
+			//    running on the same host as the tracker, and the tracker accepts
+			//    the IP parameter (which normal trackers don't). Do not set this
+			//    option unless you also control the tracker.
 			announce_ip,
 
 #if TORRENT_ABI_VERSION == 1
@@ -187,31 +193,66 @@ namespace aux {
 			// used instead
 			handshake_client_version,
 
-			// sets the network interface this session will use when it opens
-			// outgoing connections. An empty string binds outgoing connections to
-			// INADDR_ANY and port 0 (i.e. let the OS decide). The parameter must
-			// be a string containing one or more, comma separated, adapter names.
-			// Adapter names on Unix systems are of the form "eth0", "eth1",
-			// "tun0", etc. When specifying multiple interfaces, they will be
-			// assigned in round-robin order. This may be useful for clients that
-			// are multi-homed. Binding an outgoing connection to a local IP does
-			// not necessarily make the connection via the associated NIC/Adapter.
-			// Setting this to an empty string will disable binding of outgoing
-			// connections.
+			// This controls which IP address outgoing TCP connections are bound
+			// to, in addition to controlling whether such connections are also
+			// bound to a specific network interface/adapter (*bind-to-device*).
+			// This string is a comma-separated list of IP addresses and
+			// interface names. An empty string will not bind TCP sockets to a
+			// device, and let the network stack assign the local address. A
+			// list of names will be used to bind outgoing TCP sockets in a
+			// round-robin fashion. An IP address will simply be used to `bind()`
+			// the socket. An interface name will attempt to bind the socket to
+			// that interface. If that fails, or is unsupported, one of the IP
+			// addresses configured for that interface is used to `bind()` the
+			// socket to. If the interface or adapter doesn't exist, the
+			// outgoing connection will failed with an error message suggesting
+			// the device cannot be found. Adapter names on Unix systems are of
+			// the form "eth0", "eth1", "tun0", etc. This may be useful for
+			// clients that are multi-homed. Binding an outgoing connection to a
+			// local IP does not necessarily make the connection via the
+			// associated NIC/Adapter.
 			outgoing_interfaces,
 
 			// a comma-separated list of (IP or device name, port) pairs. These are
 			// the listen ports that will be opened for accepting incoming uTP and
-			// TCP connections. It is possible to listen on multiple interfaces and
+			// TCP connections. These are also used for *outgoing* uTP and UDP
+			// tracker connections and DHT nodes.
+			//
+			// It is possible to listen on multiple interfaces and
 			// multiple ports. Binding to port 0 will make the operating system
 			// pick the port.
 			//
-			// a port that has an "s" suffix will accept SSL connections. (note
+			// .. note::
+			//    There are reasons to stick to the same port across sessions,
+			//    which would mean only using port 0 on the first start, and
+			//    recording the port that was picked for subsequent startups.
+			//    Trackers, the DHT and other peers will remember the port they see
+			//    you use and hand that port out to other peers trying to connect
+			//    to you, as well as trying to connect to you themselves.
+			//
+			// A port that has an "s" suffix will accept SSL connections. (note
 			// that SSL sockets are not enabled by default).
 			//
-			// if binding fails, the listen_failed_alert is posted. If or once a
-			// socket binding succeeds, the listen_succeeded_alert is posted. There
-			// may be multiple failures before a success.
+			// A port that has an "l" suffix will be considered a local network.
+			// i.e. it's assumed to only be able to reach hosts in the same local
+			// network as the IP address (based on the netmask associated with the
+			// IP, queried from the operating system).
+			//
+			// if binding fails, the listen_failed_alert is posted. Once a
+			// socket binding succeeds (if it does), the listen_succeeded_alert
+			// is posted. There may be multiple failures before a success.
+			//
+			// If a device name that does not exist is configured, no listen
+			// socket will be opened for that interface. If this is the only
+			// interface configured, it will be as if no listen ports are
+			// configured.
+			//
+			// If no listen ports are configured (e.g. listen_interfaces is an
+			// empty string), networking will be disabled. No DHT will start, no
+			// outgoing uTP or tracker connections will be made. No incoming TCP
+			// or uTP connections will be accepted. (outgoing TCP connections
+			// will still be possible, depending on
+			// settings_pack::outgoing_interfaces).
 			//
 			// For example:
 			// ``[::1]:8888`` - will only accept connections on the IPv6 loopback
@@ -223,9 +264,15 @@ namespace aux {
 			// ``[::]:0s`` - will accept SSL connections on a port chosen by the
 			// OS. And not accept non-SSL connections at all.
 			//
-			// ``0.0.0.0:6881,[::]:6881`` - binds to all interfaces on port 6881
+			// ``0.0.0.0:6881,[::]:6881`` - binds to all interfaces on port 6881.
 			//
-			// Windows OS network adapter device name can be specified with GUID.
+			// ``10.0.1.13:6881l`` - binds to the local IP address, port 6881, but
+			// only allow talking to peers on the same local network. The netmask
+			// is queried from the operating system. Interfaces marked ``l`` are
+			// not announced to trackers, unless the tracker is also on the same
+			// local network.
+			//
+			// Windows OS network adapter device name must be specified with GUID.
 			// It can be obtained from "netsh lan show interfaces" command output.
 			// GUID must be uppercased string embraced in curly brackets.
 			// ``{E4F0B674-0DFC-48BB-98A5-2AA730BDB6D6}::7777`` - will accept
@@ -237,7 +284,14 @@ namespace aux {
 			listen_interfaces,
 
 			// when using a proxy, this is the hostname where the proxy is running
-			// see proxy_type.
+			// see proxy_type. Note that when using a proxy, the
+			// settings_pack::listen_interfaces setting is overridden and only a
+			// single interface is created, just to contact the proxy. This
+			// means a proxy cannot be combined with SSL torrents or multiple
+			// listen interfaces. This proxy listen interface will not accept
+			// incoming TCP connections, will not map ports with any gateway and
+			// will not enable local service discovery. All traffic is supposed
+			// to be channeled through the proxy.
 			proxy_hostname,
 
 			// when using a proxy, these are the credentials (if any) to use when
@@ -270,8 +324,7 @@ namespace aux {
 			max_string_setting_internal
 		};
 
-		// enumeration values naming boolean settings in the pack. To be used with
-		// get_bool() and set_bool().
+		// hidden
 		enum bool_types
 		{
 			// determines if connections from the same IP address as existing
@@ -402,10 +455,14 @@ namespace aux {
 			// preference of one protocol over another.
 			prefer_udp_trackers,
 
+#if TORRENT_ABI_VERSION == 1
 			// ``strict_super_seeding`` when this is set to true, a piece has to
 			// have been forwarded to a third peer before another one is handed
 			// out. This is the traditional definition of super seeding.
-			strict_super_seeding,
+			strict_super_seeding TORRENT_DEPRECATED_ENUM,
+#else
+			deprecated_strict_super_seeding,
+#endif
 
 #if TORRENT_ABI_VERSION == 1
 			// if this is set to true, the memory allocated for the disk cache
@@ -766,9 +823,8 @@ namespace aux {
 			// changes are taken in consideration.
 			enable_ip_notifier,
 
-			// when this is true, nodes whose IDs are derived from their source IP
-			// according to BEP 42 (https://www.bittorrent.org/beps/bep_0042.html) are
-			// preferred in the routing table.
+			// when this is true, nodes whose IDs are derived from their source
+			// IP according to `BEP 42`_ are preferred in the routing table.
 			dht_prefer_verified_node_ids,
 
 			// when this is true, create an affinity for downloading 4 MiB extents
@@ -777,11 +833,16 @@ namespace aux {
 			// small piece sizes
 			piece_extent_affinity,
 
+			// when set to true, the certificate of HTTPS trackers will be
+			// validated against the system's certificate store (as defined by
+			// OpenSSL). If the system does not have one, enabling this may cause
+			// HTTPS trackers to fail.
+			validate_https_trackers,
+
 			max_bool_setting_internal
 		};
 
-		// enumeration values naming integer settings in the pack. To be used with
-		// get_int() and set_int().
+		// hidden
 		enum int_types
 		{
 			// ``tracker_completion_timeout`` is the number of seconds the tracker
@@ -866,7 +927,7 @@ namespace aux {
 
 			// number of seconds until a new retry of a url-seed takes place.
 			// Default retry value for http-seeds that don't provide
-                        // a valid ``retry-after`` header.
+			// a valid ``retry-after`` header.
 			urlseed_wait_retry,
 
 			// sets the upper limit on the total number of files this session will
@@ -878,12 +939,12 @@ namespace aux {
 			// of file descriptors a process may have open.
 			file_pool_size,
 
-                        // ``max_failcount`` is the maximum times we try to
-                        // connect to a peer before stop connecting again. If a
-                        // peer succeeds, the failure counter is reset. If a
-                        // peer is retrieved from a peer source (other than DHT)
-                        // the failcount is decremented by one, allowing another
-                        // try.
+			// ``max_failcount`` is the maximum times we try to
+			// connect to a peer before stop connecting again. If a
+			// peer succeeds, the failure counter is reset. If a
+			// peer is retrieved from a peer source (other than DHT)
+			// the failcount is decremented by one, allowing another
+			// try.
 			max_failcount,
 
 			// the number of seconds to wait to reconnect to a peer. this time is
@@ -982,7 +1043,9 @@ namespace aux {
 			send_buffer_watermark_factor,
 
 			// ``choking_algorithm`` specifies which algorithm to use to determine
-			// which peers to unchoke.
+			// how many peers to unchoke. The unchoking algorithm for
+			// downloading torrents is always "tit-for-tat", i.e. the peers we
+			// download the fastest from are unchoked.
 			//
 			// The options for choking algorithms are:
 			//
@@ -994,20 +1057,10 @@ namespace aux {
 			//   rate achieved to peers. The more slots that are opened, the
 			//   marginal upload rate required to open up another slot increases.
 			//
-			// * ``bittyrant_choker`` attempts to optimize download rate by
-			//   finding the reciprocation rate of each peer individually and
-			//   prefers peers that gives the highest *return on investment*. It
-			//   still allocates all upload capacity, but shuffles it around to
-			//   the best peers first. For this choker to be efficient, you need
-			//   to set a global upload rate limit
-			//   (``settings_pack::upload_rate_limit``). For more information
-			//   about this choker, see the paper_. This choker is not fully
-			//   implemented nor tested.
-			//
-			// .. _paper: http://bittyrant.cs.washington.edu/#papers
-			//
 			// ``seed_choking_algorithm`` controls the seeding unchoke behavior.
-			// The available options are:
+			// i.e. How we select which peers to unchoke for seeding torrents.
+			// Since a seeding torrent isn't downloading anything, the
+			// tit-for-tat mechanism cannot be used. The available options are:
 			//
 			// * ``round_robin`` which round-robins the peers that are unchoked
 			//   when seeding. This distributes the upload bandwidth uniformly and
@@ -1021,6 +1074,9 @@ namespace aux {
 			// * ``anti_leech`` prioritizes peers who have just started or are
 			//   just about to finish the download. The intention is to force
 			//   peers in the middle of the download to trade with each other.
+			//   This does not just take into account the pieces a peer is
+			//   reporting having downloaded, but also the pieces we have sent
+			//   to it.
 			choking_algorithm,
 			seed_choking_algorithm,
 
@@ -1298,6 +1354,7 @@ namespace aux {
 			// allowed upload slots as optimistic unchoke slots.
 			num_optimistic_unchoke_slots,
 
+#if TORRENT_ABI_VERSION == 1
 			// ``default_est_reciprocation_rate`` is the assumed reciprocation
 			// rate from peers when using the BitTyrant choker. If set too high,
 			// you will over-estimate your peers and be
@@ -1314,9 +1371,14 @@ namespace aux {
 			// estimated reciprocation rate should be decreased by each unchoke
 			// interval a peer unchokes us. This only applies
 			// to the BitTyrant choker.
-			default_est_reciprocation_rate,
-			increase_est_reciprocation_rate,
-			decrease_est_reciprocation_rate,
+			default_est_reciprocation_rate TORRENT_DEPRECATED_ENUM,
+			increase_est_reciprocation_rate TORRENT_DEPRECATED_ENUM,
+			decrease_est_reciprocation_rate TORRENT_DEPRECATED_ENUM,
+#else
+			deprecated_default_est_reciprocation_rate,
+			deprecated_increase_est_reciprocation_rate,
+			deprecated_decrease_est_reciprocation_rate,
+#endif
 
 			// the max number of peers we accept from pex messages from a single
 			// peer. this limits the number of concurrent peers any of our peers
@@ -1362,15 +1424,11 @@ namespace aux {
 			deprecated_local_download_rate_limit,
 #endif
 
-#if TORRENT_ABI_VERSION == 1
 			// ``dht_upload_rate_limit`` sets the rate limit on the DHT. This is
 			// specified in bytes per second. For busy boxes
 			// with lots of torrents that requires more DHT traffic, this should
 			// be raised.
-			dht_upload_rate_limit TORRENT_DEPRECATED_ENUM,
-#else
-			deprecated_dht_upload_rate_limit,
-#endif
+			dht_upload_rate_limit,
 
 			// ``unchoke_slots_limit`` is the max number of unchoked peers in the
 			// session. The number of unchoke slots may be ignored depending on
@@ -1613,7 +1671,7 @@ namespace aux {
 			// retry a failed port bind
 			max_retry_port_bind,
 
-			// a bitmask combining flags from alert::category_t defining which
+			// a bitmask combining flags from alert_category_t defining which
 			// kinds of alerts to receive
 			alert_mask,
 
@@ -1711,9 +1769,22 @@ namespace aux {
 			// as zero.
 			resolver_cache_timeout,
 
+			// specify the not-sent low watermark for socket send buffers. This
+			// corresponds to the, Linux-specific, ``TCP_NOTSENT_LOWAT`` TCP socket
+			// option.
+			send_not_sent_low_watermark,
+
+			// The expiration time of UPnP port-mappings, specified in seconds. 0
+			// means permanent lease. Some routers do not support expiration times
+			// on port-maps (nor correctly returning an error indicating lack of
+			// support). In those cases, set this to 0. Otherwise, don't set it any
+			// lower than 5 minutes.
+			upnp_lease_duration,
+
 			max_int_setting_internal
 		};
 
+		// hidden
 		enum settings_counts_t : int
 		{
 			num_string_settings = int(max_string_setting_internal) - int(string_type_base),
@@ -1727,7 +1798,11 @@ namespace aux {
 		{
 			fixed_slots_choker = 0,
 			rate_based_choker = 2,
-			bittyrant_choker = 3
+#if TORRENT_ABI_VERSION == 1
+			bittyrant_choker TORRENT_DEPRECATED_ENUM = 3
+#else
+			deprecated_bittyrant_choker = 3
+#endif
 		};
 
 		enum seed_choking_algorithm_t : std::uint8_t

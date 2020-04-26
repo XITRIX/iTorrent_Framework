@@ -115,6 +115,7 @@ namespace libtorrent {
 
 	TORRENT_EXTRA_EXPORT std::int64_t calc_bytes(file_storage const& fs, piece_count const& pc);
 
+#ifndef TORRENT_DISABLE_STREAMING
 	struct time_critical_piece
 	{
 		// when this piece was first requested
@@ -137,6 +138,7 @@ namespace libtorrent {
 		bool operator<(time_critical_piece const& rhs) const
 		{ return deadline < rhs.deadline; }
 	};
+#endif // TORRENT_DISABLE_STREAMING
 
 	// this is the internal representation of web seeds
 	struct web_seed_t : web_seed_entry
@@ -285,8 +287,10 @@ namespace libtorrent {
 		// effectively paused as well.
 		bool m_session_paused:1;
 
+#ifndef TORRENT_DISABLE_SHARE_MODE
 		// this is set when the torrent is in share-mode
 		bool m_share_mode:1;
+#endif
 
 		// this is true if we have all pieces. If it's false,
 		// it means we either don't have any pieces, or, if
@@ -409,11 +413,13 @@ namespace libtorrent {
 		void start_announcing();
 		void stop_announcing();
 
-		void send_share_mode();
 		void send_upload_only();
 
+#ifndef TORRENT_DISABLE_SHARE_MODE
+		void send_share_mode();
 		void set_share_mode(bool s);
 		bool share_mode() const { return m_share_mode; }
+#endif
 
 		// TODO: make graceful pause also finish all sending blocks
 		// before disconnecting
@@ -579,10 +585,13 @@ namespace libtorrent {
 		void prioritize_files(aux::vector<download_priority_t, file_index_t> files);
 		void file_priorities(aux::vector<download_priority_t, file_index_t>*) const;
 
+#ifndef TORRENT_DISABLE_STREAMING
 		void cancel_non_critical();
 		void set_piece_deadline(piece_index_t piece, int t, deadline_flags_t flags);
 		void reset_piece_deadline(piece_index_t piece);
 		void clear_time_critical();
+#endif // TORRENT_DISABLE_STREAMING
+
 		void update_piece_priorities(
 			aux::vector<download_priority_t, file_index_t> const& file_prios);
 
@@ -772,8 +781,11 @@ namespace libtorrent {
 // --------------------------------------------
 		// PIECE MANAGEMENT
 
+#ifndef TORRENT_DISABLE_SHARE_MODE
 		void recalc_share_mode();
+#endif
 
+#ifndef TORRENT_DISABLE_SUPERSEEDING
 		bool super_seeding() const
 		{
 			// we're not super seeding if we're not a seed
@@ -782,6 +794,7 @@ namespace libtorrent {
 
 		void set_super_seeding(bool on);
 		piece_index_t get_piece_to_super_seed(typed_bitfield<piece_index_t> const&);
+#endif
 
 		// returns true if we have downloaded the given piece
 		bool have_piece(piece_index_t index) const
@@ -809,6 +822,7 @@ namespace libtorrent {
 			return m_picker->has_piece_passed(index);
 		}
 
+#ifndef TORRENT_DISABLE_PREDICTIVE_PIECES
 		// a predictive piece is a piece that we might
 		// not have yet, but still announced to peers, anticipating that
 		// we'll have it very soon
@@ -816,6 +830,7 @@ namespace libtorrent {
 		{
 			return std::binary_search(m_predictive_pieces.begin(), m_predictive_pieces.end(), index);
 		}
+#endif // TORRENT_DISABLE_PREDICTIVE_PIECES
 
 	private:
 
@@ -1011,6 +1026,10 @@ namespace libtorrent {
 		std::vector<announce_entry> const& trackers() const
 		{ return m_trackers; }
 
+		// this sets all the "enabled" states on all trackers, giving them
+		// all one more chance of being tried
+		void enable_all_trackers();
+
 		void replace_trackers(std::vector<announce_entry> const& urls);
 
 		// returns true if the tracker was added, and false if it was already
@@ -1107,12 +1126,14 @@ namespace libtorrent {
 		void set_apply_ip_filter(bool b);
 		bool apply_ip_filter() const { return m_apply_ip_filter; }
 
+#ifndef TORRENT_DISABLE_PREDICTIVE_PIECES
 		std::vector<piece_index_t> const& predictive_pieces() const
 		{ return m_predictive_pieces; }
 
 		// this is called whenever we predict to have this piece
 		// within one second
 		void predicted_have_piece(piece_index_t index, int milliseconds);
+#endif
 
 		void clear_in_state_update()
 		{
@@ -1150,7 +1171,13 @@ namespace libtorrent {
 #endif
 
 		int num_time_critical_pieces() const
-		{ return int(m_time_critical_pieces.size()); }
+		{
+#ifndef TORRENT_DISABLE_STREAMING
+			return int(m_time_critical_pieces.size());
+#else
+			return 0;
+#endif
+		}
 
 		int get_suggest_pieces(std::vector<piece_index_t>& p
 			, typed_bitfield<piece_index_t> const& bits
@@ -1215,9 +1242,11 @@ namespace libtorrent {
 		bool should_announce_dht() const;
 #endif
 
+#ifndef TORRENT_DISABLE_STREAMING
 		void remove_time_critical_piece(piece_index_t piece, bool finished = false);
 		void remove_time_critical_pieces(aux::vector<download_priority_t, piece_index_t> const& priority);
 		void request_time_critical_pieces();
+#endif // TORRENT_DISABLE_STREAMING
 
 		void need_peer_list();
 
@@ -1235,7 +1264,7 @@ namespace libtorrent {
 		storage_holder m_storage;
 
 #ifdef TORRENT_USE_OPENSSL
-		std::shared_ptr<boost::asio::ssl::context> m_ssl_ctx;
+		std::unique_ptr<boost::asio::ssl::context> m_ssl_ctx;
 
 		bool verify_peer_cert(bool preverified, boost::asio::ssl::verify_context& ctx);
 
@@ -1289,8 +1318,10 @@ namespace libtorrent {
 
 		aux::vector<announce_entry> m_trackers;
 
+#ifndef TORRENT_DISABLE_STREAMING
 		// this list is sorted by time_critical_piece::deadline
 		std::vector<time_critical_piece> m_time_critical_pieces;
+#endif
 
 		std::string m_trackerid;
 #if TORRENT_ABI_VERSION == 1
@@ -1317,6 +1348,7 @@ namespace libtorrent {
 		std::string m_source_feed_url;
 #endif
 
+#ifndef TORRENT_DISABLE_PREDICTIVE_PIECES
 		// this is a list of all pieces that we have announced
 		// as having, without actually having yet. If we receive
 		// a request for a piece in this list, we need to hold off
@@ -1328,6 +1360,7 @@ namespace libtorrent {
 		// TODO: 3 factor out predictive pieces and all operations on it into a
 		// separate class (to use as memeber here instead)
 		std::vector<piece_index_t> m_predictive_pieces;
+#endif
 
 		// the performance counters of this session
 		counters& m_stats_counters;
@@ -1548,9 +1581,11 @@ namespace libtorrent {
 		// haven't
 		bool m_seed_mode:1;
 
+#ifndef TORRENT_DISABLE_SUPERSEEDING
 		// if this is true, we're currently super seeding this
 		// torrent.
 		bool m_super_seeding:1;
+#endif
 
 		// if this is set, whenever transitioning into a downloading/seeding state
 		// from a non-downloading/seeding state, the torrent is paused.

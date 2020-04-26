@@ -254,6 +254,15 @@ namespace aux {
 		torrent_handle& operator=(torrent_handle const&) = default;
 		torrent_handle& operator=(torrent_handle&&) noexcept = default;
 
+
+#if TORRENT_ABI_VERSION == 1
+		using flags_t = add_piece_flags_t;
+		using status_flags_t = libtorrent::status_flags_t;
+		using pause_flags_t = libtorrent::pause_flags_t;
+		using save_resume_flags_t = libtorrent::resume_data_flags_t;
+		using reannounce_flags_t = libtorrent::reannounce_flags_t;
+#endif
+
 		// instruct libtorrent to overwrite any data that may already have been
 		// downloaded with the data of the new piece being added.
 		static constexpr add_piece_flags_t overwrite_existing = 0_bit;
@@ -1238,10 +1247,16 @@ namespace aux {
 		}
 
 		// This function is intended only for use by plugins and the alert
-		// dispatch function. This type does not have a stable API and should
+		// dispatch function. This type does not have a stable ABI and should
 		// be relied on as little as possible. Accessing the handle returned by
 		// this function is not thread safe outside of libtorrent's internal
 		// thread (which is used to invoke plugin callbacks).
+		// The ``torrent`` class is not only eligible for changing ABI across
+		// minor versions of libtorrent, its layout is also dependent on build
+		// configuration. This adds additional requirements on a client to be
+		// built with the exact same build configuration as libtorrent itself.
+		// i.e. the ``TORRENT_`` macros must match between libtorrent and the
+		// client builds.
 		std::shared_ptr<torrent> native_handle() const;
 
 	private:

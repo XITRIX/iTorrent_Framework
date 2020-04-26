@@ -367,6 +367,7 @@ namespace aux {
 		// it will let the peer know that we have the given piece
 		void announce_piece(piece_index_t index);
 
+#ifndef TORRENT_DISABLE_SUPERSEEDING
 		// this will tell the peer to announce the given piece
 		// and only allow it to request that piece
 		void superseed_piece(piece_index_t replace_piece, piece_index_t new_piece);
@@ -375,6 +376,7 @@ namespace aux {
 			return m_superseed_piece[0] == index
 				|| m_superseed_piece[1] == index;
 		}
+#endif
 
 		// tells if this connection has data it want to send
 		// and has enough upload bandwidth quota left to send it.
@@ -384,8 +386,10 @@ namespace aux {
 		bool is_seed() const;
 		int num_have_pieces() const { return m_num_pieces; }
 
+#ifndef TORRENT_DISABLE_SHARE_MODE
 		void set_share_mode(bool m);
 		bool share_mode() const { return m_share_mode; }
+#endif
 
 		void set_upload_only(bool u);
 		bool upload_only() const { return m_upload_only; }
@@ -513,9 +517,11 @@ namespace aux {
 		// returns true if the connection was disconnected
 		bool disconnect_if_redundant();
 
+#if TORRENT_ABI_VERSION == 1
 		void increase_est_reciprocation_rate();
 		void decrease_est_reciprocation_rate();
 		int est_reciprocation_rate() const { return m_est_reciprocation_rate; }
+#endif
 
 #ifndef TORRENT_DISABLE_LOGGING
 		bool should_log(peer_log_alert::direction_t direction) const final;
@@ -1014,12 +1020,14 @@ namespace aux {
 		// by sending choke, unchoke.
 		int m_num_invalid_requests = 0;
 
+#ifndef TORRENT_DISABLE_SUPERSEEDING
 		// if [0] is -1, super-seeding is not active. If it is >= 0
 		// this is the piece that is available to this peer. Only
 		// these two pieces can be downloaded from us by this peer.
 		// This will remain the current piece for this peer until
 		// another peer sends us a have message for this piece
 		std::array<piece_index_t, 2> m_superseed_piece = {{piece_index_t(-1), piece_index_t(-1)}};
+#endif
 
 		// the number of bytes send to the disk-io
 		// thread that hasn't yet been completely written.
@@ -1029,11 +1037,13 @@ namespace aux {
 		int m_download_rate_peak = 0;
 		int m_upload_rate_peak = 0;
 
+#if TORRENT_ABI_VERSION == 1
 		// when using the BitTyrant choker, this is our
 		// estimated reciprocation rate. i.e. the rate
 		// we need to send to this peer for it to unchoke
 		// us
 		int m_est_reciprocation_rate;
+#endif
 
 		// stop sending data after this many bytes, INT_MAX = inf
 		int m_send_barrier = INT_MAX;
@@ -1097,8 +1107,10 @@ namespace aux {
 		// at a time.
 		bool m_request_large_blocks:1;
 
+#ifndef TORRENT_DISABLE_SHARE_MODE
 		// set to true if this peer is in share mode
 		bool m_share_mode:1;
+#endif
 
 		// set to true when this peer is only uploading
 		bool m_upload_only:1;

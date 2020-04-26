@@ -53,7 +53,7 @@ public:
         this->client_name = client_name;
         
         settings_pack pack;
-        pack.set_str(settings_pack::handshake_client_version, client_name);
+        pack.set_str(settings_pack::user_agent, client_name);
         pack.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
         pack.set_int(lt::settings_pack::alert_mask
                      , lt::alert::error_notification
@@ -104,21 +104,40 @@ public:
     }
     
     char* addMagnet(char* magnetLink) {
+        add_torrent_params p;
         lt::error_code ec;
-        add_torrent_params p = parse_magnet_uri(magnetLink);
+        parse_magnet_uri(magnetLink, p, ec);
+        
+        std::string hash;
+        
+        if (ec.value() != 0) {
+            hash = "-1";
+            char* res = new char[hash.length() + 1];
+            strcpy(res, hash.c_str());
+            return res;
+        }
+        
         p.save_path = download_path;
         
         p.storage_mode = isPreallocationEnabled
             ? lt::storage_mode_allocate : lt::storage_mode_sparse;
         
-		torrent_handle handle = s->add_torrent(p, ec);
+        torrent_handle handle = s->add_torrent(p, ec);
+        
+        if (ec.value() != 0) {
+            hash = "-1";
+            char* res = new char[hash.length() + 1];
+            strcpy(res, hash.c_str());
+            return res;
+        }
+        
         handle.unset_flags(lt::torrent_flags::stop_when_ready);
-		handlers = s->get_torrents();
-		
-		std::string hash = hash_to_string(handle.status().info_hash);
-		char* res = new char[hash.length() + 1];
-		strcpy(res, hash.c_str());
-		return res;
+        handlers = s->get_torrents();
+        
+        hash = hash_to_string(handle.status().info_hash);
+        char* res = new char[hash.length() + 1];
+        strcpy(res, hash.c_str());
+        return res;
     }
     
     torrent_handle* getHandleByHash(char* torrent_hash) {
@@ -136,7 +155,7 @@ public:
             torrent_status stat = handlers[i].status();
             
             std::string state_str[] = {"queued", "checking", "downloading metadata", "downloading", "finished", "seeding", "allocating", "checking fastresume"};
-            printf("\r%.2f%% complete (down: %.1d kb/s up: %.1d kB/s peers: %d) %s", stat.progress * 100, stat.download_rate / 1000, stat.upload_rate / 1000, stat.num_peers, state_str[stat.state].c_str());
+            //printf("\r%.2f%% complete (down: %.1d kb/s up: %.1d kB/s peers: %d) %s", stat.progress * 100, stat.download_rate / 1000, stat.upload_rate / 1000, stat.num_peers, state_str[stat.state].c_str());
         }
     }
 };
@@ -194,7 +213,7 @@ extern "C" char* get_torrent_file_hash(char* torrent_path) {
             return (char*)"-1";
         }
     } catch (boost::system::system_error const & e) {
-        printf("%s: %i - %s", e.what(), e.code().value(), e.code().message().c_str());
+        //printf("%s: %i - %s", e.what(), e.code().value(), e.code().message().c_str());
         return (char*)"-1";
     }
 }
@@ -269,7 +288,7 @@ extern "C" void start_torrent(char* torrent_hash) {
     handle->unset_flags(lt::torrent_flags::stop_when_ready);
     setAutoManaged(*handle, true);
 	handle->resume();
-    printf("Started");
+    //printf("Started");
 }
 
 extern "C" void stop_torrent(char* torrent_hash) {
@@ -281,7 +300,7 @@ extern "C" void stop_torrent(char* torrent_hash) {
     
     setAutoManaged(*handle, false);
 	handle->pause();
-    printf("Stopped");
+    //printf("Stopped");
 }
 
 extern "C" void rehash_torrent(char* torrent_hash) {
@@ -451,15 +470,15 @@ int generateResumeData(const bool final)
          torrent != handles.end(); ++torrent)
     {
         if (!torrent->is_valid()) {
-            printf("Not valid\n");
+            //printf("Not valid\n");
             continue;
         }
         if (!torrent->has_metadata()) {
-            printf("No metadata\n");
+            //printf("No metadata\n");
             continue;
         }
         if (!final && !torrent->need_save_resume_data()) {
-            printf("Not need to save ");
+            //printf("Not need to save ");
             continue;
         }
 
@@ -468,14 +487,14 @@ int generateResumeData(const bool final)
             || torrent->status().state == torrent_status::checking_resume_data //
             //|| torrent->is_paused()
             || (torrent->status().flags & torrent_flags::paused && torrent->status().errc)) { // HasError
-            printf("Error in %s is occured", torrent->status().name.c_str());
+            //printf("Error in %s is occured", torrent->status().name.c_str());
             continue;
         }
 
         torrent->save_resume_data();
         m_numResumeData++;
         
-        printf("%s - ADDED!!\n", torrent->name().c_str());
+        //printf("%s - ADDED!!\n", torrent->name().c_str());
     }
     
     return m_numResumeData;
@@ -499,20 +518,20 @@ extern "C" void save_fast_resume() {
     int m_numResumeData = generateResumeData(true);
     
     //sleep(500);
-    printf("Start with count %d!!\n", m_numResumeData);
+    //printf("Start with count %d!!\n", m_numResumeData);
     while (m_numResumeData > 0) {
         std::vector<lt::alert *> alerts;
         getPendingAlerts(alerts, 30 * 1000);
         if (alerts.empty()) {
-            printf(" aborting with %d outstanding torrents to save resume data for\n", m_numResumeData);
+            //printf(" aborting with %d outstanding torrents to save resume data for\n", m_numResumeData);
             break;
         }
         
         for (const auto a : alerts) {
-            printf("Type: %d!!\n", a->type());
+            //printf("Type: %d!!\n", a->type());
             
             if (lt::alert_cast<lt::save_resume_data_failed_alert>(a)) {
-                printf("Error!!\n");
+                //printf("Error!!\n");
                 --m_numResumeData;
                 continue;
             }
@@ -524,12 +543,12 @@ extern "C" void save_fast_resume() {
                 std::ofstream of(path, std::ios_base::binary);
                 auto const b = write_resume_data_buf(rd->params);
                 of.write(b.data(), b.size());
-                printf("%s - SAVED!!\n", h.name().c_str());
+                //printf("%s - SAVED!!\n", h.name().c_str());
                 --m_numResumeData;
             }
         }
     }
-    printf("Done!!\n");
+    //printf("Done!!\n");
 }
 
 extern "C" void set_download_limit(int limit_in_bytes) {

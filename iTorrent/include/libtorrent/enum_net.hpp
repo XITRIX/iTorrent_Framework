@@ -76,7 +76,7 @@ namespace libtorrent {
 		address gateway;
 		address source_hint;
 		char name[64]{};
-		int mtu;
+		int mtu = 0;
 	};
 
 	// returns a list of the configured IP interfaces
@@ -86,6 +86,9 @@ namespace libtorrent {
 
 	TORRENT_EXTRA_EXPORT std::vector<ip_route> enum_routes(io_service& ios
 		, error_code& ec);
+
+	// returns AF_INET or AF_INET6, depending on the address' family
+	TORRENT_EXTRA_EXPORT int family(address const& a);
 
 	// return (a1 & mask) == (a2 & mask)
 	TORRENT_EXTRA_EXPORT bool match_addr_mask(address const& a1
@@ -100,6 +103,9 @@ namespace libtorrent {
 	// return nullopt.
 	TORRENT_EXTRA_EXPORT boost::optional<address> get_gateway(
 		ip_interface const& iface, span<ip_route const> routes);
+
+	TORRENT_EXTRA_EXPORT bool has_default_route(char const* device, int family
+		, span<ip_route const> routes);
 
 	// attempt to bind socket to the device with the specified name. For systems
 	// that don't support SO_BINDTODEVICE the socket will be bound to one of the
@@ -134,7 +140,7 @@ namespace libtorrent {
 #if TORRENT_HAS_BINDTODEVICE
 		// try to use SO_BINDTODEVICE here, if that exists. If it fails,
 		// fall back to the mechanism we have below
-		sock.set_option(aux::bind_to_device(device_name), ec);
+		aux::bind_device(sock, device_name, ec);
 		if (ec)
 #endif
 		{
