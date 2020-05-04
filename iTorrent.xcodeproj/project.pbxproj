@@ -571,7 +571,6 @@
 		7CB17526244F655E005CEEA6 /* iTorrent_Simulator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent_Simulator.h; sourceTree = "<group>"; };
 		7CB17527244F655E005CEEA6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		7CB175F1244F6603005CEEA6 /* iTorrent-Simulator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "iTorrent-Simulator.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
-		7CB175F2244F6606005CEEA6 /* iTorrent copy-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "iTorrent copy-Info.plist"; path = "/Users/xitrix/Documents/GitHub/iTorrent_Framework/iTorrent copy-Info.plist"; sourceTree = "<absolute>"; };
 		7CBC7767231B328D0075A685 /* torrentHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torrentHandle.h; sourceTree = "<group>"; };
 		7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wrapper_destructors.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -615,7 +614,6 @@
 				7CB17525244F655E005CEEA6 /* iTorrent-Simulator */,
 				7C5505FD20B3370A00175D8F /* Products */,
 				7C74B7052125932600988F1C /* Frameworks */,
-				7CB175F2244F6606005CEEA6 /* iTorrent copy-Info.plist */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1619,7 +1617,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = "iTorrent copy-Info.plist";
+				INFOPLIST_FILE = "iTorrent-Simulator/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1662,7 +1660,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = "iTorrent copy-Info.plist";
+				INFOPLIST_FILE = "iTorrent-Simulator/Info.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
