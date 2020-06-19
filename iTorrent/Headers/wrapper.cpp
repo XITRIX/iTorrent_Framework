@@ -56,18 +56,44 @@ public:
         pack.set_str(settings_pack::user_agent, client_name);
         pack.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
         pack.set_int(lt::settings_pack::alert_mask
-                     , lt::alert::error_notification
-                     | lt::alert::storage_notification
-                     | lt::alert::status_notification);
+                        , lt::alert_category::error
+                        | lt::alert_category::peer
+                        | lt::alert_category::port_mapping
+                        | lt::alert_category::storage
+                        | lt::alert_category::tracker
+                        | lt::alert_category::connect
+                        | lt::alert_category::status
+                        | lt::alert_category::ip_block
+                        | lt::alert_category::performance_warning
+                        | lt::alert_category::dht
+                        | lt::alert_category::incoming_request
+                        | lt::alert_category::dht_operation
+                        | lt::alert_category::port_mapping_log
+                        | lt::alert_category::file_progress);
+        
+        pack.set_bool(settings_pack::enable_dht, true);
+        pack.set_bool(settings_pack::enable_lsd, true);
+        pack.set_bool(settings_pack::enable_incoming_utp, true);
+        pack.set_bool(settings_pack::enable_outgoing_utp, true);
+        pack.set_bool(settings_pack::enable_natpmp, true);
+        
         s = new lt::session(pack);
+        
     }
     
     char* addTorrentByName(char* torrent) {
-        auto handle = addTorrent(torrent);
-		
-		char* res = new char[hash_to_string(handle.status().info_hash).length() + 1];
-		strcpy(res, hash_to_string(handle.status().info_hash).c_str());
-		return res;
+        try {
+            auto handle = addTorrent(torrent);
+            char* res = new char[hash_to_string(handle.status().info_hash).length() + 1];
+            strcpy(res, hash_to_string(handle.status().info_hash).c_str());
+            return res;
+        } catch (boost::system::system_error const & e) {
+            // send error
+            std::string sres = "-1";
+            char* res = new char[sres.length() + 1];
+            strcpy(res, sres.c_str());
+            return res;
+        }
     }
     
     void addTorrentWithStates(char* torrent, int states[]) {
@@ -111,6 +137,7 @@ public:
         std::string hash;
         
         if (ec.value() != 0) {
+            // send error
             hash = "-1";
             char* res = new char[hash.length() + 1];
             strcpy(res, hash.c_str());
@@ -125,6 +152,7 @@ public:
         torrent_handle handle = s->add_torrent(p, ec);
         
         if (ec.value() != 0) {
+            // send error
             hash = "-1";
             char* res = new char[hash.length() + 1];
             strcpy(res, hash.c_str());
@@ -210,11 +238,19 @@ extern "C" char* get_torrent_file_hash(char* torrent_path) {
                 strcpy(res, s.c_str());
                 return res;
         } else {
-            return (char*)"-1";
+            // send error
+            std::string sres = "-1";
+            char* res = new char[sres.length() + 1];
+            strcpy(res, sres.c_str());
+            return res;
         }
     } catch (boost::system::system_error const & e) {
         //printf("%s: %i - %s", e.what(), e.code().value(), e.code().message().c_str());
-        return (char*)"-1";
+        // send error
+        std::string sres = "-1";
+        char* res = new char[sres.length() + 1];
+        strcpy(res, sres.c_str());
+        return res;
     }
 }
 
@@ -653,4 +689,146 @@ extern "C" TorrentResult get_torrent_info() {
     }
     
     return res;
+}
+
+
+// the number of times we've asked to save resume data
+// without having received a response (successful or failure)
+int num_outstanding_resume_data = 0;
+
+// returns true if the alert was handled (and should not be printed to the log)
+// returns false if the alert was not handled
+bool handle_alert(lt::session&, lt::alert* a)
+{
+    using namespace lt;
+
+    if (dht_stats_alert* p = alert_cast<dht_stats_alert>(a))
+    {
+//        dht_active_requests = p->active_requests;
+//        dht_routing_table = p->routing_table;
+        return true;
+    }
+
+//    if (torrent_need_cert_alert* p = alert_cast<torrent_need_cert_alert>(a))
+//    {
+//        torrent_handle h = p->handle;
+//        std::string base_name = path_append("certificates", hash_to_string(h.info_hash()));
+//        std::string cert = base_name + ".pem";
+//        std::string priv = base_name + "_key.pem";
+//
+//        {
+//            char msg[256];
+//            std::snprintf(msg, sizeof(msg), "ERROR. could not load certificate %s: %s\n"
+//                , cert.c_str(), std::strerror(errno));
+//            if (g_log_file) std::fprintf(g_log_file, "[%s] %s\n", timestamp(), msg);
+//            return true;
+//        }
+//
+//        ret = ::stat(priv.c_str(), &st);
+//        if (ret < 0 || (st.st_mode & S_IFREG) == 0)
+//        {
+//            char msg[256];
+//            std::snprintf(msg, sizeof(msg), "ERROR. could not load private key %s: %s\n"
+//                , priv.c_str(), std::strerror(errno));
+//            if (g_log_file) std::fprintf(g_log_file, "[%s] %s\n", timestamp(), msg);
+//            return true;
+//        }
+//
+//        char msg[256];
+//        std::snprintf(msg, sizeof(msg), "loaded certificate %s and key %s\n", cert.c_str(), priv.c_str());
+//        if (g_log_file) std::fprintf(g_log_file, "[%s] %s\n", timestamp(), msg);
+//
+//        h.set_ssl_certificate(cert, priv, "certificates/dhparams.pem", "1234");
+//        h.resume();
+//    }
+
+    // don't log every peer we try to connect to
+    if (alert_cast<peer_connect_alert>(a)) return true;
+
+    if (peer_disconnected_alert* pd = alert_cast<peer_disconnected_alert>(a))
+    {
+        // ignore failures to connect and peers not responding with a
+        // handshake. The peers that we successfully connect to and then
+        // disconnect is more interesting.
+        if (pd->op == operation_t::connect
+            || pd->error == errors::timed_out_no_handshake)
+            return true;
+    }
+
+    if (metadata_received_alert* p = alert_cast<metadata_received_alert>(a))
+    {
+        torrent_handle h = p->handle;
+        h.save_resume_data(torrent_handle::save_info_dict);
+        ++num_outstanding_resume_data;
+    }
+    else if (add_torrent_alert* p = alert_cast<add_torrent_alert>(a))
+    {
+        if (p->error)
+        {
+            std::fprintf(stderr, "failed to add torrent: %s %s\n"
+                , p->params.ti ? p->params.ti->name().c_str() : p->params.name.c_str()
+                , p->error.message().c_str());
+        }
+        else
+        {
+            torrent_handle h = p->handle;
+
+            h.save_resume_data(torrent_handle::save_info_dict | torrent_handle::only_if_modified);
+            ++num_outstanding_resume_data;
+        }
+    }
+    else if (torrent_finished_alert* p = alert_cast<torrent_finished_alert>(a))
+    {
+        //p->handle.set_max_connections(max_connections_per_torrent / 2);
+
+        // write resume data for the finished torrent
+        // the alert handler for save_resume_data_alert
+        // will save it to disk
+        torrent_handle h = p->handle;
+        h.save_resume_data(torrent_handle::save_info_dict);
+        ++num_outstanding_resume_data;
+    }
+    else if (save_resume_data_alert* p = alert_cast<save_resume_data_alert>(a))
+    {
+        --num_outstanding_resume_data;
+        auto const buf = write_resume_data_buf(p->params);
+        torrent_handle h = p->handle;
+        auto path = Engine::standart->config_path + "/.FastResumes/" + hash_to_string(h.info_hash()) + ".fastresume";
+        save_file(path, buf);
+    }
+    else if (save_resume_data_failed_alert* p = alert_cast<save_resume_data_failed_alert>(a))
+    {
+        --num_outstanding_resume_data;
+        // don't print the error if it was just that we didn't need to save resume
+        // data. Returning true means "handled" and not printed to the log
+        return p->error == lt::errors::resume_data_not_modified;
+    }
+    else if (torrent_paused_alert* p = alert_cast<torrent_paused_alert>(a))
+    {
+        // write resume data for the finished torrent
+        // the alert handler for save_resume_data_alert
+        // will save it to disk
+        torrent_handle h = p->handle;
+        h.save_resume_data(torrent_handle::save_info_dict);
+        ++num_outstanding_resume_data;
+    }
+    else if (state_update_alert* p = alert_cast<state_update_alert>(a))
+    {
+//        view.update_torrents(std::move(p->status));
+        return true;
+    }
+    else if (torrent_removed_alert* p = alert_cast<torrent_removed_alert>(a))
+    {
+//        view.remove_torrent(std::move(p->handle));
+    }
+    return false;
+}
+
+extern "C" void pop_alerts() {
+    std::vector<lt::alert*> alerts;
+    Engine::standart->s->pop_alerts(&alerts);
+    for (auto a : alerts)
+    {
+        if (::handle_alert(*Engine::standart->s, a)) continue;
+    }
 }

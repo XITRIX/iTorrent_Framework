@@ -1143,7 +1143,8 @@ namespace {
 				use_ssl ? make_announce_port(ssl_listen_port(ls)) :
 #endif
 				make_announce_port(listen_port(ls));
-			m_tracker_manager.queue_request(get_io_service(), std::move(req), c);
+			m_tracker_manager.queue_request(get_io_service(), std::move(req)
+				, m_settings, c);
 		}
 		else
 		{
@@ -1165,7 +1166,8 @@ namespace {
 					make_announce_port(listen_port(ls.get()));
 
 				socket_req.outgoing_socket = ls;
-				m_tracker_manager.queue_request(get_io_service(), std::move(socket_req), c);
+				m_tracker_manager.queue_request(get_io_service()
+					, std::move(socket_req), m_settings, c);
 			}
 		}
 	}
@@ -4237,11 +4239,9 @@ namespace {
 		{
 			session_log("RECALCULATE UNCHOKE SLOTS: [ peers: %d "
 				"eligible-peers: %d"
-				" max_upload_rate: %d"
 				" allowed-slots: %d ]"
 				, int(m_connections.size())
 				, int(peers.size())
-				, max_upload_rate
 				, allowed_upload_slots);
 		}
 #endif
@@ -6354,7 +6354,12 @@ namespace {
 			// everyone
 			for (auto const& p : m_connections)
 			{
-				if (p->is_disconnecting() || p->is_connecting())
+				if (p->is_disconnecting()
+					|| p->is_connecting()
+					|| !p->is_choked()
+					|| p->in_handshake()
+					|| p->ignore_unchoke_slots()
+					)
 					continue;
 
 				auto const t = p->associated_torrent().lock();

@@ -124,7 +124,7 @@ constexpr int CLOSE_FILE_INTERVAL = 0;
 		SET(proxy_username, "", &session_impl::update_proxy),
 		SET(proxy_password, "", &session_impl::update_proxy),
 		SET(i2p_hostname, "", &session_impl::update_i2p_bridge),
-		SET(peer_fingerprint, "-LT1260-", nullptr),
+		SET(peer_fingerprint, "-LT1270-", nullptr),
 		SET(dht_bootstrap_nodes, "dht.libtorrent.org:25401", &session_impl::update_dht_bootstrap_nodes)
 	}});
 
@@ -135,7 +135,7 @@ constexpr int CLOSE_FILE_INTERVAL = 0;
 		SET(send_redundant_have, true, nullptr),
 		DEPRECATED_SET(lazy_bitfields, false, nullptr),
 		SET(use_dht_as_fallback, false, nullptr),
-		DEPRECATED_SET(upnp_ignore_nonrouters, false, nullptr),
+		SET(upnp_ignore_nonrouters, false, nullptr),
 		SET(use_parole_mode, true, nullptr),
 		SET(use_read_cache, true, nullptr),
 		DEPRECATED_SET(use_write_cache, true, nullptr),
@@ -350,7 +350,9 @@ constexpr int CLOSE_FILE_INTERVAL = 0;
 		SET(max_web_seed_connections, 3, nullptr),
 		SET(resolver_cache_timeout, 1200, &session_impl::update_resolver_cache_timeout),
 		SET(send_not_sent_low_watermark, 16384, nullptr),
+		SET(rate_choker_initial_threshold, 1024, nullptr),
 		SET(upnp_lease_duration, 3600, nullptr),
+		SET(max_concurrent_http_announces, 50, nullptr),
 	}});
 
 #undef SET

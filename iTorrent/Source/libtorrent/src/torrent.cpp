@@ -1300,6 +1300,12 @@ bool is_downloading_state(int const st)
 	storage_mode_t torrent::storage_mode() const
 	{ return storage_mode_t(m_storage_mode); }
 
+	void torrent::clear_peers()
+	{
+		disconnect_all(error_code(), operation_t::unknown);
+		if (m_peer_list) m_peer_list->clear();
+	}
+
 	storage_interface* torrent::get_storage_impl() const
 	{
 		return m_ses.disk_thread().get_torrent(m_storage);
@@ -2354,8 +2360,7 @@ bool is_downloading_state(int const st)
 		update_want_tick();
 		set_state(torrent_status::checking_resume_data);
 
-		if (m_auto_managed && !is_finished())
-			set_queue_position(last_pos);
+		set_queue_position(last_pos);
 
 		TORRENT_ASSERT(m_outstanding_check_files == false);
 		m_add_torrent_params.reset();
@@ -6299,15 +6304,7 @@ bool is_downloading_state(int const st)
 		ret.num_incomplete = m_incomplete;
 		ret.num_downloaded = m_downloaded;
 
-		ret.flags = torrent_flags_t{};
-		if (m_sequential_download) ret.flags |= torrent_flags::sequential_download;
-		if (m_seed_mode ) ret.flags |= torrent_flags::seed_mode;
-#ifndef TORRENT_DISABLE_SUPERSEEDING
-		if (m_super_seeding ) ret.flags |= torrent_flags::super_seeding;
-#endif
-		if (is_torrent_paused()) ret.flags |= torrent_flags::paused;
-		if (m_auto_managed ) ret.flags |= torrent_flags::auto_managed;
-		if (m_stop_when_ready) ret.flags |= torrent_flags::stop_when_ready;
+		ret.flags = flags();
 
 		ret.added_time = m_added_time;
 		ret.completed_time = m_completed_time;
@@ -11179,8 +11176,13 @@ bool is_downloading_state(int const st)
 			}
 		}
 		// announce to the next working tracker
-		if ((!m_abort && !is_paused()) || r.event == tracker_request::stopped)
+		// We may have changed state into checking by now, in which case we
+		// shouldn't keep trying to announce
+		if ((!m_abort && !is_paused() && state() != torrent_status::checking_files)
+			|| r.event == tracker_request::stopped)
+		{
 			announce_with_tracker(r.event);
+		}
 		update_tracker_timer(aux::time_now32());
 	}
 

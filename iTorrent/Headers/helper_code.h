@@ -35,4 +35,11 @@ void setAutoManaged(libtorrent::torrent_handle m_nativeHandle, const bool enable
         m_nativeHandle.unset_flags(lt::torrent_flags::auto_managed);
 }
 
+int save_file(std::string const& filename, std::vector<char> const& v)
+{
+    std::fstream f(filename, std::ios_base::trunc | std::ios_base::out | std::ios_base::binary);
+    f.write(v.data(), v.size());
+    return !f.fail();
+}
+
 #endif /* helper_code_h */
