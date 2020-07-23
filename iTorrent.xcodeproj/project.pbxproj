@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		7C0624A720BD689300C7466C /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
 		7C1682B924A8D3C700B04169 /* peer_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C98410E24A7A49200B51AA0 /* peer_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6AE224C9EECC00874C0F /* iTorrent.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C5505FF20B3370A00175D8F /* iTorrent.h */; };
+		7C1C6AE424C9EF7F00874C0F /* iTorrent.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C5505FF20B3370A00175D8F /* iTorrent.h */; };
 		7C554E9A20B3525500175D8F /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9520B3525500175D8F /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9B20B3525500175D8F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; };
 		7C554E9C20B3525500175D8F /* iTorrent-Framework-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9720B3525500175D8F /* iTorrent-Framework-Bridging-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -380,8 +382,8 @@
 
 /* Begin PBXFileReference section */
 		7C5505FC20B3370A00175D8F /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
-		7C5505FF20B3370A00175D8F /* iTorrent_Framework.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent_Framework.h; sourceTree = "<group>"; };
-		7C55060020B3370A00175D8F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		7C5505FF20B3370A00175D8F /* iTorrent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent.h; sourceTree = "<group>"; };
+		7C55060020B3370A00175D8F /* Info-iOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-iOS.plist"; sourceTree = "<group>"; };
 		7C554E9520B3525500175D8F /* file_struct.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = file_struct.h; sourceTree = "<group>"; };
 		7C554E9620B3525500175D8F /* helper_code.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = helper_code.h; sourceTree = "<group>"; };
 		7C554E9720B3525500175D8F /* iTorrent-Framework-Bridging-Header.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "iTorrent-Framework-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -572,9 +574,8 @@
 		7CB1747C244F5C99005CEEA6 /* crc32c.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crc32c.cpp; sourceTree = "<group>"; };
 		7CB1747D244F5C99005CEEA6 /* generate_peer_id.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = generate_peer_id.cpp; sourceTree = "<group>"; };
 		7CB1747E244F5C99005CEEA6 /* xml_parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xml_parse.cpp; sourceTree = "<group>"; };
-		7CB17526244F655E005CEEA6 /* iTorrent_Simulator.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent_Simulator.h; sourceTree = "<group>"; };
-		7CB17527244F655E005CEEA6 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		7CB175F1244F6603005CEEA6 /* iTorrent-Simulator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "iTorrent-Simulator.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
+		7CB17527244F655E005CEEA6 /* Info-macOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-macOS.plist"; sourceTree = "<group>"; };
+		7CB175F1244F6603005CEEA6 /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7CBC7767231B328D0075A685 /* torrentHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torrentHandle.h; sourceTree = "<group>"; };
 		7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wrapper_destructors.cpp; sourceTree = "<group>"; };
 		7CCD3104249D2F9E00ECF631 /* settings_pack_struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_pack_struct.h; sourceTree = "<group>"; };
@@ -616,7 +617,6 @@
 			isa = PBXGroup;
 			children = (
 				7C5505FE20B3370A00175D8F /* iTorrent */,
-				7CB17525244F655E005CEEA6 /* iTorrent-Simulator */,
 				7C5505FD20B3370A00175D8F /* Products */,
 				7C74B7052125932600988F1C /* Frameworks */,
 			);
@@ -626,7 +626,7 @@
 			isa = PBXGroup;
 			children = (
 				7C5505FC20B3370A00175D8F /* iTorrent.framework */,
-				7CB175F1244F6603005CEEA6 /* iTorrent-Simulator.framework */,
+				7CB175F1244F6603005CEEA6 /* iTorrent.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -637,8 +637,9 @@
 				7C57FBBC20B93D320060D862 /* include */,
 				7C554E9420B3525500175D8F /* Headers */,
 				7C553DB620B3379C00175D8F /* Source */,
-				7C5505FF20B3370A00175D8F /* iTorrent_Framework.h */,
-				7C55060020B3370A00175D8F /* Info.plist */,
+				7C55060020B3370A00175D8F /* Info-iOS.plist */,
+				7CB17527244F655E005CEEA6 /* Info-macOS.plist */,
+				7C5505FF20B3370A00175D8F /* iTorrent.h */,
 			);
 			path = iTorrent;
 			sourceTree = "<group>";
@@ -912,15 +913,6 @@
 			path = kademlia;
 			sourceTree = "<group>";
 		};
-		7CB17525244F655E005CEEA6 /* iTorrent-Simulator */ = {
-			isa = PBXGroup;
-			children = (
-				7CB17526244F655E005CEEA6 /* iTorrent_Simulator.h */,
-				7CB17527244F655E005CEEA6 /* Info.plist */,
-			);
-			path = "iTorrent-Simulator";
-			sourceTree = "<group>";
-		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -940,6 +932,7 @@
 				7C554E9B20B3525500175D8F /* helper_code.h in Headers */,
 				7CB1748B244F5C99005CEEA6 /* ge.h in Headers */,
 				7C55745520B3426D00175D8F /* windows_file_codecvt.hpp in Headers */,
+				7C1C6AE224C9EECC00874C0F /* iTorrent.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -958,15 +951,16 @@
 				7CB175EA244F6603005CEEA6 /* helper_code.h in Headers */,
 				7CB175EB244F6603005CEEA6 /* ge.h in Headers */,
 				7CB175EC244F6603005CEEA6 /* windows_file_codecvt.hpp in Headers */,
+				7C1C6AE424C9EF7F00874C0F /* iTorrent.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		7C5505FB20B3370A00175D8F /* iTorrent */ = {
+		7C5505FB20B3370A00175D8F /* iTorrent-iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent" */;
+			buildConfigurationList = 7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent-iOS" */;
 			buildPhases = (
 				7C5505F720B3370A00175D8F /* Sources */,
 				7C5505F820B3370A00175D8F /* Frameworks */,
@@ -977,14 +971,14 @@
 			);
 			dependencies = (
 			);
-			name = iTorrent;
+			name = "iTorrent-iOS";
 			productName = "iTorrent-Framework";
 			productReference = 7C5505FC20B3370A00175D8F /* iTorrent.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		7CB17530244F6603005CEEA6 /* iTorrent-Simulator */ = {
+		7CB17530244F6603005CEEA6 /* iTorrent-macOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-Simulator" */;
+			buildConfigurationList = 7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-macOS" */;
 			buildPhases = (
 				7CB17531244F6603005CEEA6 /* Sources */,
 				7CB175D8244F6603005CEEA6 /* Frameworks */,
@@ -995,9 +989,9 @@
 			);
 			dependencies = (
 			);
-			name = "iTorrent-Simulator";
+			name = "iTorrent-macOS";
 			productName = "iTorrent-Framework";
-			productReference = 7CB175F1244F6603005CEEA6 /* iTorrent-Simulator.framework */;
+			productReference = 7CB175F1244F6603005CEEA6 /* iTorrent.framework */;
 			productType = "com.apple.product-type.framework";
 		};
 /* End PBXNativeTarget section */
@@ -1011,6 +1005,7 @@
 				TargetAttributes = {
 					7C5505FB20B3370A00175D8F = {
 						CreatedOnToolsVersion = 9.3;
+						LastSwiftMigration = 1140;
 					};
 				};
 			};
@@ -1027,8 +1022,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7C5505FB20B3370A00175D8F /* iTorrent */,
-				7CB17530244F6603005CEEA6 /* iTorrent-Simulator */,
+				7C5505FB20B3370A00175D8F /* iTorrent-iOS */,
+				7CB17530244F6603005CEEA6 /* iTorrent-macOS */,
 			);
 		};
 /* End PBXProject section */
@@ -1455,6 +1450,7 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = YES;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1511,6 +1507,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SDKROOT = iphoneos;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
@@ -1523,6 +1520,8 @@
 		7C55060520B3370A00175D8F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1540,7 +1539,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = iTorrent/Info.plist;
+				INFOPLIST_FILE = "iTorrent/Info-iOS.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1554,10 +1553,11 @@
 				MACH_O_TYPE = mh_dylib;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SDKROOT = driverkit;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 4.0;
 				SYSTEM_HEADER_SEARCH_PATHS = "";
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1569,6 +1569,8 @@
 		7C55060620B3370A00175D8F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1584,7 +1586,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = iTorrent/Info.plist;
+				INFOPLIST_FILE = "iTorrent/Info-iOS.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1597,7 +1599,7 @@
 				);
 				MACH_O_TYPE = mh_dylib;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
-				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SDKROOT = driverkit;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
@@ -1629,7 +1631,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = "iTorrent-Simulator/Info.plist";
+				INFOPLIST_FILE = "iTorrent/Info-macOS.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1642,7 +1644,7 @@
 				);
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SDKROOT = driverkit;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
@@ -1672,7 +1674,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = "iTorrent-Simulator/Info.plist";
+				INFOPLIST_FILE = "iTorrent/Info-macOS.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1684,7 +1686,7 @@
 					"$(PROJECT_DIR)/iTorrent/Libraries",
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
-				PRODUCT_NAME = "$(TARGET_NAME)";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
 				SDKROOT = driverkit;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
@@ -1708,7 +1710,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent" */ = {
+		7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent-iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7C55060520B3370A00175D8F /* Debug */,
@@ -1717,7 +1719,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-Simulator" */ = {
+		7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-macOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7CB175EF244F6603005CEEA6 /* Debug */,

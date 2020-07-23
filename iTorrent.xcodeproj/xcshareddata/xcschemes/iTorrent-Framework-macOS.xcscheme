@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "0930"
+   LastUpgradeVersion = "1140"
    version = "1.3">
    <BuildAction
       parallelizeBuildables = "YES"
@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7C5505FB20B3370A00175D8F"
-               BuildableName = "iTorrent.framework"
-               BlueprintName = "iTorrent"
+               BlueprintIdentifier = "7CB17530244F6603005CEEA6"
+               BuildableName = "iTorrent-macOS.framework"
+               BlueprintName = "iTorrent-macOS"
                ReferencedContainer = "container:iTorrent.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -31,7 +31,7 @@
       </Testables>
    </TestAction>
    <LaunchAction
-      buildConfiguration = "Release"
+      buildConfiguration = "Debug"
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       launchStyle = "0"
@@ -40,15 +40,6 @@
       debugDocumentVersioning = "YES"
       debugServiceExtension = "internal"
       allowLocationSimulation = "YES">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7C5505FB20B3370A00175D8F"
-            BuildableName = "iTorrent.framework"
-            BlueprintName = "iTorrent"
-            ReferencedContainer = "container:iTorrent.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"
@@ -59,9 +50,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7C5505FB20B3370A00175D8F"
-            BuildableName = "iTorrent.framework"
-            BlueprintName = "iTorrent"
+            BlueprintIdentifier = "7CB17530244F6603005CEEA6"
+            BuildableName = "iTorrent-macOS.framework"
+            BlueprintName = "iTorrent-macOS"
             ReferencedContainer = "container:iTorrent.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -71,7 +62,6 @@
    </AnalyzeAction>
    <ArchiveAction
       buildConfiguration = "Release"
-      customArchiveName = "iTorrent"
       revealArchiveInOrganizer = "YES">
    </ArchiveAction>
 </Scheme>

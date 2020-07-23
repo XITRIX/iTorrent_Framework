@@ -1,12 +1,12 @@
 //
-//  iTorrent_Framework.h
+//  iTorrent.h
 //  iTorrent-Framework
 //
-//  Created by  XITRIX on 21.05.2018.
+//  Created by XITRIX on 21.05.2018.
 //  Copyright © 2018  XITRIX. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+#import <Foundation/Foundation.h>
 
 //! Project version number for iTorrent_Framework.
 FOUNDATION_EXPORT double iTorrent_FrameworkVersionNumber;
