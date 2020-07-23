@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		7C0624A720BD689300C7466C /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
+		7C1682B924A8D3C700B04169 /* peer_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C98410E24A7A49200B51AA0 /* peer_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9A20B3525500175D8F /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9520B3525500175D8F /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9B20B3525500175D8F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; };
 		7C554E9C20B3525500175D8F /* iTorrent-Framework-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9720B3525500175D8F /* iTorrent-Framework-Bridging-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -373,6 +374,8 @@
 		7CB175F5244F6642005CEEA6 /* libssl-i386.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */; };
 		7CB175F6244F6642005CEEA6 /* libssl-x86_64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CA9DD04240BB67700D95CD4 /* libssl-x86_64.a */; };
 		7CCD02CD243A36E000B1669F /* wrapper_destructors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */; };
+		7CCD3105249D3FEA00ECF631 /* settings_pack_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CCD3104249D2F9E00ECF631 /* settings_pack_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7CCD3106249D3FF200ECF631 /* settings_pack_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CCD3104249D2F9E00ECF631 /* settings_pack_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -396,6 +399,7 @@
 		7C55744C20B3426D00175D8F /* error_code.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = error_code.cpp; sourceTree = "<group>"; };
 		7C57FBBC20B93D320060D862 /* include */ = {isa = PBXFileReference; lastKnownFileType = folder; path = include; sourceTree = "<group>"; };
 		7C74B7062125932700988F1C /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
+		7C98410E24A7A49200B51AA0 /* peer_struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = peer_struct.h; sourceTree = "<group>"; };
 		7CA9DD02240BB67700D95CD4 /* libssl-armv7.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-armv7.a"; path = "iTorrent/Libraries/libssl-armv7.a"; sourceTree = "<group>"; };
 		7CA9DD03240BB67700D95CD4 /* libssl-armv7s.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-armv7s.a"; path = "iTorrent/Libraries/libssl-armv7s.a"; sourceTree = "<group>"; };
 		7CA9DD04240BB67700D95CD4 /* libssl-x86_64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-x86_64.a"; path = "iTorrent/Libraries/libssl-x86_64.a"; sourceTree = "<group>"; };
@@ -573,6 +577,7 @@
 		7CB175F1244F6603005CEEA6 /* iTorrent-Simulator.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = "iTorrent-Simulator.framework"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7CBC7767231B328D0075A685 /* torrentHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torrentHandle.h; sourceTree = "<group>"; };
 		7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wrapper_destructors.cpp; sourceTree = "<group>"; };
+		7CCD3104249D2F9E00ECF631 /* settings_pack_struct.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = settings_pack_struct.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -651,7 +656,9 @@
 		7C554E9420B3525500175D8F /* Headers */ = {
 			isa = PBXGroup;
 			children = (
+				7CCD3104249D2F9E00ECF631 /* settings_pack_struct.h */,
 				7C554E9520B3525500175D8F /* file_struct.h */,
+				7C98410E24A7A49200B51AA0 /* peer_struct.h */,
 				7C554E9620B3525500175D8F /* helper_code.h */,
 				7C554E9720B3525500175D8F /* iTorrent-Framework-Bridging-Header.h */,
 				7C554E9820B3525500175D8F /* result_struct.h */,
@@ -924,6 +931,8 @@
 				7C554E9A20B3525500175D8F /* file_struct.h in Headers */,
 				7CB17488244F5C99005CEEA6 /* fe.h in Headers */,
 				7C554E9C20B3525500175D8F /* iTorrent-Framework-Bridging-Header.h in Headers */,
+				7CCD3105249D3FEA00ECF631 /* settings_pack_struct.h in Headers */,
+				7C1682B924A8D3C700B04169 /* peer_struct.h in Headers */,
 				7CB17489244F5C99005CEEA6 /* fixedint.h in Headers */,
 				7C554E9D20B3525500175D8F /* result_struct.h in Headers */,
 				7CB17482244F5C99005CEEA6 /* precomp_data.h in Headers */,
@@ -940,6 +949,7 @@
 			files = (
 				7CB175E3244F6603005CEEA6 /* file_struct.h in Headers */,
 				7CB175E4244F6603005CEEA6 /* fe.h in Headers */,
+				7CCD3106249D3FF200ECF631 /* settings_pack_struct.h in Headers */,
 				7CB175E5244F6603005CEEA6 /* iTorrent-Framework-Bridging-Header.h in Headers */,
 				7CB175E6244F6603005CEEA6 /* fixedint.h in Headers */,
 				7CB175E7244F6603005CEEA6 /* result_struct.h in Headers */,
@@ -1541,6 +1551,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/iTorrent/Libraries",
 				);
+				MACH_O_TYPE = mh_dylib;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
@@ -1584,6 +1595,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/iTorrent/Libraries",
 				);
+				MACH_O_TYPE = mh_dylib;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SDKROOT = driverkit;

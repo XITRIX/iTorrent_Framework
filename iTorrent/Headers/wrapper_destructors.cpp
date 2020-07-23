@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include "result_struct.h"
 #include "file_struct.h"
+#include "settings_pack_struct.h"
+#include "peer_struct.h"
 
 extern "C" void free_result(TorrentResult res) {
     for (int i = 0; i < res.count; i++) {
@@ -38,4 +40,18 @@ extern "C" void free_trackers(Trackers trackers) {
         delete[] trackers.trackers[i].messages;
     }
     delete[] trackers.trackers;
+}
+
+extern "C" void free_settings_pack(settings_pack_struct settings_pack) {
+    delete[] settings_pack.proxy_hostname;
+    delete[] settings_pack.proxy_password;
+    delete[] settings_pack.proxy_username;
+}
+
+extern "C" void free_peer_result(PeerResult res) {
+    for (int i = 0; i < res.count; i++) {
+        delete[] res.peers[i].address;
+        delete[] res.peers[i].client;
+    }
+    delete[] res.peers;
 }
