@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "7C1C6AEF24CA47E300874C0F"
+               BlueprintIdentifier = "7CB17530244F6603005CEEA6"
                BuildableName = "iTorrent.framework"
-               BlueprintName = "iTorrent-macOS"
+               BlueprintName = "iTorrent-iOS-x86"
                ReferencedContainer = "container:iTorrent.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -50,9 +50,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "7C1C6AEF24CA47E300874C0F"
+            BlueprintIdentifier = "7CB17530244F6603005CEEA6"
             BuildableName = "iTorrent.framework"
-            BlueprintName = "iTorrent-macOS"
+            BlueprintName = "iTorrent-iOS-x86"
             ReferencedContainer = "container:iTorrent.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

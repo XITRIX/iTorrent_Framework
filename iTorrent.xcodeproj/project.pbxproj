@@ -6,11 +6,208 @@
 	objectVersion = 50;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		7C1C6BB824CA53C100874C0F /* iTorrent */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 7C1C6BB924CA53C100874C0F /* Build configuration list for PBXAggregateTarget "iTorrent" */;
+			buildPhases = (
+				7C1C6BBC24CA53EA00874C0F /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = iTorrent;
+			productName = iTorrent;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		7C0624A720BD689300C7466C /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
 		7C1682B924A8D3C700B04169 /* peer_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C98410E24A7A49200B51AA0 /* peer_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C1C6AE224C9EECC00874C0F /* iTorrent.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C5505FF20B3370A00175D8F /* iTorrent.h */; };
 		7C1C6AE424C9EF7F00874C0F /* iTorrent.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C5505FF20B3370A00175D8F /* iTorrent.h */; };
+		7C1C6AF824CA484400874C0F /* iTorrent.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C5505FF20B3370A00175D8F /* iTorrent.h */; };
+		7C1C6AFB24CA495300874C0F /* error_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744C20B3426D00175D8F /* error_code.cpp */; };
+		7C1C6AFC24CA495700874C0F /* codecvt_error_category.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744220B3426C00175D8F /* codecvt_error_category.cpp */; };
+		7C1C6AFD24CA495700874C0F /* operations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744320B3426C00175D8F /* operations.cpp */; };
+		7C1C6AFE24CA495700874C0F /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744420B3426C00175D8F /* path.cpp */; };
+		7C1C6AFF24CA495700874C0F /* path_traits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744520B3426C00175D8F /* path_traits.cpp */; };
+		7C1C6B0024CA495700874C0F /* portability.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744620B3426C00175D8F /* portability.cpp */; };
+		7C1C6B0124CA495700874C0F /* unique_path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744720B3426C00175D8F /* unique_path.cpp */; };
+		7C1C6B0224CA495700874C0F /* utf8_codecvt_facet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744820B3426C00175D8F /* utf8_codecvt_facet.cpp */; };
+		7C1C6B0324CA495700874C0F /* windows_file_codecvt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C55744920B3426C00175D8F /* windows_file_codecvt.cpp */; };
+		7C1C6B0424CA495700874C0F /* windows_file_codecvt.hpp in Headers */ = {isa = PBXBuildFile; fileRef = 7C55744A20B3426C00175D8F /* windows_file_codecvt.hpp */; };
+		7C1C6B0524CA495E00874C0F /* request_blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173EB244F5C99005CEEA6 /* request_blocks.cpp */; };
+		7C1C6B0624CA495E00874C0F /* http_tracker_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173EC244F5C99005CEEA6 /* http_tracker_connection.cpp */; };
+		7C1C6B0724CA495E00874C0F /* choker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173ED244F5C99005CEEA6 /* choker.cpp */; };
+		7C1C6B0824CA495E00874C0F /* peer_list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173EE244F5C99005CEEA6 /* peer_list.cpp */; };
+		7C1C6B0924CA495E00874C0F /* udp_tracker_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173EF244F5C99005CEEA6 /* udp_tracker_connection.cpp */; };
+		7C1C6B0A24CA495E00874C0F /* storage_piece_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F0244F5C99005CEEA6 /* storage_piece_set.cpp */; };
+		7C1C6B0B24CA495E00874C0F /* tracker_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F1244F5C99005CEEA6 /* tracker_manager.cpp */; };
+		7C1C6B0C24CA495E00874C0F /* string_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F2244F5C99005CEEA6 /* string_util.cpp */; };
+		7C1C6B0D24CA495E00874C0F /* magnet_uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F3244F5C99005CEEA6 /* magnet_uri.cpp */; };
+		7C1C6B0E24CA495E00874C0F /* http_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F4244F5C99005CEEA6 /* http_stream.cpp */; };
+		7C1C6B0F24CA495E00874C0F /* platform_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F5244F5C99005CEEA6 /* platform_util.cpp */; };
+		7C1C6B1024CA495E00874C0F /* add_torrent_params.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F6244F5C99005CEEA6 /* add_torrent_params.cpp */; };
+		7C1C6B1124CA495E00874C0F /* piece_picker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F7244F5C99005CEEA6 /* piece_picker.cpp */; };
+		7C1C6B1224CA495E00874C0F /* session_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F8244F5C99005CEEA6 /* session_handle.cpp */; };
+		7C1C6B1324CA495E00874C0F /* utp_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173F9244F5C99005CEEA6 /* utp_stream.cpp */; };
+		7C1C6B1424CA495E00874C0F /* stack_allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173FA244F5C99005CEEA6 /* stack_allocator.cpp */; };
+		7C1C6B1524CA495E00874C0F /* peer_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173FB244F5C99005CEEA6 /* peer_connection.cpp */; };
+		7C1C6B1624CA495E00874C0F /* listen_socket_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173FC244F5C99005CEEA6 /* listen_socket_handle.cpp */; };
+		7C1C6B1724CA495E00874C0F /* settings_pack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173FD244F5C99005CEEA6 /* settings_pack.cpp */; };
+		7C1C6B1824CA495E00874C0F /* create_torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173FE244F5C99005CEEA6 /* create_torrent.cpp */; };
+		7C1C6B1924CA495E00874C0F /* socks5_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173FF244F5C99005CEEA6 /* socks5_stream.cpp */; };
+		7C1C6B1A24CA495E00874C0F /* hasher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17400244F5C99005CEEA6 /* hasher.cpp */; };
+		7C1C6B1B24CA495E00874C0F /* identify_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17401244F5C99005CEEA6 /* identify_client.cpp */; };
+		7C1C6B1C24CA495E00874C0F /* disk_job_fence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17402244F5C99005CEEA6 /* disk_job_fence.cpp */; };
+		7C1C6B1D24CA495E00874C0F /* sha1_hash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17403244F5C99005CEEA6 /* sha1_hash.cpp */; };
+		7C1C6B1E24CA495E00874C0F /* hasher512.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17404244F5C99005CEEA6 /* hasher512.cpp */; };
+		7C1C6B1F24CA495E00874C0F /* stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17405244F5C99005CEEA6 /* stat.cpp */; };
+		7C1C6B2024CA495E00874C0F /* instantiate_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17406244F5C99005CEEA6 /* instantiate_connection.cpp */; };
+		7C1C6B2124CA495E00874C0F /* escape_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17407244F5C99005CEEA6 /* escape_string.cpp */; };
+		7C1C6B2224CA495E00874C0F /* stat_cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17408244F5C99005CEEA6 /* stat_cache.cpp */; };
+		7C1C6B2324CA495E00874C0F /* version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17409244F5C99005CEEA6 /* version.cpp */; };
+		7C1C6B2424CA495E00874C0F /* part_file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1740A244F5C99005CEEA6 /* part_file.cpp */; };
+		7C1C6B2524CA495E00874C0F /* ut_pex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1740B244F5C99005CEEA6 /* ut_pex.cpp */; };
+		7C1C6B2624CA495E00874C0F /* chained_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1740C244F5C99005CEEA6 /* chained_buffer.cpp */; };
+		7C1C6B2724CA495E00874C0F /* lazy_bdecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1740D244F5C99005CEEA6 /* lazy_bdecode.cpp */; };
+		7C1C6B2824CA495E00874C0F /* disk_buffer_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1740E244F5C99005CEEA6 /* disk_buffer_pool.cpp */; };
+		7C1C6B2924CA495E00874C0F /* disk_io_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1740F244F5C99005CEEA6 /* disk_io_thread.cpp */; };
+		7C1C6B2A24CA495E00874C0F /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17410244F5C99005CEEA6 /* random.cpp */; };
+		7C1C6B2B24CA495E00874C0F /* parse_url.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17411244F5C99005CEEA6 /* parse_url.cpp */; };
+		7C1C6B2C24CA495E00874C0F /* natpmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17412244F5C99005CEEA6 /* natpmp.cpp */; };
+		7C1C6B2D24CA495E00874C0F /* read_resume_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17413244F5C99005CEEA6 /* read_resume_data.cpp */; };
+		7C1C6B2E24CA495E00874C0F /* merkle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17414244F5C99005CEEA6 /* merkle.cpp */; };
+		7C1C6B2F24CA495E00874C0F /* fingerprint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17415244F5C99005CEEA6 /* fingerprint.cpp */; };
+		7C1C6B3024CA495E00874C0F /* write_resume_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17416244F5C99005CEEA6 /* write_resume_data.cpp */; };
+		7C1C6B3124CA495E00874C0F /* entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17417244F5C99005CEEA6 /* entry.cpp */; };
+		7C1C6B3224CA495E00874C0F /* openssl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17418244F5C99005CEEA6 /* openssl.cpp */; };
+		7C1C6B3324CA495E00874C0F /* bloom_filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17419244F5C99005CEEA6 /* bloom_filter.cpp */; };
+		7C1C6B3424CA496700874C0F /* node_id.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1741B244F5C99005CEEA6 /* node_id.cpp */; };
+		7C1C6B3524CA496700874C0F /* dht_settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1741C244F5C99005CEEA6 /* dht_settings.cpp */; };
+		7C1C6B3624CA496700874C0F /* refresh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1741D244F5C99005CEEA6 /* refresh.cpp */; };
+		7C1C6B3724CA496700874C0F /* rpc_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1741E244F5C99005CEEA6 /* rpc_manager.cpp */; };
+		7C1C6B3824CA496700874C0F /* put_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1741F244F5C99005CEEA6 /* put_data.cpp */; };
+		7C1C6B3924CA496700874C0F /* get_item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17420244F5C99005CEEA6 /* get_item.cpp */; };
+		7C1C6B3A24CA496700874C0F /* dos_blocker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17421244F5C99005CEEA6 /* dos_blocker.cpp */; };
+		7C1C6B3B24CA496700874C0F /* node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17422244F5C99005CEEA6 /* node.cpp */; };
+		7C1C6B3C24CA496700874C0F /* node_entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17423244F5C99005CEEA6 /* node_entry.cpp */; };
+		7C1C6B3D24CA496700874C0F /* item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17424244F5C99005CEEA6 /* item.cpp */; };
+		7C1C6B3E24CA496700874C0F /* ed25519.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17425244F5C99005CEEA6 /* ed25519.cpp */; };
+		7C1C6B3F24CA496700874C0F /* get_peers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17426244F5C99005CEEA6 /* get_peers.cpp */; };
+		7C1C6B4024CA496700874C0F /* traversal_algorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17427244F5C99005CEEA6 /* traversal_algorithm.cpp */; };
+		7C1C6B4124CA496700874C0F /* dht_storage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17428244F5C99005CEEA6 /* dht_storage.cpp */; };
+		7C1C6B4224CA496700874C0F /* sample_infohashes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17429244F5C99005CEEA6 /* sample_infohashes.cpp */; };
+		7C1C6B4324CA496700874C0F /* dht_state.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1742A244F5C99005CEEA6 /* dht_state.cpp */; };
+		7C1C6B4424CA496700874C0F /* dht_tracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1742B244F5C99005CEEA6 /* dht_tracker.cpp */; };
+		7C1C6B4524CA496700874C0F /* find_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1742C244F5C99005CEEA6 /* find_data.cpp */; };
+		7C1C6B4624CA496700874C0F /* routing_table.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1742D244F5C99005CEEA6 /* routing_table.cpp */; };
+		7C1C6B4724CA496700874C0F /* msg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1742E244F5C99005CEEA6 /* msg.cpp */; };
+		7C1C6B4824CA496700874C0F /* http_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1742F244F5C99005CEEA6 /* http_parser.cpp */; };
+		7C1C6B4924CA496700874C0F /* assert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17430244F5C99005CEEA6 /* assert.cpp */; };
+		7C1C6B4A24CA496700874C0F /* disk_buffer_holder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17431244F5C99005CEEA6 /* disk_buffer_holder.cpp */; };
+		7C1C6B4B24CA496700874C0F /* proxy_settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17432244F5C99005CEEA6 /* proxy_settings.cpp */; };
+		7C1C6B4C24CA496700874C0F /* ConvertUTF.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17433244F5C99005CEEA6 /* ConvertUTF.cpp */; };
+		7C1C6B4D24CA496700874C0F /* disk_job_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17434244F5C99005CEEA6 /* disk_job_pool.cpp */; };
+		7C1C6B4E24CA496700874C0F /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17435244F5C99005CEEA6 /* sha1.cpp */; };
+		7C1C6B4F24CA496700874C0F /* ffs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17436244F5C99005CEEA6 /* ffs.cpp */; };
+		7C1C6B5024CA496700874C0F /* torrent_status.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17437244F5C99005CEEA6 /* torrent_status.cpp */; };
+		7C1C6B5124CA496800874C0F /* error_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17438244F5C99005CEEA6 /* error_code.cpp */; };
+		7C1C6B5224CA496800874C0F /* session_stats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17439244F5C99005CEEA6 /* session_stats.cpp */; };
+		7C1C6B5324CA496800874C0F /* storage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1743A244F5C99005CEEA6 /* storage.cpp */; };
+		7C1C6B5424CA496800874C0F /* session_settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1743B244F5C99005CEEA6 /* session_settings.cpp */; };
+		7C1C6B5524CA496800874C0F /* sha512.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1743C244F5C99005CEEA6 /* sha512.cpp */; };
+		7C1C6B5624CA496800874C0F /* bt_peer_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1743D244F5C99005CEEA6 /* bt_peer_connection.cpp */; };
+		7C1C6B5724CA496800874C0F /* gzip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1743E244F5C99005CEEA6 /* gzip.cpp */; };
+		7C1C6B5824CA496800874C0F /* i2p_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1743F244F5C99005CEEA6 /* i2p_stream.cpp */; };
+		7C1C6B5924CA496800874C0F /* storage_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17440244F5C99005CEEA6 /* storage_utils.cpp */; };
+		7C1C6B5A24CA496800874C0F /* http_seed_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17441244F5C99005CEEA6 /* http_seed_connection.cpp */; };
+		7C1C6B5B24CA496800874C0F /* torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17442244F5C99005CEEA6 /* torrent.cpp */; };
+		7C1C6B5C24CA496800874C0F /* peer_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17443244F5C99005CEEA6 /* peer_info.cpp */; };
+		7C1C6B5D24CA496800874C0F /* peer_class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17444244F5C99005CEEA6 /* peer_class.cpp */; };
+		7C1C6B5E24CA496800874C0F /* web_connection_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17445244F5C99005CEEA6 /* web_connection_base.cpp */; };
+		7C1C6B5F24CA496800874C0F /* alert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17446244F5C99005CEEA6 /* alert.cpp */; };
+		7C1C6B6024CA496800874C0F /* socket_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17447244F5C99005CEEA6 /* socket_io.cpp */; };
+		7C1C6B6124CA496800874C0F /* pe_crypto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17448244F5C99005CEEA6 /* pe_crypto.cpp */; };
+		7C1C6B6224CA496800874C0F /* close_reason.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17449244F5C99005CEEA6 /* close_reason.cpp */; };
+		7C1C6B6324CA496800874C0F /* disk_io_job.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1744A244F5C99005CEEA6 /* disk_io_job.cpp */; };
+		7C1C6B6424CA496800874C0F /* bdecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1744B244F5C99005CEEA6 /* bdecode.cpp */; };
+		7C1C6B6524CA496800874C0F /* puff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1744C244F5C99005CEEA6 /* puff.cpp */; };
+		7C1C6B6624CA496800874C0F /* peer_connection_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1744D244F5C99005CEEA6 /* peer_connection_handle.cpp */; };
+		7C1C6B6724CA496800874C0F /* ip_voter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1744E244F5C99005CEEA6 /* ip_voter.cpp */; };
+		7C1C6B6824CA496800874C0F /* session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1744F244F5C99005CEEA6 /* session.cpp */; };
+		7C1C6B6924CA496800874C0F /* upnp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17450244F5C99005CEEA6 /* upnp.cpp */; };
+		7C1C6B6A24CA496800874C0F /* file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17451244F5C99005CEEA6 /* file.cpp */; };
+		7C1C6B6B24CA496800874C0F /* ip_notifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17452244F5C99005CEEA6 /* ip_notifier.cpp */; };
+		7C1C6B6C24CA496800874C0F /* file_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17453244F5C99005CEEA6 /* file_pool.cpp */; };
+		7C1C6B6D24CA496800874C0F /* bitfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17454244F5C99005CEEA6 /* bitfield.cpp */; };
+		7C1C6B6E24CA496800874C0F /* session_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17455244F5C99005CEEA6 /* session_impl.cpp */; };
+		7C1C6B6F24CA496800874C0F /* udp_socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17456244F5C99005CEEA6 /* udp_socket.cpp */; };
+		7C1C6B7024CA496800874C0F /* announce_entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17457244F5C99005CEEA6 /* announce_entry.cpp */; };
+		7C1C6B7124CA496800874C0F /* enum_net.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17458244F5C99005CEEA6 /* enum_net.cpp */; };
+		7C1C6B7224CA496800874C0F /* hex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17459244F5C99005CEEA6 /* hex.cpp */; };
+		7C1C6B7324CA496800874C0F /* ip_filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1745A244F5C99005CEEA6 /* ip_filter.cpp */; };
+		7C1C6B7424CA496800874C0F /* torrent_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1745B244F5C99005CEEA6 /* torrent_handle.cpp */; };
+		7C1C6B7524CA496800874C0F /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1745C244F5C99005CEEA6 /* path.cpp */; };
+		7C1C6B7624CA496800874C0F /* lsd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1745D244F5C99005CEEA6 /* lsd.cpp */; };
+		7C1C6B7724CA496800874C0F /* receive_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1745E244F5C99005CEEA6 /* receive_buffer.cpp */; };
+		7C1C6B7824CA496800874C0F /* file_storage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1745F244F5C99005CEEA6 /* file_storage.cpp */; };
+		7C1C6B7924CA496800874C0F /* peer_class_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17460244F5C99005CEEA6 /* peer_class_set.cpp */; };
+		7C1C6B7A24CA496800874C0F /* block_cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17461244F5C99005CEEA6 /* block_cache.cpp */; };
+		7C1C6B7B24CA496800874C0F /* alert_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17462244F5C99005CEEA6 /* alert_manager.cpp */; };
+		7C1C6B7C24CA496800874C0F /* session_call.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17463244F5C99005CEEA6 /* session_call.cpp */; };
+		7C1C6B7D24CA496800874C0F /* web_peer_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17464244F5C99005CEEA6 /* web_peer_connection.cpp */; };
+		7C1C6B7E24CA496800874C0F /* http_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17465244F5C99005CEEA6 /* http_connection.cpp */; };
+		7C1C6B7F24CA496800874C0F /* resolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17466244F5C99005CEEA6 /* resolver.cpp */; };
+		7C1C6B8024CA496800874C0F /* packet_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17467244F5C99005CEEA6 /* packet_buffer.cpp */; };
+		7C1C6B8124CA496800874C0F /* torrent_peer_allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17468244F5C99005CEEA6 /* torrent_peer_allocator.cpp */; };
+		7C1C6B8224CA496800874C0F /* bandwidth_limit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17469244F5C99005CEEA6 /* bandwidth_limit.cpp */; };
+		7C1C6B8324CA496800874C0F /* proxy_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1746A244F5C99005CEEA6 /* proxy_base.cpp */; };
+		7C1C6B8424CA496800874C0F /* performance_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1746B244F5C99005CEEA6 /* performance_counters.cpp */; };
+		7C1C6B8524CA496800874C0F /* smart_ban.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1746C244F5C99005CEEA6 /* smart_ban.cpp */; };
+		7C1C6B8624CA496800874C0F /* file_progress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1746D244F5C99005CEEA6 /* file_progress.cpp */; };
+		7C1C6B8724CA496800874C0F /* broadcast_socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1746E244F5C99005CEEA6 /* broadcast_socket.cpp */; };
+		7C1C6B8824CA496800874C0F /* torrent_peer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1746F244F5C99005CEEA6 /* torrent_peer.cpp */; };
+		7C1C6B8924CA496800874C0F /* utf8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17470244F5C99005CEEA6 /* utf8.cpp */; };
+		7C1C6B8A24CA496800874C0F /* bandwidth_queue_entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17471244F5C99005CEEA6 /* bandwidth_queue_entry.cpp */; };
+		7C1C6B8B24CA496800874C0F /* torrent_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17472244F5C99005CEEA6 /* torrent_info.cpp */; };
+		7C1C6B8C24CA496800874C0F /* resolve_links.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17473244F5C99005CEEA6 /* resolve_links.cpp */; };
+		7C1C6B8D24CA496800874C0F /* disk_io_thread_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17474244F5C99005CEEA6 /* disk_io_thread_pool.cpp */; };
+		7C1C6B8E24CA496800874C0F /* socket_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17475244F5C99005CEEA6 /* socket_type.cpp */; };
+		7C1C6B8F24CA496800874C0F /* ut_metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17476244F5C99005CEEA6 /* ut_metadata.cpp */; };
+		7C1C6B9024CA496800874C0F /* utp_socket_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17477244F5C99005CEEA6 /* utp_socket_manager.cpp */; };
+		7C1C6B9124CA496800874C0F /* timestamp_history.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17478244F5C99005CEEA6 /* timestamp_history.cpp */; };
+		7C1C6B9224CA496800874C0F /* bandwidth_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB17479244F5C99005CEEA6 /* bandwidth_manager.cpp */; };
+		7C1C6B9324CA496800874C0F /* cpuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1747A244F5C99005CEEA6 /* cpuid.cpp */; };
+		7C1C6B9424CA496800874C0F /* time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1747B244F5C99005CEEA6 /* time.cpp */; };
+		7C1C6B9524CA496800874C0F /* crc32c.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1747C244F5C99005CEEA6 /* crc32c.cpp */; };
+		7C1C6B9624CA496800874C0F /* generate_peer_id.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1747D244F5C99005CEEA6 /* generate_peer_id.cpp */; };
+		7C1C6B9724CA496800874C0F /* xml_parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB1747E244F5C99005CEEA6 /* xml_parse.cpp */; };
+		7C1C6B9824CA497100874C0F /* key_exchange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173DD244F5C99005CEEA6 /* key_exchange.cpp */; };
+		7C1C6B9924CA497100874C0F /* keypair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173DE244F5C99005CEEA6 /* keypair.cpp */; };
+		7C1C6B9A24CA497100874C0F /* verify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173DF244F5C99005CEEA6 /* verify.cpp */; };
+		7C1C6B9B24CA497100874C0F /* precomp_data.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CB173E0244F5C99005CEEA6 /* precomp_data.h */; };
+		7C1C6B9C24CA497100874C0F /* sc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173E1244F5C99005CEEA6 /* sc.cpp */; };
+		7C1C6B9D24CA497100874C0F /* add_scalar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173E2244F5C99005CEEA6 /* add_scalar.cpp */; };
+		7C1C6B9E24CA497100874C0F /* ge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173E3244F5C99005CEEA6 /* ge.cpp */; };
+		7C1C6B9F24CA497100874C0F /* fe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173E4244F5C99005CEEA6 /* fe.cpp */; };
+		7C1C6BA024CA497100874C0F /* sign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CB173E5244F5C99005CEEA6 /* sign.cpp */; };
+		7C1C6BA124CA497100874C0F /* fe.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CB173E6244F5C99005CEEA6 /* fe.h */; };
+		7C1C6BA224CA497100874C0F /* fixedint.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CB173E7244F5C99005CEEA6 /* fixedint.h */; };
+		7C1C6BA324CA497100874C0F /* sc.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CB173E8244F5C99005CEEA6 /* sc.h */; };
+		7C1C6BA424CA497100874C0F /* ge.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CB173E9244F5C99005CEEA6 /* ge.h */; };
+		7C1C6BA524CA498200874C0F /* peer_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C98410E24A7A49200B51AA0 /* peer_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6BA624CA498E00874C0F /* wrapper.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C554E9920B3525500175D8F /* wrapper.cpp */; };
+		7C1C6BA724CA499100874C0F /* wrapper_destructors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */; };
+		7C1C6BA824CA49AE00874C0F /* settings_pack_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7CCD3104249D2F9E00ECF631 /* settings_pack_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6BA924CA49AE00874C0F /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9520B3525500175D8F /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6BAA24CA49AE00874C0F /* peer_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C98410E24A7A49200B51AA0 /* peer_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6BAB24CA49B200874C0F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; };
+		7C1C6BAC24CA49B800874C0F /* iTorrent-Framework-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9720B3525500175D8F /* iTorrent-Framework-Bridging-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6BAD24CA49B800874C0F /* result_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9820B3525500175D8F /* result_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7C1C6BB324CA4A5A00874C0F /* SystemConfiguration.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C1C6BB224CA4A5A00874C0F /* SystemConfiguration.framework */; };
+		7C1C6BB624CA4D0600874C0F /* libcrypto-mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C1C6BB524CA4CF100874C0F /* libcrypto-mac.a */; };
+		7C1C6BB724CA4D0600874C0F /* libssl-mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C1C6BB424CA4CF000874C0F /* libssl-mac.a */; };
 		7C554E9A20B3525500175D8F /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9520B3525500175D8F /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C554E9B20B3525500175D8F /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9620B3525500175D8F /* helper_code.h */; };
 		7C554E9C20B3525500175D8F /* iTorrent-Framework-Bridging-Header.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C554E9720B3525500175D8F /* iTorrent-Framework-Bridging-Header.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -381,6 +578,11 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		7C1C6AF024CA47E300874C0F /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		7C1C6AF924CA492B00874C0F /* Info-macOS.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-macOS.plist"; sourceTree = "<group>"; };
+		7C1C6BB224CA4A5A00874C0F /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.15.sdk/System/Library/Frameworks/SystemConfiguration.framework; sourceTree = DEVELOPER_DIR; };
+		7C1C6BB424CA4CF000874C0F /* libssl-mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-mac.a"; path = "iTorrent/Libraries/libssl-mac.a"; sourceTree = "<group>"; };
+		7C1C6BB524CA4CF100874C0F /* libcrypto-mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-mac.a"; path = "iTorrent/Libraries/libcrypto-mac.a"; sourceTree = "<group>"; };
 		7C5505FC20B3370A00175D8F /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C5505FF20B3370A00175D8F /* iTorrent.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = iTorrent.h; sourceTree = "<group>"; };
 		7C55060020B3370A00175D8F /* Info-iOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-iOS.plist"; sourceTree = "<group>"; };
@@ -574,7 +776,7 @@
 		7CB1747C244F5C99005CEEA6 /* crc32c.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crc32c.cpp; sourceTree = "<group>"; };
 		7CB1747D244F5C99005CEEA6 /* generate_peer_id.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = generate_peer_id.cpp; sourceTree = "<group>"; };
 		7CB1747E244F5C99005CEEA6 /* xml_parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xml_parse.cpp; sourceTree = "<group>"; };
-		7CB17527244F655E005CEEA6 /* Info-macOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-macOS.plist"; sourceTree = "<group>"; };
+		7CB17527244F655E005CEEA6 /* Info-iOS-x86.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-iOS-x86.plist"; sourceTree = "<group>"; };
 		7CB175F1244F6603005CEEA6 /* iTorrent.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = iTorrent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7CBC7767231B328D0075A685 /* torrentHandle.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = torrentHandle.h; sourceTree = "<group>"; };
 		7CCD02CC243A36E000B1669F /* wrapper_destructors.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = wrapper_destructors.cpp; sourceTree = "<group>"; };
@@ -582,6 +784,16 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7C1C6AED24CA47E300874C0F /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C1C6BB624CA4D0600874C0F /* libcrypto-mac.a in Frameworks */,
+				7C1C6BB724CA4D0600874C0F /* libssl-mac.a in Frameworks */,
+				7C1C6BB324CA4A5A00874C0F /* SystemConfiguration.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C5505F820B3370A00175D8F /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -627,6 +839,7 @@
 			children = (
 				7C5505FC20B3370A00175D8F /* iTorrent.framework */,
 				7CB175F1244F6603005CEEA6 /* iTorrent.framework */,
+				7C1C6AF024CA47E300874C0F /* iTorrent.framework */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -638,7 +851,8 @@
 				7C554E9420B3525500175D8F /* Headers */,
 				7C553DB620B3379C00175D8F /* Source */,
 				7C55060020B3370A00175D8F /* Info-iOS.plist */,
-				7CB17527244F655E005CEEA6 /* Info-macOS.plist */,
+				7CB17527244F655E005CEEA6 /* Info-iOS-x86.plist */,
+				7C1C6AF924CA492B00874C0F /* Info-macOS.plist */,
 				7C5505FF20B3370A00175D8F /* iTorrent.h */,
 			);
 			path = iTorrent;
@@ -697,6 +911,9 @@
 		7C74B7052125932600988F1C /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7C1C6BB524CA4CF100874C0F /* libcrypto-mac.a */,
+				7C1C6BB424CA4CF000874C0F /* libssl-mac.a */,
+				7C1C6BB224CA4A5A00874C0F /* SystemConfiguration.framework */,
 				7CA9DD17240BBBCB00D95CD4 /* libcrypto-i386.a */,
 				7CA9DD16240BBBCB00D95CD4 /* libssl-i386.a */,
 				7CA9DD0A240BB67700D95CD4 /* libcrypto-arm64.a */,
@@ -916,6 +1133,26 @@
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
+		7C1C6AEB24CA47E300874C0F /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C1C6BA324CA497100874C0F /* sc.h in Headers */,
+				7C1C6B9B24CA497100874C0F /* precomp_data.h in Headers */,
+				7C1C6BA224CA497100874C0F /* fixedint.h in Headers */,
+				7C1C6BAB24CA49B200874C0F /* helper_code.h in Headers */,
+				7C1C6BAA24CA49AE00874C0F /* peer_struct.h in Headers */,
+				7C1C6BA124CA497100874C0F /* fe.h in Headers */,
+				7C1C6AF824CA484400874C0F /* iTorrent.h in Headers */,
+				7C1C6BA424CA497100874C0F /* ge.h in Headers */,
+				7C1C6B0424CA495700874C0F /* windows_file_codecvt.hpp in Headers */,
+				7C1C6BAC24CA49B800874C0F /* iTorrent-Framework-Bridging-Header.h in Headers */,
+				7C1C6BA924CA49AE00874C0F /* file_struct.h in Headers */,
+				7C1C6BAD24CA49B800874C0F /* result_struct.h in Headers */,
+				7C1C6BA824CA49AE00874C0F /* settings_pack_struct.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C5505F920B3370A00175D8F /* Headers */ = {
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
@@ -951,6 +1188,7 @@
 				7CB175EA244F6603005CEEA6 /* helper_code.h in Headers */,
 				7CB175EB244F6603005CEEA6 /* ge.h in Headers */,
 				7CB175EC244F6603005CEEA6 /* windows_file_codecvt.hpp in Headers */,
+				7C1C6BA524CA498200874C0F /* peer_struct.h in Headers */,
 				7C1C6AE424C9EF7F00874C0F /* iTorrent.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -958,6 +1196,24 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		7C1C6AEF24CA47E300874C0F /* iTorrent-macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C1C6AF524CA47E300874C0F /* Build configuration list for PBXNativeTarget "iTorrent-macOS" */;
+			buildPhases = (
+				7C1C6AEB24CA47E300874C0F /* Headers */,
+				7C1C6AEC24CA47E300874C0F /* Sources */,
+				7C1C6AED24CA47E300874C0F /* Frameworks */,
+				7C1C6AEE24CA47E300874C0F /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "iTorrent-macOS";
+			productName = "iTorrent-macOS";
+			productReference = 7C1C6AF024CA47E300874C0F /* iTorrent.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 		7C5505FB20B3370A00175D8F /* iTorrent-iOS */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7C55060420B3370A00175D8F /* Build configuration list for PBXNativeTarget "iTorrent-iOS" */;
@@ -976,9 +1232,9 @@
 			productReference = 7C5505FC20B3370A00175D8F /* iTorrent.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		7CB17530244F6603005CEEA6 /* iTorrent-macOS */ = {
+		7CB17530244F6603005CEEA6 /* iTorrent-iOS-x86 */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-macOS" */;
+			buildConfigurationList = 7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-iOS-x86" */;
 			buildPhases = (
 				7CB17531244F6603005CEEA6 /* Sources */,
 				7CB175D8244F6603005CEEA6 /* Frameworks */,
@@ -989,7 +1245,7 @@
 			);
 			dependencies = (
 			);
-			name = "iTorrent-macOS";
+			name = "iTorrent-iOS-x86";
 			productName = "iTorrent-Framework";
 			productReference = 7CB175F1244F6603005CEEA6 /* iTorrent.framework */;
 			productType = "com.apple.product-type.framework";
@@ -1003,6 +1259,12 @@
 				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = " XITRIX";
 				TargetAttributes = {
+					7C1C6AEF24CA47E300874C0F = {
+						CreatedOnToolsVersion = 11.4.1;
+					};
+					7C1C6BB824CA53C100874C0F = {
+						CreatedOnToolsVersion = 11.4.1;
+					};
 					7C5505FB20B3370A00175D8F = {
 						CreatedOnToolsVersion = 9.3;
 						LastSwiftMigration = 1140;
@@ -1023,12 +1285,21 @@
 			projectRoot = "";
 			targets = (
 				7C5505FB20B3370A00175D8F /* iTorrent-iOS */,
-				7CB17530244F6603005CEEA6 /* iTorrent-macOS */,
+				7CB17530244F6603005CEEA6 /* iTorrent-iOS-x86 */,
+				7C1C6AEF24CA47E300874C0F /* iTorrent-macOS */,
+				7C1C6BB824CA53C100874C0F /* iTorrent */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
+		7C1C6AEE24CA47E300874C0F /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C5505FA20B3370A00175D8F /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1045,7 +1316,200 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		7C1C6BBC24CA53EA00874C0F /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "rm -rd \"iTorrent.xcframework\"\n\nxcodebuild archive -scheme iTorrent-Framework-iOS-x86 -destination \"platform=iOS Simulator\" -archivePath \"$TEMP_DIR/iTorrent.iOSx86.xcarchive\" SKIP_INSTALL=NO\nxcodebuild archive -scheme iTorrent-Framework-iOS -destination \"generic/platform=iOS\" -archivePath \"$TEMP_DIR/iTorrent.iOS.xcarchive\" SKIP_INSTALL=NO\nxcodebuild archive -scheme iTorrent-Framework-macOS -destination \"platform=macOS,variant=Mac Catalyst\" -archivePath \"$TEMP_DIR/iTorrent.macOS.xcarchive\" SKIP_INSTALL=NO\n\nxcodebuild -create-xcframework \\\n -framework \\\n \"$TEMP_DIR/iTorrent.iOSx86.xcarchive/Products/Library/Frameworks/iTorrent.framework\" \\\n -framework \\\n \"$TEMP_DIR/iTorrent.iOS.xcarchive/Products/Library/Frameworks/iTorrent.framework\" \\\n -framework \\\n \"$TEMP_DIR/iTorrent.macOS.xcarchive/Products/Library/Frameworks/iTorrent.framework\" \\\n -output \"iTorrent.xcframework\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
+		7C1C6AEC24CA47E300874C0F /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C1C6B9A24CA497100874C0F /* verify.cpp in Sources */,
+				7C1C6B6624CA496800874C0F /* peer_connection_handle.cpp in Sources */,
+				7C1C6B5D24CA496800874C0F /* peer_class.cpp in Sources */,
+				7C1C6B7424CA496800874C0F /* torrent_handle.cpp in Sources */,
+				7C1C6B2D24CA495E00874C0F /* read_resume_data.cpp in Sources */,
+				7C1C6B8924CA496800874C0F /* utf8.cpp in Sources */,
+				7C1C6B5524CA496800874C0F /* sha512.cpp in Sources */,
+				7C1C6B2924CA495E00874C0F /* disk_io_thread.cpp in Sources */,
+				7C1C6B9924CA497100874C0F /* keypair.cpp in Sources */,
+				7C1C6B5724CA496800874C0F /* gzip.cpp in Sources */,
+				7C1C6B8424CA496800874C0F /* performance_counters.cpp in Sources */,
+				7C1C6B7024CA496800874C0F /* announce_entry.cpp in Sources */,
+				7C1C6AFF24CA495700874C0F /* path_traits.cpp in Sources */,
+				7C1C6B4F24CA496700874C0F /* ffs.cpp in Sources */,
+				7C1C6B2224CA495E00874C0F /* stat_cache.cpp in Sources */,
+				7C1C6B9D24CA497100874C0F /* add_scalar.cpp in Sources */,
+				7C1C6B3E24CA496700874C0F /* ed25519.cpp in Sources */,
+				7C1C6B8024CA496800874C0F /* packet_buffer.cpp in Sources */,
+				7C1C6B2F24CA495E00874C0F /* fingerprint.cpp in Sources */,
+				7C1C6B6E24CA496800874C0F /* session_impl.cpp in Sources */,
+				7C1C6B6824CA496800874C0F /* session.cpp in Sources */,
+				7C1C6B4E24CA496700874C0F /* sha1.cpp in Sources */,
+				7C1C6B5B24CA496800874C0F /* torrent.cpp in Sources */,
+				7C1C6B4324CA496700874C0F /* dht_state.cpp in Sources */,
+				7C1C6B3424CA496700874C0F /* node_id.cpp in Sources */,
+				7C1C6B5224CA496800874C0F /* session_stats.cpp in Sources */,
+				7C1C6B6A24CA496800874C0F /* file.cpp in Sources */,
+				7C1C6B1924CA495E00874C0F /* socks5_stream.cpp in Sources */,
+				7C1C6B0524CA495E00874C0F /* request_blocks.cpp in Sources */,
+				7C1C6B9F24CA497100874C0F /* fe.cpp in Sources */,
+				7C1C6B0C24CA495E00874C0F /* string_util.cpp in Sources */,
+				7C1C6B8E24CA496800874C0F /* socket_type.cpp in Sources */,
+				7C1C6B1324CA495E00874C0F /* utp_stream.cpp in Sources */,
+				7C1C6AFB24CA495300874C0F /* error_code.cpp in Sources */,
+				7C1C6B1D24CA495E00874C0F /* sha1_hash.cpp in Sources */,
+				7C1C6B6B24CA496800874C0F /* ip_notifier.cpp in Sources */,
+				7C1C6B0D24CA495E00874C0F /* magnet_uri.cpp in Sources */,
+				7C1C6B9024CA496800874C0F /* utp_socket_manager.cpp in Sources */,
+				7C1C6B8D24CA496800874C0F /* disk_io_thread_pool.cpp in Sources */,
+				7C1C6B8524CA496800874C0F /* smart_ban.cpp in Sources */,
+				7C1C6B6424CA496800874C0F /* bdecode.cpp in Sources */,
+				7C1C6B9124CA496800874C0F /* timestamp_history.cpp in Sources */,
+				7C1C6BA724CA499100874C0F /* wrapper_destructors.cpp in Sources */,
+				7C1C6B1A24CA495E00874C0F /* hasher.cpp in Sources */,
+				7C1C6B0724CA495E00874C0F /* choker.cpp in Sources */,
+				7C1C6B0124CA495700874C0F /* unique_path.cpp in Sources */,
+				7C1C6B5924CA496800874C0F /* storage_utils.cpp in Sources */,
+				7C1C6B8324CA496800874C0F /* proxy_base.cpp in Sources */,
+				7C1C6B9C24CA497100874C0F /* sc.cpp in Sources */,
+				7C1C6B4024CA496700874C0F /* traversal_algorithm.cpp in Sources */,
+				7C1C6B2624CA495E00874C0F /* chained_buffer.cpp in Sources */,
+				7C1C6B6324CA496800874C0F /* disk_io_job.cpp in Sources */,
+				7C1C6B8124CA496800874C0F /* torrent_peer_allocator.cpp in Sources */,
+				7C1C6B8F24CA496800874C0F /* ut_metadata.cpp in Sources */,
+				7C1C6B5A24CA496800874C0F /* http_seed_connection.cpp in Sources */,
+				7C1C6B9724CA496800874C0F /* xml_parse.cpp in Sources */,
+				7C1C6B0624CA495E00874C0F /* http_tracker_connection.cpp in Sources */,
+				7C1C6B1E24CA495E00874C0F /* hasher512.cpp in Sources */,
+				7C1C6B3724CA496700874C0F /* rpc_manager.cpp in Sources */,
+				7C1C6B2024CA495E00874C0F /* instantiate_connection.cpp in Sources */,
+				7C1C6B1524CA495E00874C0F /* peer_connection.cpp in Sources */,
+				7C1C6B1424CA495E00874C0F /* stack_allocator.cpp in Sources */,
+				7C1C6B4C24CA496700874C0F /* ConvertUTF.cpp in Sources */,
+				7C1C6B1124CA495E00874C0F /* piece_picker.cpp in Sources */,
+				7C1C6B3824CA496700874C0F /* put_data.cpp in Sources */,
+				7C1C6B5F24CA496800874C0F /* alert.cpp in Sources */,
+				7C1C6B7524CA496800874C0F /* path.cpp in Sources */,
+				7C1C6B7A24CA496800874C0F /* block_cache.cpp in Sources */,
+				7C1C6B3A24CA496700874C0F /* dos_blocker.cpp in Sources */,
+				7C1C6B0824CA495E00874C0F /* peer_list.cpp in Sources */,
+				7C1C6B8B24CA496800874C0F /* torrent_info.cpp in Sources */,
+				7C1C6B3024CA495E00874C0F /* write_resume_data.cpp in Sources */,
+				7C1C6B9424CA496800874C0F /* time.cpp in Sources */,
+				7C1C6B0324CA495700874C0F /* windows_file_codecvt.cpp in Sources */,
+				7C1C6B6024CA496800874C0F /* socket_io.cpp in Sources */,
+				7C1C6BA624CA498E00874C0F /* wrapper.cpp in Sources */,
+				7C1C6AFC24CA495700874C0F /* codecvt_error_category.cpp in Sources */,
+				7C1C6B2424CA495E00874C0F /* part_file.cpp in Sources */,
+				7C1C6B3B24CA496700874C0F /* node.cpp in Sources */,
+				7C1C6B4D24CA496700874C0F /* disk_job_pool.cpp in Sources */,
+				7C1C6B3224CA495E00874C0F /* openssl.cpp in Sources */,
+				7C1C6B6124CA496800874C0F /* pe_crypto.cpp in Sources */,
+				7C1C6B6724CA496800874C0F /* ip_voter.cpp in Sources */,
+				7C1C6B5324CA496800874C0F /* storage.cpp in Sources */,
+				7C1C6B5C24CA496800874C0F /* peer_info.cpp in Sources */,
+				7C1C6B7C24CA496800874C0F /* session_call.cpp in Sources */,
+				7C1C6B7924CA496800874C0F /* peer_class_set.cpp in Sources */,
+				7C1C6B4624CA496700874C0F /* routing_table.cpp in Sources */,
+				7C1C6AFE24CA495700874C0F /* path.cpp in Sources */,
+				7C1C6B6224CA496800874C0F /* close_reason.cpp in Sources */,
+				7C1C6B1624CA495E00874C0F /* listen_socket_handle.cpp in Sources */,
+				7C1C6B6F24CA496800874C0F /* udp_socket.cpp in Sources */,
+				7C1C6B7E24CA496800874C0F /* http_connection.cpp in Sources */,
+				7C1C6B4824CA496700874C0F /* http_parser.cpp in Sources */,
+				7C1C6B4724CA496700874C0F /* msg.cpp in Sources */,
+				7C1C6B8C24CA496800874C0F /* resolve_links.cpp in Sources */,
+				7C1C6B7324CA496800874C0F /* ip_filter.cpp in Sources */,
+				7C1C6B4A24CA496700874C0F /* disk_buffer_holder.cpp in Sources */,
+				7C1C6B3F24CA496700874C0F /* get_peers.cpp in Sources */,
+				7C1C6B0F24CA495E00874C0F /* platform_util.cpp in Sources */,
+				7C1C6B2B24CA495E00874C0F /* parse_url.cpp in Sources */,
+				7C1C6B2824CA495E00874C0F /* disk_buffer_pool.cpp in Sources */,
+				7C1C6B3124CA495E00874C0F /* entry.cpp in Sources */,
+				7C1C6B6C24CA496800874C0F /* file_pool.cpp in Sources */,
+				7C1C6B7624CA496800874C0F /* lsd.cpp in Sources */,
+				7C1C6B3924CA496700874C0F /* get_item.cpp in Sources */,
+				7C1C6B4524CA496700874C0F /* find_data.cpp in Sources */,
+				7C1C6B8824CA496800874C0F /* torrent_peer.cpp in Sources */,
+				7C1C6B6D24CA496800874C0F /* bitfield.cpp in Sources */,
+				7C1C6B8624CA496800874C0F /* file_progress.cpp in Sources */,
+				7C1C6B7B24CA496800874C0F /* alert_manager.cpp in Sources */,
+				7C1C6B1224CA495E00874C0F /* session_handle.cpp in Sources */,
+				7C1C6B2E24CA495E00874C0F /* merkle.cpp in Sources */,
+				7C1C6B3524CA496700874C0F /* dht_settings.cpp in Sources */,
+				7C1C6B0E24CA495E00874C0F /* http_stream.cpp in Sources */,
+				7C1C6B9824CA497100874C0F /* key_exchange.cpp in Sources */,
+				7C1C6B9624CA496800874C0F /* generate_peer_id.cpp in Sources */,
+				7C1C6B2324CA495E00874C0F /* version.cpp in Sources */,
+				7C1C6B2124CA495E00874C0F /* escape_string.cpp in Sources */,
+				7C1C6B5024CA496700874C0F /* torrent_status.cpp in Sources */,
+				7C1C6B8224CA496800874C0F /* bandwidth_limit.cpp in Sources */,
+				7C1C6B2724CA495E00874C0F /* lazy_bdecode.cpp in Sources */,
+				7C1C6B7224CA496800874C0F /* hex.cpp in Sources */,
+				7C1C6B5124CA496800874C0F /* error_code.cpp in Sources */,
+				7C1C6B5E24CA496800874C0F /* web_connection_base.cpp in Sources */,
+				7C1C6B4124CA496700874C0F /* dht_storage.cpp in Sources */,
+				7C1C6B7D24CA496800874C0F /* web_peer_connection.cpp in Sources */,
+				7C1C6B3C24CA496700874C0F /* node_entry.cpp in Sources */,
+				7C1C6B7724CA496800874C0F /* receive_buffer.cpp in Sources */,
+				7C1C6B6524CA496800874C0F /* puff.cpp in Sources */,
+				7C1C6B2A24CA495E00874C0F /* random.cpp in Sources */,
+				7C1C6B7824CA496800874C0F /* file_storage.cpp in Sources */,
+				7C1C6B5424CA496800874C0F /* session_settings.cpp in Sources */,
+				7C1C6B0B24CA495E00874C0F /* tracker_manager.cpp in Sources */,
+				7C1C6B5624CA496800874C0F /* bt_peer_connection.cpp in Sources */,
+				7C1C6AFD24CA495700874C0F /* operations.cpp in Sources */,
+				7C1C6B9224CA496800874C0F /* bandwidth_manager.cpp in Sources */,
+				7C1C6B1024CA495E00874C0F /* add_torrent_params.cpp in Sources */,
+				7C1C6B4424CA496700874C0F /* dht_tracker.cpp in Sources */,
+				7C1C6B4224CA496700874C0F /* sample_infohashes.cpp in Sources */,
+				7C1C6B4924CA496700874C0F /* assert.cpp in Sources */,
+				7C1C6B9524CA496800874C0F /* crc32c.cpp in Sources */,
+				7C1C6B1824CA495E00874C0F /* create_torrent.cpp in Sources */,
+				7C1C6B2C24CA495E00874C0F /* natpmp.cpp in Sources */,
+				7C1C6BA024CA497100874C0F /* sign.cpp in Sources */,
+				7C1C6B9E24CA497100874C0F /* ge.cpp in Sources */,
+				7C1C6B0024CA495700874C0F /* portability.cpp in Sources */,
+				7C1C6B3324CA495E00874C0F /* bloom_filter.cpp in Sources */,
+				7C1C6B4B24CA496700874C0F /* proxy_settings.cpp in Sources */,
+				7C1C6B6924CA496800874C0F /* upnp.cpp in Sources */,
+				7C1C6B7F24CA496800874C0F /* resolver.cpp in Sources */,
+				7C1C6B7124CA496800874C0F /* enum_net.cpp in Sources */,
+				7C1C6B8724CA496800874C0F /* broadcast_socket.cpp in Sources */,
+				7C1C6B3D24CA496700874C0F /* item.cpp in Sources */,
+				7C1C6B1F24CA495E00874C0F /* stat.cpp in Sources */,
+				7C1C6B0924CA495E00874C0F /* udp_tracker_connection.cpp in Sources */,
+				7C1C6B1C24CA495E00874C0F /* disk_job_fence.cpp in Sources */,
+				7C1C6B9324CA496800874C0F /* cpuid.cpp in Sources */,
+				7C1C6B1724CA495E00874C0F /* settings_pack.cpp in Sources */,
+				7C1C6B0A24CA495E00874C0F /* storage_piece_set.cpp in Sources */,
+				7C1C6B3624CA496700874C0F /* refresh.cpp in Sources */,
+				7C1C6B5824CA496800874C0F /* i2p_stream.cpp in Sources */,
+				7C1C6B1B24CA495E00874C0F /* identify_client.cpp in Sources */,
+				7C1C6B2524CA495E00874C0F /* ut_pex.cpp in Sources */,
+				7C1C6B8A24CA496800874C0F /* bandwidth_queue_entry.cpp in Sources */,
+				7C1C6B0224CA495700874C0F /* utf8_codecvt_facet.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C5505F720B3370A00175D8F /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -1395,6 +1859,101 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		7C1C6AF624CA47E300874C0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+					NDEBUG,
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
+				INFOPLIST_FILE = "iTorrent/Info-macOS.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/iTorrent/Libraries",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Debug;
+		};
+		7C1C6AF724CA47E300874C0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+					NDEBUG,
+				);
+				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
+				INFOPLIST_FILE = "iTorrent/Info-macOS.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/iTorrent/Libraries",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.15;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
+				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
+				SUPPORTED_PLATFORMS = macosx;
+				SWIFT_VERSION = 5.0;
+			};
+			name = Release;
+		};
+		7C1C6BBA24CA53C100874C0F /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		7C1C6BBB24CA53C100874C0F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		7C55060220B3370A00175D8F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1520,7 +2079,7 @@
 		7C55060520B3370A00175D8F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
@@ -1554,7 +2113,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(PROJECT_NAME)";
-				SDKROOT = driverkit;
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1569,7 +2128,7 @@
 		7C55060620B3370A00175D8F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUILD_LIBRARY_FOR_DISTRIBUTION = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
@@ -1600,7 +2159,7 @@
 				MACH_O_TYPE = mh_dylib;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(PROJECT_NAME)";
-				SDKROOT = driverkit;
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_VERSION = 4.0;
@@ -1614,6 +2173,7 @@
 		7CB175EF244F6603005CEEA6 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1631,7 +2191,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = "iTorrent/Info-macOS.plist";
+				INFOPLIST_FILE = "iTorrent/Info-iOS-x86.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1645,7 +2205,7 @@
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(PROJECT_NAME)";
-				SDKROOT = driverkit;
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_VERSION = 4.0;
@@ -1659,6 +2219,7 @@
 		7CB175F0244F6603005CEEA6 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CODE_SIGN_IDENTITY = "";
 				"CODE_SIGN_IDENTITY[sdk=macosx*]" = "-";
 				CODE_SIGN_STYLE = Automatic;
@@ -1674,7 +2235,7 @@
 					NDEBUG,
 				);
 				HEADER_SEARCH_PATHS = "$(SRCROOT)/iTorrent/include";
-				INFOPLIST_FILE = "iTorrent/Info-macOS.plist";
+				INFOPLIST_FILE = "iTorrent/Info-iOS-x86.plist";
 				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1687,7 +2248,7 @@
 				);
 				PRODUCT_BUNDLE_IDENTIFIER = "com.NoNameDude.iTorrent-Framework";
 				PRODUCT_NAME = "$(PROJECT_NAME)";
-				SDKROOT = driverkit;
+				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
 				SUPPORTED_PLATFORMS = "iphonesimulator iphoneos";
 				SWIFT_VERSION = 4.0;
@@ -1701,6 +2262,24 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7C1C6AF524CA47E300874C0F /* Build configuration list for PBXNativeTarget "iTorrent-macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C1C6AF624CA47E300874C0F /* Debug */,
+				7C1C6AF724CA47E300874C0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C1C6BB924CA53C100874C0F /* Build configuration list for PBXAggregateTarget "iTorrent" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C1C6BBA24CA53C100874C0F /* Debug */,
+				7C1C6BBB24CA53C100874C0F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		7C5505F620B3370A00175D8F /* Build configuration list for PBXProject "iTorrent" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1719,7 +2298,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-macOS" */ = {
+		7CB175EE244F6603005CEEA6 /* Build configuration list for PBXNativeTarget "iTorrent-iOS-x86" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7CB175EF244F6603005CEEA6 /* Debug */,
