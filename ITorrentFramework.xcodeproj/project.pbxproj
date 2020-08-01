@@ -6,6 +6,20 @@
 	objectVersion = 50;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		7C4B71A724D58E5500DA0C49 /* ITorrentFramework */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 7C4B71A824D58E5600DA0C49 /* Build configuration list for PBXAggregateTarget "ITorrentFramework" */;
+			buildPhases = (
+				7C4B71AB24D58E7C00DA0C49 /* ShellScript */,
+			);
+			dependencies = (
+			);
+			name = ITorrentFramework;
+			productName = ITorrentFramework;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		7C4B70C124D4C62300DA0C49 /* libcrypto-arm64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C4B70BD24D4C61400DA0C49 /* libcrypto-arm64.a */; };
 		7C4B70C224D4C62300DA0C49 /* libcrypto-arm64e.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C4B70BC24D4C61400DA0C49 /* libcrypto-arm64e.a */; };
@@ -200,6 +214,26 @@
 		7C4B719524D4C75200DA0C49 /* libssl-i386.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C4B719324D4C74500DA0C49 /* libssl-i386.a */; };
 		7C4B719624D4C75200DA0C49 /* libssl-x86_64.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C4B719424D4C74600DA0C49 /* libssl-x86_64.a */; };
 		7C4B71A224D5614E00DA0C49 /* Info-iOS-x86.plist in Resources */ = {isa = PBXBuildFile; fileRef = 7C4B71A124D5614E00DA0C49 /* Info-iOS-x86.plist */; };
+		7C4B71B624D5C8C700DA0C49 /* TorrentSdk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71AD24D5C8C700DA0C49 /* TorrentSdk.swift */; };
+		7C4B71B724D5C8C700DA0C49 /* TorrentSdk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71AD24D5C8C700DA0C49 /* TorrentSdk.swift */; };
+		7C4B71B824D5C8C700DA0C49 /* TorrentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71AF24D5C8C700DA0C49 /* TorrentModel.swift */; };
+		7C4B71B924D5C8C700DA0C49 /* TorrentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71AF24D5C8C700DA0C49 /* TorrentModel.swift */; };
+		7C4B71BA24D5C8C700DA0C49 /* FileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B024D5C8C700DA0C49 /* FileModel.swift */; };
+		7C4B71BB24D5C8C800DA0C49 /* FileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B024D5C8C700DA0C49 /* FileModel.swift */; };
+		7C4B71BC24D5C8C800DA0C49 /* TorrentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B124D5C8C700DA0C49 /* TorrentState.swift */; };
+		7C4B71BD24D5C8C800DA0C49 /* TorrentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B124D5C8C700DA0C49 /* TorrentState.swift */; };
+		7C4B71BE24D5C8C800DA0C49 /* SettingsPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B224D5C8C700DA0C49 /* SettingsPack.swift */; };
+		7C4B71BF24D5C8C800DA0C49 /* SettingsPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B224D5C8C700DA0C49 /* SettingsPack.swift */; };
+		7C4B71C024D5C8C800DA0C49 /* TrackerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B324D5C8C700DA0C49 /* TrackerModel.swift */; };
+		7C4B71C124D5C8C800DA0C49 /* TrackerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B324D5C8C700DA0C49 /* TrackerModel.swift */; };
+		7C4B71C224D5C8C800DA0C49 /* FolderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B424D5C8C700DA0C49 /* FolderModel.swift */; };
+		7C4B71C324D5C8C800DA0C49 /* FolderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B424D5C8C700DA0C49 /* FolderModel.swift */; };
+		7C4B71C424D5C8C800DA0C49 /* PeerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B524D5C8C700DA0C49 /* PeerModel.swift */; };
+		7C4B71C524D5C8C800DA0C49 /* PeerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B524D5C8C700DA0C49 /* PeerModel.swift */; };
+		7C4B71C724D5D17200DA0C49 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C624D5D17200DA0C49 /* Utils.swift */; };
+		7C4B71C824D5D17800DA0C49 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C624D5D17200DA0C49 /* Utils.swift */; };
+		7C4B71CA24D5D33E00DA0C49 /* NotificationNamesExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */; };
+		7C4B71CC24D5D48C00DA0C49 /* StringExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */; };
 		7C9D055224D1E338007E78AD /* torrent_headers.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03EB24D1E2ED007E78AD /* torrent_headers.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C9D055324D1E5C8007E78AD /* result_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03E824D1E2ED007E78AD /* result_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7C9D055424D1E5C8007E78AD /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03E924D1E2ED007E78AD /* file_struct.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -398,6 +432,17 @@
 		7C4B719324D4C74500DA0C49 /* libssl-i386.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-i386.a"; path = "Libraries/libssl-i386.a"; sourceTree = "<group>"; };
 		7C4B719424D4C74600DA0C49 /* libssl-x86_64.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-x86_64.a"; path = "Libraries/libssl-x86_64.a"; sourceTree = "<group>"; };
 		7C4B71A124D5614E00DA0C49 /* Info-iOS-x86.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-iOS-x86.plist"; sourceTree = "<group>"; };
+		7C4B71AD24D5C8C700DA0C49 /* TorrentSdk.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TorrentSdk.swift; sourceTree = "<group>"; };
+		7C4B71AF24D5C8C700DA0C49 /* TorrentModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TorrentModel.swift; sourceTree = "<group>"; };
+		7C4B71B024D5C8C700DA0C49 /* FileModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FileModel.swift; sourceTree = "<group>"; };
+		7C4B71B124D5C8C700DA0C49 /* TorrentState.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TorrentState.swift; sourceTree = "<group>"; };
+		7C4B71B224D5C8C700DA0C49 /* SettingsPack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SettingsPack.swift; sourceTree = "<group>"; };
+		7C4B71B324D5C8C700DA0C49 /* TrackerModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = TrackerModel.swift; sourceTree = "<group>"; };
+		7C4B71B424D5C8C700DA0C49 /* FolderModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FolderModel.swift; sourceTree = "<group>"; };
+		7C4B71B524D5C8C700DA0C49 /* PeerModel.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PeerModel.swift; sourceTree = "<group>"; };
+		7C4B71C624D5D17200DA0C49 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
+		7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNamesExtension.swift; sourceTree = "<group>"; };
+		7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtension.swift; sourceTree = "<group>"; };
 		7C9D000024D1E2E1007E78AD /* random_provider_detect_platform.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = random_provider_detect_platform.hpp; sourceTree = "<group>"; };
 		7C9D000124D1E2E1007E78AD /* uuid_generic.ipp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = uuid_generic.ipp; sourceTree = "<group>"; };
 		7C9D000224D1E2E1007E78AD /* config.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = config.hpp; sourceTree = "<group>"; };
@@ -14868,6 +14913,40 @@
 			name = Frameworks;
 			sourceTree = "<group>";
 		};
+		7C4B71AC24D5C8C700DA0C49 /* torrentSdk */ = {
+			isa = PBXGroup;
+			children = (
+				7C4B71CD24D5D4B400DA0C49 /* Extensions */,
+				7C4B71AE24D5C8C700DA0C49 /* Models */,
+				7C4B71C624D5D17200DA0C49 /* Utils.swift */,
+				7C4B71AD24D5C8C700DA0C49 /* TorrentSdk.swift */,
+			);
+			path = torrentSdk;
+			sourceTree = "<group>";
+		};
+		7C4B71AE24D5C8C700DA0C49 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				7C4B71AF24D5C8C700DA0C49 /* TorrentModel.swift */,
+				7C4B71B024D5C8C700DA0C49 /* FileModel.swift */,
+				7C4B71B124D5C8C700DA0C49 /* TorrentState.swift */,
+				7C4B71B224D5C8C700DA0C49 /* SettingsPack.swift */,
+				7C4B71B324D5C8C700DA0C49 /* TrackerModel.swift */,
+				7C4B71B424D5C8C700DA0C49 /* FolderModel.swift */,
+				7C4B71B524D5C8C700DA0C49 /* PeerModel.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		7C4B71CD24D5D4B400DA0C49 /* Extensions */ = {
+			isa = PBXGroup;
+			children = (
+				7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */,
+				7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */,
+			);
+			path = Extensions;
+			sourceTree = "<group>";
+		};
 		7C9D001724D1E2E1007E78AD /* thread */ = {
 			isa = PBXGroup;
 			children = (
@@ -16963,6 +17042,7 @@
 			children = (
 				7C9DC92824D1E288007E78AD /* include */,
 				7C9DC7C224D1D72F007E78AD /* src */,
+				7C4B71AC24D5C8C700DA0C49 /* torrentSdk */,
 				7C9DC7B424D1D056007E78AD /* Info-iOS.plist */,
 				7C4B71A124D5614E00DA0C49 /* Info-iOS-x86.plist */,
 				7C9DC7B324D1D056007E78AD /* ITorrentFramework.h */,
@@ -38703,9 +38783,9 @@
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
-		7C4B70C924D4C71500DA0C49 /* ITorrent-iOS-Simulator */ = {
+		7C4B70C924D4C71500DA0C49 /* ITorrentFramework-iOS-Simulator */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7C4B718A24D4C71500DA0C49 /* Build configuration list for PBXNativeTarget "ITorrent-iOS-Simulator" */;
+			buildConfigurationList = 7C4B718A24D4C71500DA0C49 /* Build configuration list for PBXNativeTarget "ITorrentFramework-iOS-Simulator" */;
 			buildPhases = (
 				7C4B70CA24D4C71500DA0C49 /* Headers */,
 				7C4B70D824D4C71500DA0C49 /* Sources */,
@@ -38716,14 +38796,14 @@
 			);
 			dependencies = (
 			);
-			name = "ITorrent-iOS-Simulator";
+			name = "ITorrentFramework-iOS-Simulator";
 			productName = ITorrentFramework;
 			productReference = 7C4B718D24D4C71500DA0C49 /* ITorrentFramework.framework */;
 			productType = "com.apple.product-type.framework";
 		};
-		7C9DC7AF24D1D056007E78AD /* ITorrent-iOS */ = {
+		7C9DC7AF24D1D056007E78AD /* ITorrentFramework-iOS */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 7C9DC7B824D1D056007E78AD /* Build configuration list for PBXNativeTarget "ITorrent-iOS" */;
+			buildConfigurationList = 7C9DC7B824D1D056007E78AD /* Build configuration list for PBXNativeTarget "ITorrentFramework-iOS" */;
 			buildPhases = (
 				7C9DC7AB24D1D056007E78AD /* Headers */,
 				7C9DC7AC24D1D056007E78AD /* Sources */,
@@ -38734,7 +38814,7 @@
 			);
 			dependencies = (
 			);
-			name = "ITorrent-iOS";
+			name = "ITorrentFramework-iOS";
 			productName = ITorrentFramework;
 			productReference = 7C9DC7B024D1D056007E78AD /* ITorrentFramework.framework */;
 			productType = "com.apple.product-type.framework";
@@ -38748,6 +38828,9 @@
 				LastUpgradeCheck = 1140;
 				ORGANIZATIONNAME = NoNameDude;
 				TargetAttributes = {
+					7C4B71A724D58E5500DA0C49 = {
+						CreatedOnToolsVersion = 11.4.1;
+					};
 					7C9DC7AF24D1D056007E78AD = {
 						CreatedOnToolsVersion = 11.4.1;
 						LastSwiftMigration = 1140;
@@ -38767,8 +38850,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				7C9DC7AF24D1D056007E78AD /* ITorrent-iOS */,
-				7C4B70C924D4C71500DA0C49 /* ITorrent-iOS-Simulator */,
+				7C9DC7AF24D1D056007E78AD /* ITorrentFramework-iOS */,
+				7C4B70C924D4C71500DA0C49 /* ITorrentFramework-iOS-Simulator */,
+				7C4B71A724D58E5500DA0C49 /* ITorrentFramework */,
 			);
 		};
 /* End PBXProject section */
@@ -38791,6 +38875,26 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		7C4B71AB24D58E7C00DA0C49 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "rm -rd \"ITorrentFramework.xcframework\"\nxcodebuild archive -scheme ITorrentFramework-iOS -destination \"generic/platform=iOS\" -archivePath \"$TEMP_DIR/ITorrentFramework.iOS.xcarchive\" SKIP_INSTALL=NO\nxcodebuild archive -scheme ITorrentFramework-iOS-Simulator -destination \"platform=iOS Simulator,name=iPhone 11\" -archivePath \"$TEMP_DIR/ITorrentFramework.iOS-Simulator.xcarchive\" SKIP_INSTALL=NO\n#xcodebuild archive -scheme Framis -destination \"platform=macOS\" -archivePath \"$TEMP_DIR/Framis.macOS.xcarchive\" SKIP_INSTALL=NO\n#xcodebuild archive -scheme FramisTouch -destination \"platform=macOS,variant=Mac Catalyst\" -archivePath \"$TEMP_DIR/FramisTouch.macOS.xcarchive\" SKIP_INSTALL=NO\nxcodebuild -create-xcframework -framework \"$TEMP_DIR/ITorrentFramework.iOS.xcarchive/Products/Library/Frameworks/ITorrentFramework.framework\" -framework \"$TEMP_DIR/ITorrentFramework.iOS-Simulator.xcarchive/Products/Library/Frameworks/ITorrentFramework.framework\" -output \"ITorrentFramework.xcframework\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		7C4B70D824D4C71500DA0C49 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
@@ -38803,9 +38907,11 @@
 				7C4B70DD24D4C71500DA0C49 /* http_seed_connection.cpp in Sources */,
 				7C4B70DE24D4C71500DA0C49 /* add_torrent_params.cpp in Sources */,
 				7C4B70DF24D4C71500DA0C49 /* udp_tracker_connection.cpp in Sources */,
+				7C4B71C824D5D17800DA0C49 /* Utils.swift in Sources */,
 				7C4B70E024D4C71500DA0C49 /* find_data.cpp in Sources */,
 				7C4B70E124D4C71500DA0C49 /* close_reason.cpp in Sources */,
 				7C4B70E224D4C71500DA0C49 /* key_exchange.cpp in Sources */,
+				7C4B71C524D5C8C800DA0C49 /* PeerModel.swift in Sources */,
 				7C4B70E324D4C71500DA0C49 /* escape_string.cpp in Sources */,
 				7C4B70E424D4C71500DA0C49 /* get_item.cpp in Sources */,
 				7C4B70E524D4C71500DA0C49 /* disk_buffer_holder.cpp in Sources */,
@@ -38838,6 +38944,7 @@
 				7C4B710024D4C71500DA0C49 /* fingerprint.cpp in Sources */,
 				7C4B710124D4C71500DA0C49 /* performance_counters.cpp in Sources */,
 				7C4B710224D4C71500DA0C49 /* bandwidth_manager.cpp in Sources */,
+				7C4B71B924D5C8C700DA0C49 /* TorrentModel.swift in Sources */,
 				7C4B710324D4C71500DA0C49 /* traversal_algorithm.cpp in Sources */,
 				7C4B710424D4C71500DA0C49 /* session_call.cpp in Sources */,
 				7C4B710524D4C71500DA0C49 /* verify.cpp in Sources */,
@@ -38863,6 +38970,7 @@
 				7C4B711924D4C71500DA0C49 /* piece_picker.cpp in Sources */,
 				7C4B711A24D4C71500DA0C49 /* lazy_bdecode.cpp in Sources */,
 				7C4B711B24D4C71500DA0C49 /* sample_infohashes.cpp in Sources */,
+				7C4B71C124D5C8C800DA0C49 /* TrackerModel.swift in Sources */,
 				7C4B711C24D4C71500DA0C49 /* instantiate_connection.cpp in Sources */,
 				7C4B711D24D4C71500DA0C49 /* http_tracker_connection.cpp in Sources */,
 				7C4B711E24D4C71500DA0C49 /* bdecode.cpp in Sources */,
@@ -38882,6 +38990,7 @@
 				7C4B712C24D4C71500DA0C49 /* bitfield.cpp in Sources */,
 				7C4B712D24D4C71500DA0C49 /* torrent_handle.cpp in Sources */,
 				7C4B712E24D4C71500DA0C49 /* upnp.cpp in Sources */,
+				7C4B71BB24D5C8C800DA0C49 /* FileModel.swift in Sources */,
 				7C4B712F24D4C71500DA0C49 /* unique_path.cpp in Sources */,
 				7C4B713024D4C71500DA0C49 /* peer_info.cpp in Sources */,
 				7C4B713124D4C71500DA0C49 /* udp_socket.cpp in Sources */,
@@ -38917,13 +39026,16 @@
 				7C4B714F24D4C71500DA0C49 /* utf8.cpp in Sources */,
 				7C4B715024D4C71500DA0C49 /* alert_manager.cpp in Sources */,
 				7C4B715124D4C71500DA0C49 /* routing_table.cpp in Sources */,
+				7C4B71BD24D5C8C800DA0C49 /* TorrentState.swift in Sources */,
 				7C4B715224D4C71500DA0C49 /* ut_metadata.cpp in Sources */,
 				7C4B715324D4C71500DA0C49 /* helper_code.cpp in Sources */,
+				7C4B71B724D5C8C700DA0C49 /* TorrentSdk.swift in Sources */,
 				7C4B715424D4C71500DA0C49 /* settings_pack.cpp in Sources */,
 				7C4B715524D4C71500DA0C49 /* bloom_filter.cpp in Sources */,
 				7C4B715624D4C71500DA0C49 /* disk_io_thread.cpp in Sources */,
 				7C4B715724D4C71500DA0C49 /* alert.cpp in Sources */,
 				7C4B715824D4C71500DA0C49 /* chained_buffer.cpp in Sources */,
+				7C4B71C324D5C8C800DA0C49 /* FolderModel.swift in Sources */,
 				7C4B715924D4C71500DA0C49 /* node_entry.cpp in Sources */,
 				7C4B715A24D4C71500DA0C49 /* sc.cpp in Sources */,
 				7C4B715B24D4C71500DA0C49 /* ed25519.cpp in Sources */,
@@ -38949,6 +39061,7 @@
 				7C4B716F24D4C71500DA0C49 /* proxy_base.cpp in Sources */,
 				7C4B717024D4C71500DA0C49 /* read_resume_data.cpp in Sources */,
 				7C4B717124D4C71500DA0C49 /* platform_util.cpp in Sources */,
+				7C4B71BF24D5C8C800DA0C49 /* SettingsPack.swift in Sources */,
 				7C4B717224D4C71500DA0C49 /* file_pool.cpp in Sources */,
 				7C4B717324D4C71500DA0C49 /* i2p_stream.cpp in Sources */,
 				7C4B717424D4C71500DA0C49 /* peer_connection.cpp in Sources */,
@@ -38977,9 +39090,11 @@
 				7C9DC8E724D1D732007E78AD /* http_seed_connection.cpp in Sources */,
 				7C9DC89D24D1D732007E78AD /* add_torrent_params.cpp in Sources */,
 				7C9DC89624D1D732007E78AD /* udp_tracker_connection.cpp in Sources */,
+				7C4B71C724D5D17200DA0C49 /* Utils.swift in Sources */,
 				7C9DC8D224D1D732007E78AD /* find_data.cpp in Sources */,
 				7C9DC8EF24D1D733007E78AD /* close_reason.cpp in Sources */,
 				7C9DC88524D1D732007E78AD /* key_exchange.cpp in Sources */,
+				7C4B71C424D5C8C800DA0C49 /* PeerModel.swift in Sources */,
 				7C9DC8AE24D1D732007E78AD /* escape_string.cpp in Sources */,
 				7C9DC8C624D1D732007E78AD /* get_item.cpp in Sources */,
 				7C9DC8D724D1D732007E78AD /* disk_buffer_holder.cpp in Sources */,
@@ -39012,6 +39127,7 @@
 				7C9DC8BC24D1D732007E78AD /* fingerprint.cpp in Sources */,
 				7C9DC91124D1D733007E78AD /* performance_counters.cpp in Sources */,
 				7C9DC91F24D1D733007E78AD /* bandwidth_manager.cpp in Sources */,
+				7C4B71B824D5C8C700DA0C49 /* TorrentModel.swift in Sources */,
 				7C9DC8CD24D1D732007E78AD /* traversal_algorithm.cpp in Sources */,
 				7C9DC90924D1D733007E78AD /* session_call.cpp in Sources */,
 				7C9DC88724D1D732007E78AD /* verify.cpp in Sources */,
@@ -39037,6 +39153,7 @@
 				7C9DC89E24D1D732007E78AD /* piece_picker.cpp in Sources */,
 				7C9DC8B424D1D732007E78AD /* lazy_bdecode.cpp in Sources */,
 				7C9DC8CF24D1D732007E78AD /* sample_infohashes.cpp in Sources */,
+				7C4B71C024D5C8C800DA0C49 /* TrackerModel.swift in Sources */,
 				7C9DC8AD24D1D732007E78AD /* instantiate_connection.cpp in Sources */,
 				7C9DC89324D1D732007E78AD /* http_tracker_connection.cpp in Sources */,
 				7C9DC8F124D1D733007E78AD /* bdecode.cpp in Sources */,
@@ -39056,6 +39173,7 @@
 				7C9DC8FA24D1D733007E78AD /* bitfield.cpp in Sources */,
 				7C9DC90124D1D733007E78AD /* torrent_handle.cpp in Sources */,
 				7C9DC8F624D1D733007E78AD /* upnp.cpp in Sources */,
+				7C4B71BA24D5C8C700DA0C49 /* FileModel.swift in Sources */,
 				7C9DC87D24D1D732007E78AD /* unique_path.cpp in Sources */,
 				7C9DC8E924D1D732007E78AD /* peer_info.cpp in Sources */,
 				7C9DC8FC24D1D733007E78AD /* udp_socket.cpp in Sources */,
@@ -39091,13 +39209,17 @@
 				7C9DC91624D1D733007E78AD /* utf8.cpp in Sources */,
 				7C9DC90824D1D733007E78AD /* alert_manager.cpp in Sources */,
 				7C9DC8D324D1D732007E78AD /* routing_table.cpp in Sources */,
+				7C4B71BC24D5C8C800DA0C49 /* TorrentState.swift in Sources */,
 				7C9DC91C24D1D733007E78AD /* ut_metadata.cpp in Sources */,
 				7C9DC88224D1D732007E78AD /* helper_code.cpp in Sources */,
+				7C4B71B624D5C8C700DA0C49 /* TorrentSdk.swift in Sources */,
 				7C9DC8A424D1D732007E78AD /* settings_pack.cpp in Sources */,
 				7C9DC8C024D1D732007E78AD /* bloom_filter.cpp in Sources */,
+				7C4B71CC24D5D48C00DA0C49 /* StringExtension.swift in Sources */,
 				7C9DC8B624D1D732007E78AD /* disk_io_thread.cpp in Sources */,
 				7C9DC8EC24D1D733007E78AD /* alert.cpp in Sources */,
 				7C9DC8B324D1D732007E78AD /* chained_buffer.cpp in Sources */,
+				7C4B71C224D5C8C800DA0C49 /* FolderModel.swift in Sources */,
 				7C9DC8C924D1D732007E78AD /* node_entry.cpp in Sources */,
 				7C9DC88924D1D732007E78AD /* sc.cpp in Sources */,
 				7C9DC8CB24D1D732007E78AD /* ed25519.cpp in Sources */,
@@ -39123,7 +39245,9 @@
 				7C9DC91024D1D733007E78AD /* proxy_base.cpp in Sources */,
 				7C9DC8BA24D1D732007E78AD /* read_resume_data.cpp in Sources */,
 				7C9DC89C24D1D732007E78AD /* platform_util.cpp in Sources */,
+				7C4B71BE24D5C8C800DA0C49 /* SettingsPack.swift in Sources */,
 				7C9DC8F924D1D733007E78AD /* file_pool.cpp in Sources */,
+				7C4B71CA24D5D33E00DA0C49 /* NotificationNamesExtension.swift in Sources */,
 				7C9DC8E524D1D732007E78AD /* i2p_stream.cpp in Sources */,
 				7C9DC8A224D1D732007E78AD /* peer_connection.cpp in Sources */,
 				7C9DC8BF24D1D732007E78AD /* openssl.cpp in Sources */,
@@ -39214,10 +39338,27 @@
 			};
 			name = Release;
 		};
+		7C4B71A924D58E5600DA0C49 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		7C4B71AA24D58E5600DA0C49 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_STYLE = Automatic;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
 		7C9DC7B624D1D056007E78AD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -39289,6 +39430,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				BUILD_LIBRARY_FOR_DISTRIBUTION = YES;
 				CLANG_ALLOW_NON_MODULAR_INCLUDES_IN_FRAMEWORK_MODULES = NO;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
@@ -39426,11 +39568,20 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		7C4B718A24D4C71500DA0C49 /* Build configuration list for PBXNativeTarget "ITorrent-iOS-Simulator" */ = {
+		7C4B718A24D4C71500DA0C49 /* Build configuration list for PBXNativeTarget "ITorrentFramework-iOS-Simulator" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7C4B718B24D4C71500DA0C49 /* Debug */,
 				7C4B718C24D4C71500DA0C49 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7C4B71A824D58E5600DA0C49 /* Build configuration list for PBXAggregateTarget "ITorrentFramework" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C4B71A924D58E5600DA0C49 /* Debug */,
+				7C4B71AA24D58E5600DA0C49 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
@@ -39444,7 +39595,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		7C9DC7B824D1D056007E78AD /* Build configuration list for PBXNativeTarget "ITorrent-iOS" */ = {
+		7C9DC7B824D1D056007E78AD /* Build configuration list for PBXNativeTarget "ITorrentFramework-iOS" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				7C9DC7B924D1D056007E78AD /* Debug */,

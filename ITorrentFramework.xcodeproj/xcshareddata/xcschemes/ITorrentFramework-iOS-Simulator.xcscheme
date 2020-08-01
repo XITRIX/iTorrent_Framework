@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7C4B70C924D4C71500DA0C49"
                BuildableName = "ITorrentFramework.framework"
-               BlueprintName = "ITorrent-iOS-Simulator"
+               BlueprintName = "ITorrentFramework-iOS-Simulator"
                ReferencedContainer = "container:ITorrentFramework.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -52,7 +52,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7C4B70C924D4C71500DA0C49"
             BuildableName = "ITorrentFramework.framework"
-            BlueprintName = "ITorrent-iOS-Simulator"
+            BlueprintName = "ITorrentFramework-iOS-Simulator"
             ReferencedContainer = "container:ITorrentFramework.xcodeproj">
          </BuildableReference>
       </MacroExpansion>

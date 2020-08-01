@@ -16,7 +16,7 @@
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7C9DC7AF24D1D056007E78AD"
                BuildableName = "ITorrentFramework.framework"
-               BlueprintName = "ITorrent-iOS"
+               BlueprintName = "ITorrentFramework-iOS"
                ReferencedContainer = "container:ITorrentFramework.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -52,7 +52,7 @@
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7C9DC7AF24D1D056007E78AD"
             BuildableName = "ITorrentFramework.framework"
-            BlueprintName = "ITorrent-iOS"
+            BlueprintName = "ITorrentFramework-iOS"
             ReferencedContainer = "container:ITorrentFramework.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
