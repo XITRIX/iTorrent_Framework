@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ITorrentFramework.Private
 
 public class TorrentSdk {
     /**

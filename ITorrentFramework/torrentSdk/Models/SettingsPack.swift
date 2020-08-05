@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import ITorrentFramework.Private
 
 public enum ProxyType: Int, CaseIterable, Codable {
     case none
@@ -123,6 +124,6 @@ public extension SettingsPack {
         self.proxyPort = proxyPort
         self.proxyUsername = proxyUsername
         self.proxyPassword = proxyPassword
-        self.proxyPeerConnections = proxyPeerConnection
+        proxyPeerConnections = proxyPeerConnection
     }
 }
