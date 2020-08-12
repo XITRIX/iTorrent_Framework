@@ -112,11 +112,11 @@ public class TorrentModel: Hashable {
 
         displayState = getDisplayState()
         
-        if oldState != model.displayState {
+        if oldState != displayState {
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .torrentsStateChanged,
                                                 object: nil,
-                                                userInfo: ["data": (manager: self, oldState: oldState, newState: model.displayState)])
+                                                userInfo: ["data": (manager: self, oldState: oldState, newState: self.displayState)])
             }
         }
     }
