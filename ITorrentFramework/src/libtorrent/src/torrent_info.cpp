@@ -31,7 +31,6 @@ POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "libtorrent/config.hpp"
-#include "libtorrent/ConvertUTF.h"
 #include "libtorrent/torrent_info.hpp"
 #include "libtorrent/string_util.hpp" // is_space, is_i2p_url
 #include "libtorrent/bencode.hpp"
@@ -72,6 +71,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <ctime>
 #include <array>
 
+#if TORRENT_ABI_VERSION == 1 && defined TORRENT_WINDOWS
+#include "libtorrent/aux_/escape_string.hpp"
+#endif
+
 namespace libtorrent {
 
 	TORRENT_EXPORT from_span_t from_span;
@@ -79,12 +82,10 @@ namespace libtorrent {
 	namespace {
 
 	// this is an arbitrary limit to avoid malicious torrents causing
-	// unreasaonably large allocations for the merkle hash tree
-	// the size of the tree would be max_pieces * sizeof(int) * 2
-	// which is about 8 MB with this limit
+	// unreasaonably large allocations.
 	// TODO: remove this limit and the overloads that imply it, in favour of
 	// using load_torrent_limits
-	constexpr int default_piece_limit = 0x100000;
+	constexpr int default_piece_limit = 0x200000;
 
 	bool valid_path_character(std::int32_t const c)
 	{
@@ -122,55 +123,28 @@ namespace libtorrent {
 		tmp_path.reserve(target.size()+5);
 		bool valid_encoding = true;
 
-		UTF8 const* ptr = reinterpret_cast<UTF8 const*>(&target[0]);
-		UTF8 const* end = ptr + target.size();
-		while (ptr < end)
+		string_view ptr = target;
+		while (!ptr.empty())
 		{
-			UTF32 codepoint;
-			UTF32* cp = &codepoint;
+			std::int32_t codepoint;
+			int len;
 
 			// decode a single utf-8 character
-			ConversionResult res = ConvertUTF8toUTF32(&ptr, end, &cp, cp + 1
-				, lenientConversion);
+			std::tie(codepoint, len) = parse_utf8_codepoint(ptr);
 
 			// this was the last character, and nothing was
 			// written to the destination buffer (i.e. the source character was
 			// truncated)
-			if (res == sourceExhausted
-				|| res == sourceIllegal)
+			if (codepoint == -1)
 			{
-				if (cp == &codepoint)
-				{
-					if (res == sourceExhausted)
-						ptr = end;
-					else
-						++ptr;
-
-					codepoint = '_';
-					valid_encoding = false;
-				}
-			}
-			else if ((res != conversionOK && res != targetExhausted)
-				|| codepoint == UNI_REPLACEMENT_CHAR)
-			{
-				// we expect the conversion to fail with targetExhausted, since we
-				// only pass in a single destination character slot. The last
-				// character will succeed though. Also, if the character was replaced,
-				// use our own replacement symbol (underscore).
 				codepoint = '_';
 				valid_encoding = false;
 			}
 
-			// encode codepoint into utf-8
-			cp = &codepoint;
-			UTF8 sequence[5];
-			UTF8* start = sequence;
-			res = ConvertUTF32toUTF8(const_cast<const UTF32**>(&cp), cp + 1, &start, start + 5, lenientConversion);
-			TORRENT_UNUSED(res);
-			TORRENT_ASSERT(res == conversionOK);
+			ptr = ptr.substr(std::size_t(len));
 
-			for (int i = 0; i < std::min(5, int(start - sequence)); ++i)
-				tmp_path += char(sequence[i]);
+			// encode codepoint into utf-8
+			append_utf8_codepoint(tmp_path, codepoint);
 		}
 
 		// the encoding was not valid utf-8
@@ -264,8 +238,6 @@ namespace libtorrent {
 				continue;
 			}
 
-			TORRENT_ASSERT(isLegalUTF8(reinterpret_cast<UTF8 const*>(element.data() + i), seq_len));
-
 			// validation passed, add it to the output string
 			for (std::size_t k = i; k < i + std::size_t(seq_len); ++k)
 			{
@@ -300,7 +272,7 @@ namespace libtorrent {
 				if (dot == -1) break;
 				found_extension = true;
 				TORRENT_ASSERT(dot > 0);
-				i = std::size_t(dot - 1);
+				i = std::size_t(dot - seq_len);
 			}
 		}
 
@@ -500,13 +472,13 @@ namespace {
 					sanitize_append_path_element(symlink_path, pe);
 				}
 			}
+			else
+			{
+				// technically this is an invalid torrent. "symlink path" must exist
+				file_flags &= ~file_storage::flag_symlink;
+			}
 			// symlink targets are validated later, as it may point to a file or
 			// directory we haven't parsed yet
-		}
-		else
-		{
-			// technically this is an invalid torrent. "symlink path" must exist
-			file_flags &= ~file_storage::flag_symlink;
 		}
 
 		if (filename.size() > path.length()
@@ -925,11 +897,12 @@ namespace {
 	}
 
 #if TORRENT_ABI_VERSION == 1
+#if defined TORRENT_WINDOWS
 	torrent_info::torrent_info(std::wstring const& filename)
 	{
 		std::vector<char> buf;
 		error_code ec;
-		int ret = load_file(wchar_utf8(filename), buf, ec);
+		int ret = load_file(convert_from_wstring(filename), buf, ec);
 		if (ret < 0) aux::throw_ex<system_error>(ec);
 
 		bdecode_node e = bdecode(buf, ec);
@@ -947,6 +920,7 @@ namespace {
 		copy_on_write();
 		m_files.rename_file_deprecated(index, new_filename);
 	}
+#endif // TORRENT_WINDOWS
 #endif // TORRENT_ABI_VERSION
 #endif
 
@@ -981,11 +955,12 @@ namespace {
 	}
 
 #if TORRENT_ABI_VERSION == 1
+#if defined TORRENT_WINDOWS
 	torrent_info::torrent_info(std::wstring const& filename
 		, error_code& ec)
 	{
 		std::vector<char> buf;
-		int ret = load_file(wchar_utf8(filename), buf, ec);
+		int ret = load_file(convert_from_wstring(filename), buf, ec);
 		if (ret < 0) return;
 
 		bdecode_node e = bdecode(buf, ec);
@@ -994,6 +969,7 @@ namespace {
 
 		INVARIANT_CHECK;
 	}
+#endif // TORRENT_WINDOWS
 #endif // TORRENT_ABI_VERSION
 
 	// constructor used for creating new torrents
@@ -1590,6 +1566,7 @@ namespace {
 	void torrent_info::add_tracker(std::string const& url, int const tier
 		, announce_entry::tracker_source const source)
 	{
+		TORRENT_ASSERT_PRECOND(!url.empty());
 		auto const i = std::find_if(m_urls.begin(), m_urls.end()
 			, [&url](announce_entry const& ae) { return ae.url == url; });
 		if (i != m_urls.end()) return;

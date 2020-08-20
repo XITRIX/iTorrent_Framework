@@ -33,6 +33,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/config.hpp"
 #include "libtorrent/crc32c.hpp"
 #include "libtorrent/aux_/cpuid.hpp"
+#include "libtorrent/aux_/byteswap.hpp"
 #include "libtorrent/aux_/disable_warnings_push.hpp"
 
 #include <boost/crc.hpp>

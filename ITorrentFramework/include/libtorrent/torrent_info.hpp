@@ -115,15 +115,19 @@ namespace libtorrent {
 	// this object holds configuration options for limits to use when loading
 	// torrents. They are meant to prevent loading potentially malicious torrents
 	// that cause excessive memory allocations.
-	struct load_torrent_limits
+	struct TORRENT_EXPORT load_torrent_limits
 	{
-		int max_buffer_size = 6000000;
+		// the max size of a .torrent file to load into RAM
+		int max_buffer_size = 10000000;
+
 		// the max number of pieces allowed in the torrent
-		int max_pieces = 0x100000;
+		int max_pieces = 0x200000;
+
 		// the max recursion depth in the bdecoded structure
 		int max_decode_depth = 100;
+
 		// the max number of bdecode tokens
-		int max_decode_tokens = 2000000;
+		int max_decode_tokens = 3000000;
 	};
 
 	// the torrent_info class holds the information found in a .torrent file.
@@ -200,14 +204,17 @@ namespace libtorrent {
 			: torrent_info(span<char const>{buffer, size}, ec, from_span) {}
 		TORRENT_DEPRECATED
 		explicit torrent_info(lazy_entry const& torrent_file);
+
 		TORRENT_DEPRECATED
 		torrent_info(lazy_entry const& torrent_file, error_code& eca);
 		// all wstring APIs are deprecated since 0.16.11 instead, use the wchar
 		// -> utf8 conversion functions and pass in utf8 strings
+#ifdef TORRENT_WINDOWS
 		TORRENT_DEPRECATED
 		torrent_info(std::wstring const& filename, error_code& ec);
 		TORRENT_DEPRECATED
 		explicit torrent_info(std::wstring const& filename);
+#endif
 #endif // TORRENT_ABI_VERSION
 
 		// frees all storage associated with this torrent_info object

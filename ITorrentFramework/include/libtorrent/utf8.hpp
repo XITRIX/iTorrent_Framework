@@ -37,49 +37,16 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
 #include <string>
-#include <cwchar>
 
 #include "libtorrent/string_view.hpp"
-#include "libtorrent/error_code.hpp"
 
 namespace libtorrent {
 
-	namespace utf8_errors
-	{
-		// internal
-		enum error_code_enum
-		{
-			// conversion successful
-			conversion_ok,
-
-			// partial character in source, but hit end
-			source_exhausted,
-
-			// insufficient room in target for conversion
-			target_exhausted,
-
-			// source sequence is illegal/malformed
-			source_illegal
-		};
-
-		// hidden
-		TORRENT_EXPORT error_code make_error_code(error_code_enum e);
-	}
-
-	TORRENT_EXPORT boost::system::error_category const& utf8_category();
-
-	// ``utf8_wchar`` converts a UTF-8 string (``utf8``) to a wide character
-	// string (``wide``). ``wchar_utf8`` converts a wide character string
-	// (``wide``) to a UTF-8 string (``utf8``). The return value is one of
-	// the enumeration values from utf8_conv_result_t.
-	TORRENT_EXTRA_EXPORT std::wstring utf8_wchar(string_view utf8, error_code& ec);
-	TORRENT_EXTRA_EXPORT std::wstring utf8_wchar(string_view utf8);
-	TORRENT_EXTRA_EXPORT std::string wchar_utf8(wstring_view wide, error_code& ec);
-	TORRENT_EXTRA_EXPORT std::string wchar_utf8(wstring_view wide);
-
-	// TODO: 3 take a string_view here
 	TORRENT_EXTRA_EXPORT std::pair<std::int32_t, int>
 		parse_utf8_codepoint(string_view str);
-}
+
+	TORRENT_EXTRA_EXPORT void append_utf8_codepoint(std::string&, std::int32_t);
+
+} // namespace libtorrent
 
 #endif

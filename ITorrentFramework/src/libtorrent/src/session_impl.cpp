@@ -276,14 +276,21 @@ namespace aux {
 					continue;
 				}
 
-				// record whether the device has a gateway associated with it
-				// (which indicates it can be used to reach the internet)
-				// if the IP address tell us it's loopback or link-local, don't
-				// bother looking for the gateway
-				bool const local = ipface.interface_address.is_loopback()
+				// ignore interfaces that are down
+				if (ipface.state != if_state::up && ipface.state != if_state::unknown)
+					continue;
+				if (!(ipface.flags & if_flags::up))
+					continue;
+
+				// we assume this listen_socket_t is local-network under some
+				// conditions, meaning we won't announce it to internet trackers
+				bool const local
+					= ipface.interface_address.is_loopback()
 					|| is_link_local(ipface.interface_address)
+					|| (ipface.flags & if_flags::loopback)
 					|| (!is_global(ipface.interface_address)
-						&& !has_default_route(ipface.name, family(ipface.interface_address), routes));
+						&& !(ipface.flags & if_flags::pointopoint)
+						&& !has_internet_route(ipface.name, family(ipface.interface_address), routes));
 
 				eps.emplace_back(ipface.interface_address, uep.port, uep.device
 					, uep.ssl, uep.flags | listen_socket_t::was_expanded
@@ -857,6 +864,9 @@ namespace aux {
 #ifndef TORRENT_DISABLE_LOGGING
 		session_log(" *** session paused ***");
 #endif
+		// this will abort all tracker announces other than event=stopped
+		m_tracker_manager.abort_all_requests();
+
 		m_paused = true;
 		for (auto& te : m_torrents)
 		{
@@ -1359,6 +1369,9 @@ namespace {
 			|| (pack.has_val(settings_pack::proxy_type)
 				&& pack.get_int(settings_pack::proxy_type)
 					!= m_settings.get_int(settings_pack::proxy_type))
+			|| (pack.has_val(settings_pack::proxy_peer_connections)
+				&& pack.get_bool(settings_pack::proxy_peer_connections)
+					!= m_settings.get_bool(settings_pack::proxy_peer_connections))
 			;
 
 #ifndef TORRENT_DISABLE_LOGGING
@@ -1804,10 +1817,6 @@ namespace {
 				// connecting to)
 				if (iface.device != ipface.name) continue;
 
-				// record whether the device has a gateway associated with it
-				// (which indicates it can be used to reach the internet)
-				// if the IP address tell us it's loopback or link-local, don't
-				// bother looking for the gateway
 				bool const local = iface.local
 					|| ipface.interface_address.is_loopback()
 					|| is_link_local(ipface.interface_address);
@@ -1837,7 +1846,10 @@ namespace {
 		// of a new socket failing to bind due to a conflict with a stale socket
 		std::vector<listen_endpoint_t> eps;
 
-		if (m_settings.get_int(settings_pack::proxy_type) != settings_pack::none)
+		// if we don't proxy peer connections, don't apply the special logic for
+		// proxies
+		if (m_settings.get_int(settings_pack::proxy_type) != settings_pack::none
+			&& m_settings.get_bool(settings_pack::proxy_peer_connections))
 		{
 			// we will be able to accept incoming connections over UDP. so use
 			// one of the ports the user specified to use a consistent port
@@ -1852,12 +1864,6 @@ namespace {
 		}
 		else
 		{
-
-			listen_socket_flags_t const flags
-				= (m_settings.get_int(settings_pack::proxy_type) != settings_pack::none)
-				? listen_socket_flags_t{}
-				: listen_socket_t::accept_incoming;
-
 			std::vector<ip_interface> const ifs = enum_net_interfaces(m_io_service, ec);
 			if (ec && m_alerts.should_post<listen_failed_alert>())
 			{
@@ -1896,7 +1902,7 @@ namespace {
 				// IP address or a device name. In case it's a device name, we want to
 				// (potentially) end up binding a socket for each IP address associated
 				// with that device.
-				interface_to_endpoints(iface, flags, ifs, eps);
+				interface_to_endpoints(iface, listen_socket_t::accept_incoming, ifs, eps);
 			}
 
 			if (eps.empty())
@@ -3053,6 +3059,8 @@ namespace {
 
 	void session_impl::sent_bytes(int bytes_payload, int bytes_protocol)
 	{
+		TORRENT_ASSERT(bytes_payload >= 0);
+		TORRENT_ASSERT(bytes_protocol >= 0);
 		m_stats_counters.inc_stats_counter(counters::sent_bytes
 			, bytes_payload + bytes_protocol);
 		m_stats_counters.inc_stats_counter(counters::sent_payload_bytes
@@ -3063,6 +3071,8 @@ namespace {
 
 	void session_impl::received_bytes(int bytes_payload, int bytes_protocol)
 	{
+		TORRENT_ASSERT(bytes_payload >= 0);
+		TORRENT_ASSERT(bytes_protocol >= 0);
 		m_stats_counters.inc_stats_counter(counters::recv_bytes
 			, bytes_payload + bytes_protocol);
 		m_stats_counters.inc_stats_counter(counters::recv_payload_bytes
@@ -3073,6 +3083,7 @@ namespace {
 
 	void session_impl::trancieve_ip_packet(int bytes, bool ipv6)
 	{
+		TORRENT_ASSERT(bytes >= 0);
 		// one TCP/IP packet header for the packet
 		// sent or received, and one for the ACK
 		// The IPv4 header is 20 bytes
@@ -5419,10 +5430,11 @@ namespace {
 		if (sock)
 		{
 			// if we're using a proxy, we won't be able to accept any TCP
-			// connections. We may be able to accept uTP connections though, so
-			// announce the UDP port instead
+			// connections. Not even uTP connections via the port we know about.
+			// The DHT may use the implied port to make it work, but the port we
+			// announce here has no relevance for that.
 			if (sock->flags & listen_socket_t::proxy)
-				return std::uint16_t(sock->udp_external_port());
+				return 0;
 
 			if (!(sock->flags & listen_socket_t::accept_incoming))
 				return 0;

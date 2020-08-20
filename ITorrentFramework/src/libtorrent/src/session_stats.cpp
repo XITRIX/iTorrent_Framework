@@ -129,7 +129,8 @@ namespace {
 		METRIC(peer, incoming_connections)
 
 		// the number of peer connections for each kind of socket.
-		// these counts include half-open (connecting) peers.
+		// ``num_peers_half_open`` counts half-open (connecting) peers, no other
+		// count includes those peers.
 		// ``num_peers_up_unchoked_all`` is the total number of unchoked peers,
 		// whereas ``num_peers_up_unchoked`` only are unchoked peers that count
 		// against the limit (i.e. excluding peers that are unchoked because the
@@ -563,6 +564,11 @@ namespace {
 		METRIC(sock_bufs, socket_recv_size19)
 		METRIC(sock_bufs, socket_recv_size20)
 
+		// if the outstanding tracker announce limit is reached, tracker
+		// announces are queued, to be issued when an announce slot opens up.
+		// this measure the number of tracker announces currently in the
+		// queue
+		METRIC(tracker, num_queued_tracker_announces)
 		// ... more
 	}});
 #undef METRIC
