@@ -644,6 +644,7 @@ extern "C" TorrentResult get_torrent_info() {
             strcpy((char*)res.torrents[i].creator, info->creator().c_str());
         } else {
             res.torrents[i].creator = new char[1];
+            strcpy((char*)res.torrents[i].creator, "");
         }
         
         if (info != NULL) {
@@ -651,6 +652,7 @@ extern "C" TorrentResult get_torrent_info() {
             strcpy(res.torrents[i].comment, info->comment().c_str());
         } else {
             res.torrents[i].comment = new char[1];
+            strcpy(res.torrents[i].comment, "");
         }
         
         res.torrents[i].progress = stat.progress;
