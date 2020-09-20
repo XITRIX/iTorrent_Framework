@@ -42,6 +42,8 @@ public struct SettingsPack {
     public var enableUpnp: Bool
     public var enableNatpmp: Bool
 
+    public var outgoingInterfaces: String
+    
     public var portRangeFirst: Int
     public var portRangeSecond: Int
 
@@ -61,6 +63,7 @@ public struct SettingsPack {
                              enable_utp: enableUtp,
                              enable_upnp: enableUpnp,
                              enable_natpmp: enableNatpmp,
+                             outgoing_interfaces: outgoingInterfaces.cString(),
                              port_range_first: Int32(portRangeFirst),
                              port_range_second: Int32(portRangeSecond),
                              proxy_type: proxy_type_t(rawValue: UInt32(proxyType.rawValue)),
@@ -82,6 +85,7 @@ public extension SettingsPack {
         enableUtp = native.enable_utp
         enableUpnp = native.enable_upnp
         enableNatpmp = native.enable_natpmp
+        outgoingInterfaces = String(validatingUTF8: native.outgoing_interfaces) ?? ""
         portRangeFirst = Int(native.port_range_first)
         portRangeSecond = Int(native.port_range_second)
         proxyType = ProxyType(rawValue: Int(native.proxy_type.rawValue))!
@@ -100,6 +104,7 @@ public extension SettingsPack {
          enableUtp: Bool,
          enableUpnp: Bool,
          enableNatpmp: Bool,
+         outgoingInterfaces: String,
          portRangeFirst: Int,
          portRangeSecond: Int,
          proxyType: ProxyType,
@@ -116,6 +121,7 @@ public extension SettingsPack {
         self.enableUtp = enableUtp
         self.enableUpnp = enableUpnp
         self.enableNatpmp = enableNatpmp
+        self.outgoingInterfaces = outgoingInterfaces
         self.portRangeFirst = portRangeFirst
         self.portRangeSecond = portRangeSecond
         self.proxyType = proxyType

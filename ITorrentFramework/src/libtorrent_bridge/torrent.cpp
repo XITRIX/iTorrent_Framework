@@ -55,7 +55,6 @@ public:
         
         struct settings_pack pack;
         pack.set_str(settings_pack::user_agent, client_name);
-        pack.set_str(settings_pack::listen_interfaces, "0.0.0.0:6881");
         pack.set_int(lt::settings_pack::alert_mask
                         , lt::alert_category::error
                         | lt::alert_category::peer

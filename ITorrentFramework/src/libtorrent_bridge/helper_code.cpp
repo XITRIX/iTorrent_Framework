@@ -108,6 +108,7 @@ void applySettingsPackHelper(lt::settings_pack *pack, settings_pack_struct *_pac
     pack->set_bool(lt::settings_pack::enable_outgoing_utp, _pack->enable_utp);
     pack->set_bool(lt::settings_pack::enable_upnp, _pack->enable_upnp);
     pack->set_bool(lt::settings_pack::enable_natpmp, _pack->enable_natpmp);
+    pack->set_str(lt::settings_pack::outgoing_interfaces, _pack->outgoing_interfaces);
     
     pack->set_str(lt::settings_pack::listen_interfaces, "0.0.0.0:" + std::to_string(_pack->port_range_first) +  ",[::]:" + std::to_string(_pack->port_range_first));
     if (_pack->port_range_second - _pack->port_range_first >= 0)
