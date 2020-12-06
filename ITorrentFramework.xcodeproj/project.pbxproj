@@ -23,6 +23,174 @@
 /* Begin PBXBuildFile section */
 		7C1465DB24DAC45000FD8292 /* NotificationNamesExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */; };
 		7C1465DD24DAC52800FD8292 /* StringExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */; };
+		7C2AEB29257D1E0500B97050 /* libcrypto-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C2AEB27257D1DED00B97050 /* libcrypto-tvOS.a */; };
+		7C2AEB2A257D1E0500B97050 /* libssl-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C2AEB28257D1DEE00B97050 /* libssl-tvOS.a */; };
+		7C2AEB32257D1E2800B97050 /* http_seed_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BBE24F6B2500066761E /* http_seed_connection.cpp */; };
+		7C2AEB33257D1E2800B97050 /* bandwidth_limit.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE624F6B2510066761E /* bandwidth_limit.cpp */; };
+		7C2AEB34257D1E2800B97050 /* ge.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6124F6B2500066761E /* ge.cpp */; };
+		7C2AEB35257D1E2800B97050 /* torrent_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BEF24F6B2510066761E /* torrent_info.cpp */; };
+		7C2AEB36257D1E2800B97050 /* settings_pack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7B24F6B2500066761E /* settings_pack.cpp */; };
+		7C2AEB37257D1E2800B97050 /* lsd.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BDA24F6B2510066761E /* lsd.cpp */; };
+		7C2AEB38257D1E2800B97050 /* dos_blocker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9F24F6B2500066761E /* dos_blocker.cpp */; };
+		7C2AEB39257D1E2800B97050 /* pe_crypto.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC524F6B2500066761E /* pe_crypto.cpp */; };
+		7C2AEB3A257D1E2800B97050 /* time.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF824F6B2510066761E /* time.cpp */; };
+		7C2AEB3B257D1E2800B97050 /* ffs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB324F6B2500066761E /* ffs.cpp */; };
+		7C2AEB3C257D1E2800B97050 /* peer_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7924F6B2500066761E /* peer_connection.cpp */; };
+		7C2AEB3D257D1E2800B97050 /* natpmp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9024F6B2500066761E /* natpmp.cpp */; };
+		7C2AEB3E257D1E2800B97050 /* node_id.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9924F6B2500066761E /* node_id.cpp */; };
+		7C2AEB3F257D1E2800B97050 /* udp_socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD324F6B2500066761E /* udp_socket.cpp */; };
+		7C2AEB40257D1E2800B97050 /* find_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BAA24F6B2500066761E /* find_data.cpp */; };
+		7C2AEB41257D1E2800B97050 /* utf8.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BED24F6B2510066761E /* utf8.cpp */; };
+		7C2AEB42257D1E2800B97050 /* traversal_algorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA524F6B2500066761E /* traversal_algorithm.cpp */; };
+		7C2AEB43257D1E2800B97050 /* sc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5F24F6B2500066761E /* sc.cpp */; };
+		7C2AEB44257D1E2800B97050 /* session_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7624F6B2500066761E /* session_handle.cpp */; };
+		7C2AEB45257D1E2800B97050 /* dht_settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9A24F6B2500066761E /* dht_settings.cpp */; };
+		7C2AEB46257D1E2800B97050 /* peer_info.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC024F6B2500066761E /* peer_info.cpp */; };
+		7C2AEB47257D1E2800B97050 /* socket_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF224F6B2510066761E /* socket_type.cpp */; };
+		7C2AEB48257D1E2800B97050 /* file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BCE24F6B2500066761E /* file.cpp */; };
+		7C2AEB49257D1E2800B97050 /* torrent_peer_allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE524F6B2510066761E /* torrent_peer_allocator.cpp */; };
+		7C2AEB4A257D1E2800B97050 /* storage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB724F6B2500066761E /* storage.cpp */; };
+		7C2AEB4B257D1E2800B97050 /* disk_buffer_holder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BAF24F6B2500066761E /* disk_buffer_holder.cpp */; };
+		7C2AEB4C257D1E2800B97050 /* instantiate_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8424F6B2500066761E /* instantiate_connection.cpp */; };
+		7C2AEB4D257D1E2800B97050 /* utp_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7724F6B2500066761E /* utp_stream.cpp */; };
+		7C2AEB4E257D1E2800B97050 /* puff.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC924F6B2500066761E /* puff.cpp */; };
+		7C2AEB4F257D1E2800B97050 /* entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9524F6B2500066761E /* entry.cpp */; };
+		7C2AEB50257D1E2800B97050 /* openssl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9624F6B2500066761E /* openssl.cpp */; };
+		7C2AEB51257D1E2800B97050 /* resolver.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE324F6B2510066761E /* resolver.cpp */; };
+		7C2AEB52257D1E2800B97050 /* enum_net.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD524F6B2510066761E /* enum_net.cpp */; };
+		7C2AEB53257D1E2800B97050 /* dht_state.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA824F6B2500066761E /* dht_state.cpp */; };
+		7C2AEB54257D1E2800B97050 /* close_reason.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC624F6B2500066761E /* close_reason.cpp */; };
+		7C2AEB55257D1E2800B97050 /* utp_socket_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF424F6B2510066761E /* utp_socket_manager.cpp */; };
+		7C2AEB56257D1E2800B97050 /* session.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BCC24F6B2500066761E /* session.cpp */; };
+		7C2AEB57257D1E2800B97050 /* stack_allocator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7824F6B2500066761E /* stack_allocator.cpp */; };
+		7C2AEB58257D1E2800B97050 /* gzip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BBB24F6B2500066761E /* gzip.cpp */; };
+		7C2AEB59257D1E2800B97050 /* disk_io_thread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8D24F6B2500066761E /* disk_io_thread.cpp */; };
+		7C2AEB5A257D1E2800B97050 /* fe.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6224F6B2500066761E /* fe.cpp */; };
+		7C2AEB5B257D1E2800B97050 /* add_scalar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6024F6B2500066761E /* add_scalar.cpp */; };
+		7C2AEB5C257D1E2800B97050 /* verify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5D24F6B2500066761E /* verify.cpp */; };
+		7C2AEB5D257D1E2800B97050 /* storage_piece_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6E24F6B2500066761E /* storage_piece_set.cpp */; };
+		7C2AEB5E257D1E2800B97050 /* disk_io_thread_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF124F6B2510066761E /* disk_io_thread_pool.cpp */; };
+		7C2AEB5F257D1E2800B97050 /* storage_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BBD24F6B2500066761E /* storage_utils.cpp */; };
+		7C2AEB60257D1E2800B97050 /* disk_buffer_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8C24F6B2500066761E /* disk_buffer_pool.cpp */; };
+		7C2AEB61257D1E2800B97050 /* bandwidth_queue_entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BEE24F6B2510066761E /* bandwidth_queue_entry.cpp */; };
+		7C2AEB62257D1E2800B97050 /* ip_filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD724F6B2510066761E /* ip_filter.cpp */; };
+		7C2AEB63257D1E2800B97050 /* xml_parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BFB24F6B2510066761E /* xml_parse.cpp */; };
+		7C2AEB64257D1E2800B97050 /* http_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE224F6B2510066761E /* http_connection.cpp */; };
+		7C2AEB65257D1E2800B97050 /* disk_job_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB124F6B2500066761E /* disk_job_pool.cpp */; };
+		7C2AEB66257D1E2800B97050 /* stat_cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8624F6B2500066761E /* stat_cache.cpp */; };
+		7C2AEB67257D1E2800B97050 /* key_exchange.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5B24F6B2500066761E /* key_exchange.cpp */; };
+		7C2AEB68257D1E2800B97050 /* windows_file_codecvt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5024F6B24F0066761E /* windows_file_codecvt.cpp */; };
+		7C2AEB69257D1E2800B97050 /* magnet_uri.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7124F6B2500066761E /* magnet_uri.cpp */; };
+		7C2AEB6A257D1E2800B97050 /* msg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BAC24F6B2500066761E /* msg.cpp */; };
+		7C2AEB6B257D1E2800B97050 /* smart_ban.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE924F6B2510066761E /* smart_ban.cpp */; };
+		7C2AEB6C257D1E2800B97050 /* proxy_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE724F6B2510066761E /* proxy_base.cpp */; };
+		7C2AEB6D257D1E2800B97050 /* broadcast_socket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BEB24F6B2510066761E /* broadcast_socket.cpp */; };
+		7C2AEB6E257D1E2800B97050 /* i2p_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BBC24F6B2500066761E /* i2p_stream.cpp */; };
+		7C2AEB6F257D1E2800B97050 /* rpc_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9C24F6B2500066761E /* rpc_manager.cpp */; };
+		7C2AEB70257D1E2800B97050 /* hasher512.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8224F6B2500066761E /* hasher512.cpp */; };
+		7C2AEB71257D1E2800B97050 /* peer_list.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6C24F6B2500066761E /* peer_list.cpp */; };
+		7C2AEB72257D1E2800B97050 /* torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BBF24F6B2500066761E /* torrent.cpp */; };
+		7C2AEB73257D1E2800B97050 /* version.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8724F6B2500066761E /* version.cpp */; };
+		7C2AEB74257D1E2800B97050 /* http_tracker_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6A24F6B2500066761E /* http_tracker_connection.cpp */; };
+		7C2AEB75257D1E2800B97050 /* upnp.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BCD24F6B2500066761E /* upnp.cpp */; };
+		7C2AEB76257D1E2800B97050 /* hex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD624F6B2510066761E /* hex.cpp */; };
+		7C2AEB77257D1E2800B97050 /* sign.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6324F6B2500066761E /* sign.cpp */; };
+		7C2AEB78257D1E2800B97050 /* escape_string.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8524F6B2500066761E /* escape_string.cpp */; };
+		7C2AEB79257D1E2800B97050 /* lazy_bdecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8B24F6B2500066761E /* lazy_bdecode.cpp */; };
+		7C2AEB7A257D1E2800B97050 /* sha1.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB224F6B2500066761E /* sha1.cpp */; };
+		7C2AEB7B257D1E2800B97050 /* alert_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BDF24F6B2510066761E /* alert_manager.cpp */; };
+		7C2AEB7C257D1E2800B97050 /* udp_tracker_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6D24F6B2500066761E /* udp_tracker_connection.cpp */; };
+		7C2AEB7D257D1E2800B97050 /* bdecode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC824F6B2500066761E /* bdecode.cpp */; };
+		7C2AEB7E257D1E2800B97050 /* http_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7224F6B2500066761E /* http_stream.cpp */; };
+		7C2AEB7F257D1E2800B97050 /* disk_job_fence.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8024F6B2500066761E /* disk_job_fence.cpp */; };
+		7C2AEB80257D1E2800B97050 /* error_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B4D24F6B24E0066761E /* error_code.cpp */; };
+		7C2AEB81257D1E2800B97050 /* get_peers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA424F6B2500066761E /* get_peers.cpp */; };
+		7C2AEB82257D1E2800B97050 /* ip_notifier.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BCF24F6B2500066761E /* ip_notifier.cpp */; };
+		7C2AEB83257D1E2800B97050 /* path_traits.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5524F6B24F0066761E /* path_traits.cpp */; };
+		7C2AEB84257D1E2800B97050 /* portability.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5624F6B24F0066761E /* portability.cpp */; };
+		7C2AEB85257D1E2800B97050 /* item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA224F6B2500066761E /* item.cpp */; };
+		7C2AEB86257D1E2800B97050 /* file_pool.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD024F6B2500066761E /* file_pool.cpp */; };
+		7C2AEB87257D1E2800B97050 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD924F6B2510066761E /* path.cpp */; };
+		7C2AEB88257D1E2800B97050 /* codecvt_error_category.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B4F24F6B24F0066761E /* codecvt_error_category.cpp */; };
+		7C2AEB89257D1E2800B97050 /* sha1_hash.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8124F6B2500066761E /* sha1_hash.cpp */; };
+		7C2AEB8A257D1E2800B97050 /* bitfield.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD124F6B2500066761E /* bitfield.cpp */; };
+		7C2AEB8B257D1E2800B97050 /* read_resume_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9124F6B2500066761E /* read_resume_data.cpp */; };
+		7C2AEB8C257D1E2800B97050 /* listen_socket_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7A24F6B2500066761E /* listen_socket_handle.cpp */; };
+		7C2AEB8D257D1E2800B97050 /* web_connection_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC224F6B2500066761E /* web_connection_base.cpp */; };
+		7C2AEB8E257D1E2800B97050 /* session_impl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD224F6B2500066761E /* session_impl.cpp */; };
+		7C2AEB8F257D1E2800B97050 /* sha512.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB924F6B2500066761E /* sha512.cpp */; };
+		7C2AEB90257D1E2800B97050 /* sample_infohashes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA724F6B2500066761E /* sample_infohashes.cpp */; };
+		7C2AEB91257D1E2800B97050 /* get_item.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9E24F6B2500066761E /* get_item.cpp */; };
+		7C2AEB92257D1E2800B97050 /* routing_table.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BAB24F6B2500066761E /* routing_table.cpp */; };
+		7C2AEB93257D1E2800B97050 /* assert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BAE24F6B2500066761E /* assert.cpp */; };
+		7C2AEB94257D1E2800B97050 /* session_settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB824F6B2500066761E /* session_settings.cpp */; };
+		7C2AEB95257D1E2800B97050 /* random.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8E24F6B2500066761E /* random.cpp */; };
+		7C2AEB96257D1E2800B97050 /* part_file.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8824F6B2500066761E /* part_file.cpp */; };
+		7C2AEB97257D1E2800B97050 /* add_torrent_params.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7424F6B2500066761E /* add_torrent_params.cpp */; };
+		7C2AEB98257D1E2800B97050 /* peer_connection_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BCA24F6B2500066761E /* peer_connection_handle.cpp */; };
+		7C2AEB99257D1E2800B97050 /* session_call.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE024F6B2510066761E /* session_call.cpp */; };
+		7C2AEB9A257D1E2800B97050 /* keypair.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5C24F6B2500066761E /* keypair.cpp */; };
+		7C2AEB9B257D1E2800B97050 /* node.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA024F6B2500066761E /* node.cpp */; };
+		7C2AEB9C257D1E2800B97050 /* fingerprint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9324F6B2500066761E /* fingerprint.cpp */; };
+		7C2AEB9D257D1E2800B97050 /* node_entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA124F6B2500066761E /* node_entry.cpp */; };
+		7C2AEB9E257D1E2800B97050 /* ut_pex.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8924F6B2500066761E /* ut_pex.cpp */; };
+		7C2AEB9F257D1E2800B97050 /* disk_io_job.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC724F6B2500066761E /* disk_io_job.cpp */; };
+		7C2AEBA0257D1E2800B97050 /* stat.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8324F6B2500066761E /* stat.cpp */; };
+		7C2AEBA1257D1E2800B97050 /* crc32c.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF924F6B2510066761E /* crc32c.cpp */; };
+		7C2AEBA2257D1E2800B97050 /* torrent_handle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD824F6B2510066761E /* torrent_handle.cpp */; };
+		7C2AEBA3257D1E2800B97050 /* chained_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8A24F6B2500066761E /* chained_buffer.cpp */; };
+		7C2AEBA4257D1E2800B97050 /* cpuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF724F6B2510066761E /* cpuid.cpp */; };
+		7C2AEBA5257D1E2800B97050 /* unique_path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5424F6B24F0066761E /* unique_path.cpp */; };
+		7C2AEBA6257D1E2800B97050 /* platform_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7324F6B2500066761E /* platform_util.cpp */; };
+		7C2AEBA7257D1E2800B97050 /* block_cache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BDE24F6B2510066761E /* block_cache.cpp */; };
+		7C2AEBA8257D1E2800B97050 /* packet_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE424F6B2510066761E /* packet_buffer.cpp */; };
+		7C2AEBA9257D1E2800B97050 /* socket_io.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC424F6B2500066761E /* socket_io.cpp */; };
+		7C2AEBAA257D1E2800B97050 /* ip_voter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BCB24F6B2500066761E /* ip_voter.cpp */; };
+		7C2AEBAB257D1E2800B97050 /* peer_class.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC124F6B2500066761E /* peer_class.cpp */; };
+		7C2AEBAC257D1E2800B97050 /* parse_url.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B8F24F6B2500066761E /* parse_url.cpp */; };
+		7C2AEBAD257D1E2800B97050 /* bandwidth_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF624F6B2510066761E /* bandwidth_manager.cpp */; };
+		7C2AEBAE257D1E2800B97050 /* web_peer_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE124F6B2510066761E /* web_peer_connection.cpp */; };
+		7C2AEBAF257D1E2800B97050 /* ut_metadata.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF324F6B2510066761E /* ut_metadata.cpp */; };
+		7C2AEBB0257D1E2800B97050 /* tracker_manager.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6F24F6B2500066761E /* tracker_manager.cpp */; };
+		7C2AEBB1257D1E2800B97050 /* string_util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7024F6B2500066761E /* string_util.cpp */; };
+		7C2AEBB2257D1E2800B97050 /* identify_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7F24F6B2500066761E /* identify_client.cpp */; };
+		7C2AEBB3257D1E2800B97050 /* peer_class_set.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BDD24F6B2510066761E /* peer_class_set.cpp */; };
+		7C2AEBB4257D1E2800B97050 /* generate_peer_id.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BFA24F6B2510066761E /* generate_peer_id.cpp */; };
+		7C2AEBB5257D1E2800B97050 /* timestamp_history.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF524F6B2510066761E /* timestamp_history.cpp */; };
+		7C2AEBB6257D1E2800B97050 /* utf8_codecvt_facet.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5724F6B24F0066761E /* utf8_codecvt_facet.cpp */; };
+		7C2AEBB7257D1E2800B97050 /* receive_buffer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BDB24F6B2510066761E /* receive_buffer.cpp */; };
+		7C2AEBB8257D1E2800B97050 /* write_resume_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9424F6B2500066761E /* write_resume_data.cpp */; };
+		7C2AEBB9257D1E2800B97050 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5324F6B24F0066761E /* path.cpp */; };
+		7C2AEBBA257D1E2800B97050 /* alert.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BC324F6B2500066761E /* alert.cpp */; };
+		7C2AEBBB257D1E2800B97050 /* piece_picker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7524F6B2500066761E /* piece_picker.cpp */; };
+		7C2AEBBC257D1E2800B97050 /* operations.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5124F6B24F0066761E /* operations.cpp */; };
+		7C2AEBBD257D1E2800B97050 /* error_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB524F6B2500066761E /* error_code.cpp */; };
+		7C2AEBBE257D1E2800B97050 /* hasher.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7E24F6B2500066761E /* hasher.cpp */; };
+		7C2AEBBF257D1E2800B97050 /* resolve_links.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BF024F6B2510066761E /* resolve_links.cpp */; };
+		7C2AEBC0257D1E2800B97050 /* performance_counters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BE824F6B2510066761E /* performance_counters.cpp */; };
+		7C2AEBC1257D1E2800B97050 /* create_torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7C24F6B2500066761E /* create_torrent.cpp */; };
+		7C2AEBC2257D1E2800B97050 /* refresh.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9B24F6B2500066761E /* refresh.cpp */; };
+		7C2AEBC3257D1E2800B97050 /* request_blocks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6924F6B2500066761E /* request_blocks.cpp */; };
+		7C2AEBC4257D1E2800B97050 /* session_stats.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB624F6B2500066761E /* session_stats.cpp */; };
+		7C2AEBC5257D1E2800B97050 /* announce_entry.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BD424F6B2510066761E /* announce_entry.cpp */; };
+		7C2AEBC6257D1E2800B97050 /* choker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B6B24F6B2500066761E /* choker.cpp */; };
+		7C2AEBC7257D1E2800B97050 /* torrent_peer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BEC24F6B2510066761E /* torrent_peer.cpp */; };
+		7C2AEBC8257D1E2800B97050 /* put_data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9D24F6B2500066761E /* put_data.cpp */; };
+		7C2AEBC9257D1E2800B97050 /* file_progress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BEA24F6B2510066761E /* file_progress.cpp */; };
+		7C2AEBCA257D1E2800B97050 /* merkle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9224F6B2500066761E /* merkle.cpp */; };
+		7C2AEBCB257D1E2800B97050 /* dht_tracker.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA924F6B2500066761E /* dht_tracker.cpp */; };
+		7C2AEBCC257D1E2800B97050 /* http_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BAD24F6B2500066761E /* http_parser.cpp */; };
+		7C2AEBCD257D1E2800B97050 /* bt_peer_connection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BBA24F6B2500066761E /* bt_peer_connection.cpp */; };
+		7C2AEBCE257D1E2800B97050 /* socks5_stream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B7D24F6B2500066761E /* socks5_stream.cpp */; };
+		7C2AEBCF257D1E2800B97050 /* ed25519.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA324F6B2500066761E /* ed25519.cpp */; };
+		7C2AEBD0257D1E2800B97050 /* torrent_status.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB424F6B2500066761E /* torrent_status.cpp */; };
+		7C2AEBD1257D1E2800B97050 /* proxy_settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BB024F6B2500066761E /* proxy_settings.cpp */; };
+		7C2AEBD2257D1E2800B97050 /* file_storage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BDC24F6B2510066761E /* file_storage.cpp */; };
+		7C2AEBD3257D1E2800B97050 /* dht_storage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933BA624F6B2500066761E /* dht_storage.cpp */; };
+		7C2AEBD4257D1E2800B97050 /* bloom_filter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B9724F6B2500066761E /* bloom_filter.cpp */; };
+		7C2AEBE9257D1EA200B97050 /* libTorrent-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C2AEBDC257D1E2800B97050 /* libTorrent-tvOS.a */; };
+		7C2AEBF8257D1F7300B97050 /* libcrypto-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C2AEB27257D1DED00B97050 /* libcrypto-tvOS.a */; };
+		7C2AEBF9257D1F7600B97050 /* libssl-tvOS.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C2AEB28257D1DEE00B97050 /* libssl-tvOS.a */; };
 		7C4B70CD24D4C71500DA0C49 /* result_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03E824D1E2ED007E78AD /* result_struct.h */; settings = {ATTRIBUTES = (Private, ); }; };
 		7C4B70CE24D4C71500DA0C49 /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03EA24D1E2ED007E78AD /* helper_code.h */; };
 		7C4B70D124D4C71500DA0C49 /* ITorrentFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9DC7B324D1D056007E78AD /* ITorrentFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
@@ -50,6 +218,8 @@
 		7C4B71C824D5D17800DA0C49 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C624D5D17200DA0C49 /* Utils.swift */; };
 		7C4B71CA24D5D33E00DA0C49 /* NotificationNamesExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */; };
 		7C4B71CC24D5D48C00DA0C49 /* StringExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */; };
+		7C7B4048251AAC3400720F14 /* InterfaceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C7B4047251AAC3400720F14 /* InterfaceType.swift */; };
+		7C7B4049251AAC3400720F14 /* InterfaceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C7B4047251AAC3400720F14 /* InterfaceType.swift */; };
 		7C933BFC24F6B2520066761E /* error_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B4D24F6B24E0066761E /* error_code.cpp */; };
 		7C933BFD24F6B2520066761E /* codecvt_error_category.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B4F24F6B24F0066761E /* codecvt_error_category.cpp */; };
 		7C933BFE24F6B2520066761E /* windows_file_codecvt.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7C933B5024F6B24F0066761E /* windows_file_codecvt.cpp */; };
@@ -227,6 +397,28 @@
 		7CDD30ED24DBE32B000C38F6 /* libssl-catalyst.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CDD30EB24DBE31D000C38F6 /* libssl-catalyst.a */; };
 		7CDD30F724DC351C000C38F6 /* libcrypto-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CDD30F524DC3504000C38F6 /* libcrypto-ios.a */; };
 		7CDD30F824DC3524000C38F6 /* libssl-ios.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 7CDD30F624DC3505000C38F6 /* libssl-ios.a */; };
+		7CEA5DA6257BEBDC007575D4 /* result_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03E824D1E2ED007E78AD /* result_struct.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		7CEA5DA7257BEBDC007575D4 /* helper_code.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03EA24D1E2ED007E78AD /* helper_code.h */; };
+		7CEA5DA8257BEBDC007575D4 /* ITorrentFramework.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9DC7B324D1D056007E78AD /* ITorrentFramework.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		7CEA5DA9257BEBDC007575D4 /* settings_pack_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03ED24D1E2ED007E78AD /* settings_pack_struct.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		7CEA5DAA257BEBDC007575D4 /* peer_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03EC24D1E2ED007E78AD /* peer_struct.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		7CEA5DAB257BEBDC007575D4 /* torrent_headers.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03EB24D1E2ED007E78AD /* torrent_headers.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		7CEA5DAC257BEBDC007575D4 /* file_struct.h in Headers */ = {isa = PBXBuildFile; fileRef = 7C9D03E924D1E2ED007E78AD /* file_struct.h */; settings = {ATTRIBUTES = (Private, ); }; };
+		7CEA5DAE257BEBDC007575D4 /* Utils.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C624D5D17200DA0C49 /* Utils.swift */; };
+		7CEA5DAF257BEBDC007575D4 /* helper_code.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CF219A024EF2A70002554D6 /* helper_code.cpp */; };
+		7CEA5DB0257BEBDC007575D4 /* InterfaceType.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C7B4047251AAC3400720F14 /* InterfaceType.swift */; };
+		7CEA5DB1257BEBDC007575D4 /* PeerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B524D5C8C700DA0C49 /* PeerModel.swift */; };
+		7CEA5DB2257BEBDC007575D4 /* TorrentModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71AF24D5C8C700DA0C49 /* TorrentModel.swift */; };
+		7CEA5DB3257BEBDC007575D4 /* TrackerModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B324D5C8C700DA0C49 /* TrackerModel.swift */; };
+		7CEA5DB4257BEBDC007575D4 /* FileModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B024D5C8C700DA0C49 /* FileModel.swift */; };
+		7CEA5DB5257BEBDC007575D4 /* torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CF2199E24EF2A70002554D6 /* torrent.cpp */; };
+		7CEA5DB6257BEBDC007575D4 /* TorrentState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B124D5C8C700DA0C49 /* TorrentState.swift */; };
+		7CEA5DB7257BEBDC007575D4 /* TorrentSdk.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71AD24D5C8C700DA0C49 /* TorrentSdk.swift */; };
+		7CEA5DB8257BEBDC007575D4 /* StringExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */; };
+		7CEA5DB9257BEBDC007575D4 /* FolderModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B424D5C8C700DA0C49 /* FolderModel.swift */; };
+		7CEA5DBA257BEBDC007575D4 /* SettingsPack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71B224D5C8C700DA0C49 /* SettingsPack.swift */; };
+		7CEA5DBB257BEBDC007575D4 /* NotificationNamesExtension.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */; };
+		7CEA5DBC257BEBDC007575D4 /* torrent_destructors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CF2199F24EF2A70002554D6 /* torrent_destructors.cpp */; };
 		7CF21A5924EF2A71002554D6 /* torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CF2199E24EF2A70002554D6 /* torrent.cpp */; };
 		7CF21A5A24EF2A71002554D6 /* torrent.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CF2199E24EF2A70002554D6 /* torrent.cpp */; };
 		7CF21A5B24EF2A71002554D6 /* torrent_destructors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 7CF2199F24EF2A70002554D6 /* torrent_destructors.cpp */; };
@@ -236,6 +428,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		7C2AEBEA257D1EA200B97050 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 7C9DC7A724D1D056007E78AD /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 7C2AEB30257D1E2800B97050;
+			remoteInfo = "LibTorrent-tvOS";
+		};
 		7C933CA224F6C0610066761E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 7C9DC7A724D1D056007E78AD /* Project object */;
@@ -246,6 +445,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
+		7C2AEBD8257D1E2800B97050 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C933B3E24F6B1390066761E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -258,6 +466,9 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7C2AEB27257D1DED00B97050 /* libcrypto-tvOS.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-tvOS.a"; path = "Libraries/libcrypto-tvOS.a"; sourceTree = "<group>"; };
+		7C2AEB28257D1DEE00B97050 /* libssl-tvOS.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-tvOS.a"; path = "Libraries/libssl-tvOS.a"; sourceTree = "<group>"; };
+		7C2AEBDC257D1E2800B97050 /* libTorrent-tvOS.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libTorrent-tvOS.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C4B70B224D4BDAB00DA0C49 /* module.modulemap */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.module-map"; path = module.modulemap; sourceTree = "<group>"; };
 		7C4B718D24D4C71500DA0C49 /* ITorrentFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ITorrentFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C4B71A124D5614E00DA0C49 /* Info-Catalyst.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "Info-Catalyst.plist"; sourceTree = "<group>"; };
@@ -272,6 +483,7 @@
 		7C4B71C624D5D17200DA0C49 /* Utils.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Utils.swift; sourceTree = "<group>"; };
 		7C4B71C924D5D33E00DA0C49 /* NotificationNamesExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationNamesExtension.swift; sourceTree = "<group>"; };
 		7C4B71CB24D5D48C00DA0C49 /* StringExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StringExtension.swift; sourceTree = "<group>"; };
+		7C7B4047251AAC3400720F14 /* InterfaceType.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InterfaceType.swift; sourceTree = "<group>"; };
 		7C933B4024F6B1390066761E /* libTorrent.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libTorrent.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		7C933B4D24F6B24E0066761E /* error_code.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = error_code.cpp; sourceTree = "<group>"; };
 		7C933B4F24F6B24F0066761E /* codecvt_error_category.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = codecvt_error_category.cpp; sourceTree = "<group>"; };
@@ -14688,18 +14900,27 @@
 		7C9DFFFC24D1E2E1007E78AD /* name_generator.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = name_generator.hpp; sourceTree = "<group>"; };
 		7C9DFFFD24D1E2E1007E78AD /* uuid_serialize.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = uuid_serialize.hpp; sourceTree = "<group>"; };
 		7C9DFFFF24D1E2E1007E78AD /* random_provider_getrandom.ipp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = random_provider_getrandom.ipp; sourceTree = "<group>"; };
-		7CDD30D024DB0E1B000C38F6 /* libcrypto-iPhone.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-iPhone.a"; path = "../../../Downloads/openssl-apple-master/lib/libcrypto-iPhone.a"; sourceTree = "<group>"; };
-		7CDD30D124DB0E1D000C38F6 /* libssl-iPhone.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-iPhone.a"; path = "../../../Downloads/openssl-apple-master/lib/libssl-iPhone.a"; sourceTree = "<group>"; };
+		7CC4C535257D2DE600AB236F /* Info-tvOS.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Info-tvOS.plist"; sourceTree = "<group>"; };
 		7CDD30EA24DBE31C000C38F6 /* libcrypto-catalyst.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-catalyst.a"; path = "Libraries/libcrypto-catalyst.a"; sourceTree = "<group>"; };
 		7CDD30EB24DBE31D000C38F6 /* libssl-catalyst.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-catalyst.a"; path = "Libraries/libssl-catalyst.a"; sourceTree = "<group>"; };
 		7CDD30F524DC3504000C38F6 /* libcrypto-ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libcrypto-ios.a"; path = "Libraries/libcrypto-ios.a"; sourceTree = "<group>"; };
 		7CDD30F624DC3505000C38F6 /* libssl-ios.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libssl-ios.a"; path = "Libraries/libssl-ios.a"; sourceTree = "<group>"; };
+		7CEA5DC5257BEBDC007575D4 /* ITorrentFramework.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = ITorrentFramework.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7CF2199E24EF2A70002554D6 /* torrent.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = torrent.cpp; sourceTree = "<group>"; };
 		7CF2199F24EF2A70002554D6 /* torrent_destructors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = torrent_destructors.cpp; sourceTree = "<group>"; };
 		7CF219A024EF2A70002554D6 /* helper_code.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = helper_code.cpp; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7C2AEBD5257D1E2800B97050 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C2AEBF9257D1F7600B97050 /* libssl-tvOS.a in Frameworks */,
+				7C2AEBF8257D1F7300B97050 /* libcrypto-tvOS.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C4B718024D4C71500DA0C49 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -14728,18 +14949,28 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7CEA5DBD257BEBDC007575D4 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C2AEB2A257D1E0500B97050 /* libssl-tvOS.a in Frameworks */,
+				7C2AEBE9257D1EA200B97050 /* libTorrent-tvOS.a in Frameworks */,
+				7C2AEB29257D1E0500B97050 /* libcrypto-tvOS.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		7C4B70B824D4C61200DA0C49 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				7C2AEB27257D1DED00B97050 /* libcrypto-tvOS.a */,
+				7C2AEB28257D1DEE00B97050 /* libssl-tvOS.a */,
 				7CDD30F524DC3504000C38F6 /* libcrypto-ios.a */,
 				7CDD30F624DC3505000C38F6 /* libssl-ios.a */,
 				7CDD30EA24DBE31C000C38F6 /* libcrypto-catalyst.a */,
 				7CDD30EB24DBE31D000C38F6 /* libssl-catalyst.a */,
-				7CDD30D024DB0E1B000C38F6 /* libcrypto-iPhone.a */,
-				7CDD30D124DB0E1D000C38F6 /* libssl-iPhone.a */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -14765,6 +14996,7 @@
 				7C4B71B324D5C8C700DA0C49 /* TrackerModel.swift */,
 				7C4B71B424D5C8C700DA0C49 /* FolderModel.swift */,
 				7C4B71B524D5C8C700DA0C49 /* PeerModel.swift */,
+				7C7B4047251AAC3400720F14 /* InterfaceType.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -17087,6 +17319,8 @@
 				7C9DC7B024D1D056007E78AD /* ITorrentFramework.framework */,
 				7C4B718D24D4C71500DA0C49 /* ITorrentFramework.framework */,
 				7C933B4024F6B1390066761E /* libTorrent.a */,
+				7CEA5DC5257BEBDC007575D4 /* ITorrentFramework.framework */,
+				7C2AEBDC257D1E2800B97050 /* libTorrent-tvOS.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -17098,6 +17332,7 @@
 				7C9DC92824D1E288007E78AD /* include */,
 				7C4B71AC24D5C8C700DA0C49 /* torrentSdk */,
 				7C9DC7B424D1D056007E78AD /* Info-iOS.plist */,
+				7CC4C535257D2DE600AB236F /* Info-tvOS.plist */,
 				7C4B71A124D5614E00DA0C49 /* Info-Catalyst.plist */,
 				7C9DC7B324D1D056007E78AD /* ITorrentFramework.h */,
 			);
@@ -38599,9 +38834,40 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7CEA5DA5257BEBDC007575D4 /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7CEA5DA6257BEBDC007575D4 /* result_struct.h in Headers */,
+				7CEA5DA7257BEBDC007575D4 /* helper_code.h in Headers */,
+				7CEA5DA8257BEBDC007575D4 /* ITorrentFramework.h in Headers */,
+				7CEA5DA9257BEBDC007575D4 /* settings_pack_struct.h in Headers */,
+				7CEA5DAA257BEBDC007575D4 /* peer_struct.h in Headers */,
+				7CEA5DAB257BEBDC007575D4 /* torrent_headers.h in Headers */,
+				7CEA5DAC257BEBDC007575D4 /* file_struct.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXHeadersBuildPhase section */
 
 /* Begin PBXNativeTarget section */
+		7C2AEB30257D1E2800B97050 /* LibTorrent-tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7C2AEBD9257D1E2800B97050 /* Build configuration list for PBXNativeTarget "LibTorrent-tvOS" */;
+			buildPhases = (
+				7C2AEB31257D1E2800B97050 /* Sources */,
+				7C2AEBD5257D1E2800B97050 /* Frameworks */,
+				7C2AEBD8257D1E2800B97050 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "LibTorrent-tvOS";
+			productName = LibTorrent;
+			productReference = 7C2AEBDC257D1E2800B97050 /* libTorrent-tvOS.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		7C4B70C924D4C71500DA0C49 /* ITorrentFramework-Catalyst */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 7C4B718A24D4C71500DA0C49 /* Build configuration list for PBXNativeTarget "ITorrentFramework-Catalyst" */;
@@ -38656,6 +38922,25 @@
 			productReference = 7C9DC7B024D1D056007E78AD /* ITorrentFramework.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		7CEA5DA2257BEBDC007575D4 /* ITorrentFramework-tvOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 7CEA5DC2257BEBDC007575D4 /* Build configuration list for PBXNativeTarget "ITorrentFramework-tvOS" */;
+			buildPhases = (
+				7CEA5DA5257BEBDC007575D4 /* Headers */,
+				7CEA5DAD257BEBDC007575D4 /* Sources */,
+				7CEA5DBD257BEBDC007575D4 /* Frameworks */,
+				7CEA5DC1257BEBDC007575D4 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				7C2AEBEB257D1EA200B97050 /* PBXTargetDependency */,
+			);
+			name = "ITorrentFramework-tvOS";
+			productName = ITorrentFramework;
+			productReference = 7CEA5DC5257BEBDC007575D4 /* ITorrentFramework.framework */;
+			productType = "com.apple.product-type.framework";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -38691,9 +38976,11 @@
 			projectRoot = "";
 			targets = (
 				7C9DC7AF24D1D056007E78AD /* ITorrentFramework-iOS */,
+				7CEA5DA2257BEBDC007575D4 /* ITorrentFramework-tvOS */,
 				7C4B70C924D4C71500DA0C49 /* ITorrentFramework-Catalyst */,
 				7C4B71A724D58E5500DA0C49 /* ITorrentFramework */,
 				7C933B3F24F6B1390066761E /* LibTorrent */,
+				7C2AEB30257D1E2800B97050 /* LibTorrent-tvOS */,
 			);
 		};
 /* End PBXProject section */
@@ -38707,6 +38994,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		7C9DC7AE24D1D056007E78AD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		7CEA5DC1257BEBDC007575D4 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -38736,12 +39030,183 @@
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		7C2AEB31257D1E2800B97050 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7C2AEB32257D1E2800B97050 /* http_seed_connection.cpp in Sources */,
+				7C2AEB33257D1E2800B97050 /* bandwidth_limit.cpp in Sources */,
+				7C2AEB34257D1E2800B97050 /* ge.cpp in Sources */,
+				7C2AEB35257D1E2800B97050 /* torrent_info.cpp in Sources */,
+				7C2AEB36257D1E2800B97050 /* settings_pack.cpp in Sources */,
+				7C2AEB37257D1E2800B97050 /* lsd.cpp in Sources */,
+				7C2AEB38257D1E2800B97050 /* dos_blocker.cpp in Sources */,
+				7C2AEB39257D1E2800B97050 /* pe_crypto.cpp in Sources */,
+				7C2AEB3A257D1E2800B97050 /* time.cpp in Sources */,
+				7C2AEB3B257D1E2800B97050 /* ffs.cpp in Sources */,
+				7C2AEB3C257D1E2800B97050 /* peer_connection.cpp in Sources */,
+				7C2AEB3D257D1E2800B97050 /* natpmp.cpp in Sources */,
+				7C2AEB3E257D1E2800B97050 /* node_id.cpp in Sources */,
+				7C2AEB3F257D1E2800B97050 /* udp_socket.cpp in Sources */,
+				7C2AEB40257D1E2800B97050 /* find_data.cpp in Sources */,
+				7C2AEB41257D1E2800B97050 /* utf8.cpp in Sources */,
+				7C2AEB42257D1E2800B97050 /* traversal_algorithm.cpp in Sources */,
+				7C2AEB43257D1E2800B97050 /* sc.cpp in Sources */,
+				7C2AEB44257D1E2800B97050 /* session_handle.cpp in Sources */,
+				7C2AEB45257D1E2800B97050 /* dht_settings.cpp in Sources */,
+				7C2AEB46257D1E2800B97050 /* peer_info.cpp in Sources */,
+				7C2AEB47257D1E2800B97050 /* socket_type.cpp in Sources */,
+				7C2AEB48257D1E2800B97050 /* file.cpp in Sources */,
+				7C2AEB49257D1E2800B97050 /* torrent_peer_allocator.cpp in Sources */,
+				7C2AEB4A257D1E2800B97050 /* storage.cpp in Sources */,
+				7C2AEB4B257D1E2800B97050 /* disk_buffer_holder.cpp in Sources */,
+				7C2AEB4C257D1E2800B97050 /* instantiate_connection.cpp in Sources */,
+				7C2AEB4D257D1E2800B97050 /* utp_stream.cpp in Sources */,
+				7C2AEB4E257D1E2800B97050 /* puff.cpp in Sources */,
+				7C2AEB4F257D1E2800B97050 /* entry.cpp in Sources */,
+				7C2AEB50257D1E2800B97050 /* openssl.cpp in Sources */,
+				7C2AEB51257D1E2800B97050 /* resolver.cpp in Sources */,
+				7C2AEB52257D1E2800B97050 /* enum_net.cpp in Sources */,
+				7C2AEB53257D1E2800B97050 /* dht_state.cpp in Sources */,
+				7C2AEB54257D1E2800B97050 /* close_reason.cpp in Sources */,
+				7C2AEB55257D1E2800B97050 /* utp_socket_manager.cpp in Sources */,
+				7C2AEB56257D1E2800B97050 /* session.cpp in Sources */,
+				7C2AEB57257D1E2800B97050 /* stack_allocator.cpp in Sources */,
+				7C2AEB58257D1E2800B97050 /* gzip.cpp in Sources */,
+				7C2AEB59257D1E2800B97050 /* disk_io_thread.cpp in Sources */,
+				7C2AEB5A257D1E2800B97050 /* fe.cpp in Sources */,
+				7C2AEB5B257D1E2800B97050 /* add_scalar.cpp in Sources */,
+				7C2AEB5C257D1E2800B97050 /* verify.cpp in Sources */,
+				7C2AEB5D257D1E2800B97050 /* storage_piece_set.cpp in Sources */,
+				7C2AEB5E257D1E2800B97050 /* disk_io_thread_pool.cpp in Sources */,
+				7C2AEB5F257D1E2800B97050 /* storage_utils.cpp in Sources */,
+				7C2AEB60257D1E2800B97050 /* disk_buffer_pool.cpp in Sources */,
+				7C2AEB61257D1E2800B97050 /* bandwidth_queue_entry.cpp in Sources */,
+				7C2AEB62257D1E2800B97050 /* ip_filter.cpp in Sources */,
+				7C2AEB63257D1E2800B97050 /* xml_parse.cpp in Sources */,
+				7C2AEB64257D1E2800B97050 /* http_connection.cpp in Sources */,
+				7C2AEB65257D1E2800B97050 /* disk_job_pool.cpp in Sources */,
+				7C2AEB66257D1E2800B97050 /* stat_cache.cpp in Sources */,
+				7C2AEB67257D1E2800B97050 /* key_exchange.cpp in Sources */,
+				7C2AEB68257D1E2800B97050 /* windows_file_codecvt.cpp in Sources */,
+				7C2AEB69257D1E2800B97050 /* magnet_uri.cpp in Sources */,
+				7C2AEB6A257D1E2800B97050 /* msg.cpp in Sources */,
+				7C2AEB6B257D1E2800B97050 /* smart_ban.cpp in Sources */,
+				7C2AEB6C257D1E2800B97050 /* proxy_base.cpp in Sources */,
+				7C2AEB6D257D1E2800B97050 /* broadcast_socket.cpp in Sources */,
+				7C2AEB6E257D1E2800B97050 /* i2p_stream.cpp in Sources */,
+				7C2AEB6F257D1E2800B97050 /* rpc_manager.cpp in Sources */,
+				7C2AEB70257D1E2800B97050 /* hasher512.cpp in Sources */,
+				7C2AEB71257D1E2800B97050 /* peer_list.cpp in Sources */,
+				7C2AEB72257D1E2800B97050 /* torrent.cpp in Sources */,
+				7C2AEB73257D1E2800B97050 /* version.cpp in Sources */,
+				7C2AEB74257D1E2800B97050 /* http_tracker_connection.cpp in Sources */,
+				7C2AEB75257D1E2800B97050 /* upnp.cpp in Sources */,
+				7C2AEB76257D1E2800B97050 /* hex.cpp in Sources */,
+				7C2AEB77257D1E2800B97050 /* sign.cpp in Sources */,
+				7C2AEB78257D1E2800B97050 /* escape_string.cpp in Sources */,
+				7C2AEB79257D1E2800B97050 /* lazy_bdecode.cpp in Sources */,
+				7C2AEB7A257D1E2800B97050 /* sha1.cpp in Sources */,
+				7C2AEB7B257D1E2800B97050 /* alert_manager.cpp in Sources */,
+				7C2AEB7C257D1E2800B97050 /* udp_tracker_connection.cpp in Sources */,
+				7C2AEB7D257D1E2800B97050 /* bdecode.cpp in Sources */,
+				7C2AEB7E257D1E2800B97050 /* http_stream.cpp in Sources */,
+				7C2AEB7F257D1E2800B97050 /* disk_job_fence.cpp in Sources */,
+				7C2AEB80257D1E2800B97050 /* error_code.cpp in Sources */,
+				7C2AEB81257D1E2800B97050 /* get_peers.cpp in Sources */,
+				7C2AEB82257D1E2800B97050 /* ip_notifier.cpp in Sources */,
+				7C2AEB83257D1E2800B97050 /* path_traits.cpp in Sources */,
+				7C2AEB84257D1E2800B97050 /* portability.cpp in Sources */,
+				7C2AEB85257D1E2800B97050 /* item.cpp in Sources */,
+				7C2AEB86257D1E2800B97050 /* file_pool.cpp in Sources */,
+				7C2AEB87257D1E2800B97050 /* path.cpp in Sources */,
+				7C2AEB88257D1E2800B97050 /* codecvt_error_category.cpp in Sources */,
+				7C2AEB89257D1E2800B97050 /* sha1_hash.cpp in Sources */,
+				7C2AEB8A257D1E2800B97050 /* bitfield.cpp in Sources */,
+				7C2AEB8B257D1E2800B97050 /* read_resume_data.cpp in Sources */,
+				7C2AEB8C257D1E2800B97050 /* listen_socket_handle.cpp in Sources */,
+				7C2AEB8D257D1E2800B97050 /* web_connection_base.cpp in Sources */,
+				7C2AEB8E257D1E2800B97050 /* session_impl.cpp in Sources */,
+				7C2AEB8F257D1E2800B97050 /* sha512.cpp in Sources */,
+				7C2AEB90257D1E2800B97050 /* sample_infohashes.cpp in Sources */,
+				7C2AEB91257D1E2800B97050 /* get_item.cpp in Sources */,
+				7C2AEB92257D1E2800B97050 /* routing_table.cpp in Sources */,
+				7C2AEB93257D1E2800B97050 /* assert.cpp in Sources */,
+				7C2AEB94257D1E2800B97050 /* session_settings.cpp in Sources */,
+				7C2AEB95257D1E2800B97050 /* random.cpp in Sources */,
+				7C2AEB96257D1E2800B97050 /* part_file.cpp in Sources */,
+				7C2AEB97257D1E2800B97050 /* add_torrent_params.cpp in Sources */,
+				7C2AEB98257D1E2800B97050 /* peer_connection_handle.cpp in Sources */,
+				7C2AEB99257D1E2800B97050 /* session_call.cpp in Sources */,
+				7C2AEB9A257D1E2800B97050 /* keypair.cpp in Sources */,
+				7C2AEB9B257D1E2800B97050 /* node.cpp in Sources */,
+				7C2AEB9C257D1E2800B97050 /* fingerprint.cpp in Sources */,
+				7C2AEB9D257D1E2800B97050 /* node_entry.cpp in Sources */,
+				7C2AEB9E257D1E2800B97050 /* ut_pex.cpp in Sources */,
+				7C2AEB9F257D1E2800B97050 /* disk_io_job.cpp in Sources */,
+				7C2AEBA0257D1E2800B97050 /* stat.cpp in Sources */,
+				7C2AEBA1257D1E2800B97050 /* crc32c.cpp in Sources */,
+				7C2AEBA2257D1E2800B97050 /* torrent_handle.cpp in Sources */,
+				7C2AEBA3257D1E2800B97050 /* chained_buffer.cpp in Sources */,
+				7C2AEBA4257D1E2800B97050 /* cpuid.cpp in Sources */,
+				7C2AEBA5257D1E2800B97050 /* unique_path.cpp in Sources */,
+				7C2AEBA6257D1E2800B97050 /* platform_util.cpp in Sources */,
+				7C2AEBA7257D1E2800B97050 /* block_cache.cpp in Sources */,
+				7C2AEBA8257D1E2800B97050 /* packet_buffer.cpp in Sources */,
+				7C2AEBA9257D1E2800B97050 /* socket_io.cpp in Sources */,
+				7C2AEBAA257D1E2800B97050 /* ip_voter.cpp in Sources */,
+				7C2AEBAB257D1E2800B97050 /* peer_class.cpp in Sources */,
+				7C2AEBAC257D1E2800B97050 /* parse_url.cpp in Sources */,
+				7C2AEBAD257D1E2800B97050 /* bandwidth_manager.cpp in Sources */,
+				7C2AEBAE257D1E2800B97050 /* web_peer_connection.cpp in Sources */,
+				7C2AEBAF257D1E2800B97050 /* ut_metadata.cpp in Sources */,
+				7C2AEBB0257D1E2800B97050 /* tracker_manager.cpp in Sources */,
+				7C2AEBB1257D1E2800B97050 /* string_util.cpp in Sources */,
+				7C2AEBB2257D1E2800B97050 /* identify_client.cpp in Sources */,
+				7C2AEBB3257D1E2800B97050 /* peer_class_set.cpp in Sources */,
+				7C2AEBB4257D1E2800B97050 /* generate_peer_id.cpp in Sources */,
+				7C2AEBB5257D1E2800B97050 /* timestamp_history.cpp in Sources */,
+				7C2AEBB6257D1E2800B97050 /* utf8_codecvt_facet.cpp in Sources */,
+				7C2AEBB7257D1E2800B97050 /* receive_buffer.cpp in Sources */,
+				7C2AEBB8257D1E2800B97050 /* write_resume_data.cpp in Sources */,
+				7C2AEBB9257D1E2800B97050 /* path.cpp in Sources */,
+				7C2AEBBA257D1E2800B97050 /* alert.cpp in Sources */,
+				7C2AEBBB257D1E2800B97050 /* piece_picker.cpp in Sources */,
+				7C2AEBBC257D1E2800B97050 /* operations.cpp in Sources */,
+				7C2AEBBD257D1E2800B97050 /* error_code.cpp in Sources */,
+				7C2AEBBE257D1E2800B97050 /* hasher.cpp in Sources */,
+				7C2AEBBF257D1E2800B97050 /* resolve_links.cpp in Sources */,
+				7C2AEBC0257D1E2800B97050 /* performance_counters.cpp in Sources */,
+				7C2AEBC1257D1E2800B97050 /* create_torrent.cpp in Sources */,
+				7C2AEBC2257D1E2800B97050 /* refresh.cpp in Sources */,
+				7C2AEBC3257D1E2800B97050 /* request_blocks.cpp in Sources */,
+				7C2AEBC4257D1E2800B97050 /* session_stats.cpp in Sources */,
+				7C2AEBC5257D1E2800B97050 /* announce_entry.cpp in Sources */,
+				7C2AEBC6257D1E2800B97050 /* choker.cpp in Sources */,
+				7C2AEBC7257D1E2800B97050 /* torrent_peer.cpp in Sources */,
+				7C2AEBC8257D1E2800B97050 /* put_data.cpp in Sources */,
+				7C2AEBC9257D1E2800B97050 /* file_progress.cpp in Sources */,
+				7C2AEBCA257D1E2800B97050 /* merkle.cpp in Sources */,
+				7C2AEBCB257D1E2800B97050 /* dht_tracker.cpp in Sources */,
+				7C2AEBCC257D1E2800B97050 /* http_parser.cpp in Sources */,
+				7C2AEBCD257D1E2800B97050 /* bt_peer_connection.cpp in Sources */,
+				7C2AEBCE257D1E2800B97050 /* socks5_stream.cpp in Sources */,
+				7C2AEBCF257D1E2800B97050 /* ed25519.cpp in Sources */,
+				7C2AEBD0257D1E2800B97050 /* torrent_status.cpp in Sources */,
+				7C2AEBD1257D1E2800B97050 /* proxy_settings.cpp in Sources */,
+				7C2AEBD2257D1E2800B97050 /* file_storage.cpp in Sources */,
+				7C2AEBD3257D1E2800B97050 /* dht_storage.cpp in Sources */,
+				7C2AEBD4257D1E2800B97050 /* bloom_filter.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		7C4B70D824D4C71500DA0C49 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 				7C4B71C824D5D17800DA0C49 /* Utils.swift in Sources */,
 				7CF21A5E24EF2A71002554D6 /* helper_code.cpp in Sources */,
+				7C7B4049251AAC3400720F14 /* InterfaceType.swift in Sources */,
 				7C4B71C524D5C8C800DA0C49 /* PeerModel.swift in Sources */,
 				7C4B71B924D5C8C700DA0C49 /* TorrentModel.swift in Sources */,
 				7C4B71C124D5C8C800DA0C49 /* TrackerModel.swift in Sources */,
@@ -38933,6 +39398,7 @@
 			files = (
 				7C4B71C724D5D17200DA0C49 /* Utils.swift in Sources */,
 				7CF21A5D24EF2A71002554D6 /* helper_code.cpp in Sources */,
+				7C7B4048251AAC3400720F14 /* InterfaceType.swift in Sources */,
 				7C4B71C424D5C8C800DA0C49 /* PeerModel.swift in Sources */,
 				7C4B71B824D5C8C700DA0C49 /* TorrentModel.swift in Sources */,
 				7C4B71C024D5C8C800DA0C49 /* TrackerModel.swift in Sources */,
@@ -38948,9 +39414,36 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		7CEA5DAD257BEBDC007575D4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7CEA5DAE257BEBDC007575D4 /* Utils.swift in Sources */,
+				7CEA5DAF257BEBDC007575D4 /* helper_code.cpp in Sources */,
+				7CEA5DB0257BEBDC007575D4 /* InterfaceType.swift in Sources */,
+				7CEA5DB1257BEBDC007575D4 /* PeerModel.swift in Sources */,
+				7CEA5DB2257BEBDC007575D4 /* TorrentModel.swift in Sources */,
+				7CEA5DB3257BEBDC007575D4 /* TrackerModel.swift in Sources */,
+				7CEA5DB4257BEBDC007575D4 /* FileModel.swift in Sources */,
+				7CEA5DB5257BEBDC007575D4 /* torrent.cpp in Sources */,
+				7CEA5DB6257BEBDC007575D4 /* TorrentState.swift in Sources */,
+				7CEA5DB7257BEBDC007575D4 /* TorrentSdk.swift in Sources */,
+				7CEA5DB8257BEBDC007575D4 /* StringExtension.swift in Sources */,
+				7CEA5DB9257BEBDC007575D4 /* FolderModel.swift in Sources */,
+				7CEA5DBA257BEBDC007575D4 /* SettingsPack.swift in Sources */,
+				7CEA5DBB257BEBDC007575D4 /* NotificationNamesExtension.swift in Sources */,
+				7CEA5DBC257BEBDC007575D4 /* torrent_destructors.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		7C2AEBEB257D1EA200B97050 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 7C2AEB30257D1E2800B97050 /* LibTorrent-tvOS */;
+			targetProxy = 7C2AEBEA257D1EA200B97050 /* PBXContainerItemProxy */;
+		};
 		7C933CA324F6C0610066761E /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 7C933B3F24F6B1390066761E /* LibTorrent */;
@@ -38959,6 +39452,47 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		7C2AEBDA257D1E2800B97050 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+					NDEBUG,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "Torrent-tvOS";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 3;
+			};
+			name = Debug;
+		};
+		7C2AEBDB257D1E2800B97050 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD)";
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CODE_SIGN_STYLE = Automatic;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+					NDEBUG,
+				);
+				IPHONEOS_DEPLOYMENT_TARGET = 9.0;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "Torrent-tvOS";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 3;
+			};
+			name = Release;
+		};
 		7C4B718B24D4C71500DA0C49 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -39244,6 +39778,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				"EXCLUDED_ARCHS[sdk=*]" = i386;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "i386 arm64";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					"$(inherited)",
 					TORRENT_USE_LIBCRYPTO,
@@ -39281,6 +39817,8 @@
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
 				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				"EXCLUDED_ARCHS[sdk=*]" = i386;
+				"EXCLUDED_ARCHS[sdk=iphonesimulator*]" = "i386 arm64";
 				GCC_PREPROCESSOR_DEFINITIONS = (
 					TORRENT_USE_LIBCRYPTO,
 					TORRENT_USE_OPENSSL,
@@ -39308,9 +39846,93 @@
 			};
 			name = Release;
 		};
+		7CEA5DC3257BEBDC007575D4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+				);
+				INFOPLIST_FILE = "ITorrentFramework/Info-tvOS.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Libraries",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nonamedude.ITorrentFramework;
+				PRODUCT_MODULE_NAME = "$(PROJECT_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
+			};
+			name = Debug;
+		};
+		7CEA5DC4257BEBDC007575D4 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				DEFINES_MODULE = YES;
+				DYLIB_COMPATIBILITY_VERSION = 1;
+				DYLIB_CURRENT_VERSION = 1;
+				DYLIB_INSTALL_NAME_BASE = "@rpath";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					TORRENT_USE_LIBCRYPTO,
+					TORRENT_USE_OPENSSL,
+					NDEBUG,
+				);
+				INFOPLIST_FILE = "ITorrentFramework/Info-tvOS.plist";
+				INSTALL_PATH = "$(LOCAL_LIBRARY_DIR)/Frameworks";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/Libraries",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.nonamedude.ITorrentFramework;
+				PRODUCT_MODULE_NAME = "$(PROJECT_NAME:c99extidentifier)";
+				PRODUCT_NAME = "$(PROJECT_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 12.0;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		7C2AEBD9257D1E2800B97050 /* Build configuration list for PBXNativeTarget "LibTorrent-tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7C2AEBDA257D1E2800B97050 /* Debug */,
+				7C2AEBDB257D1E2800B97050 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		7C4B718A24D4C71500DA0C49 /* Build configuration list for PBXNativeTarget "ITorrentFramework-Catalyst" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -39352,6 +39974,15 @@
 			buildConfigurations = (
 				7C9DC7B924D1D056007E78AD /* Debug */,
 				7C9DC7BA24D1D056007E78AD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		7CEA5DC2257BEBDC007575D4 /* Build configuration list for PBXNativeTarget "ITorrentFramework-tvOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7CEA5DC3257BEBDC007575D4 /* Debug */,
+				7CEA5DC4257BEBDC007575D4 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

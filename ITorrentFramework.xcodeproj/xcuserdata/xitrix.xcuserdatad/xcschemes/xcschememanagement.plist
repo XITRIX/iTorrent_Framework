@@ -7,26 +7,41 @@
 		<key>ITorrentFramework-Catalyst.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>1</integer>
+			<integer>2</integer>
 		</dict>
 		<key>ITorrentFramework-iOS.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
 			<integer>0</integer>
 		</dict>
+		<key>ITorrentFramework-tvOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>1</integer>
+		</dict>
 		<key>ITorrentFramework.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>3</integer>
+			<integer>5</integer>
+		</dict>
+		<key>LibTorrent-tvOS.xcscheme_^#shared#^_</key>
+		<dict>
+			<key>orderHint</key>
+			<integer>4</integer>
 		</dict>
 		<key>LibTorrent.xcscheme_^#shared#^_</key>
 		<dict>
 			<key>orderHint</key>
-			<integer>2</integer>
+			<integer>3</integer>
 		</dict>
 	</dict>
 	<key>SuppressBuildableAutocreation</key>
 	<dict>
+		<key>7C2AEB30257D1E2800B97050</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
 		<key>7C4B70C924D4C71500DA0C49</key>
 		<dict>
 			<key>primary</key>
@@ -43,6 +58,11 @@
 			<true/>
 		</dict>
 		<key>7C9DC7AF24D1D056007E78AD</key>
+		<dict>
+			<key>primary</key>
+			<true/>
+		</dict>
+		<key>7CEA5DA2257BEBDC007575D4</key>
 		<dict>
 			<key>primary</key>
 			<true/>

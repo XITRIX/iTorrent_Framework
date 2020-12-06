@@ -42,7 +42,9 @@ public struct SettingsPack {
     public var enableUpnp: Bool
     public var enableNatpmp: Bool
 
-    public var outgoingInterfaces: String
+    public var interfaceType: InterfaceType
+//    public var outgoingInterfaces: String
+//    public var listenInterfaces: String
     
     public var portRangeFirst: Int
     public var portRangeSecond: Int
@@ -63,7 +65,8 @@ public struct SettingsPack {
                              enable_utp: enableUtp,
                              enable_upnp: enableUpnp,
                              enable_natpmp: enableNatpmp,
-                             outgoing_interfaces: outgoingInterfaces.cString(),
+                             outgoing_interfaces: outgoungInterfaces.cString(),
+                             listen_interfaces: listenInterfaces.cString(),
                              port_range_first: Int32(portRangeFirst),
                              port_range_second: Int32(portRangeSecond),
                              proxy_type: proxy_type_t(rawValue: UInt32(proxyType.rawValue)),
@@ -73,6 +76,28 @@ public struct SettingsPack {
                              proxy_username: proxyUsername.cString(),
                              proxy_password: proxyPassword.cString(),
                              proxy_peer_connections: proxyPeerConnections)
+    }
+    
+    private var outgoungInterfaces: String {
+        let interfaces = Utils.interfaceNames()
+        
+        switch interfaceType {
+        case .all: return ""
+        case .primary: return interfaces.filter{ $0.hasPrefix("en0") || $0.hasPrefix("utun")}.joined(separator: ",")
+        case .vpnOnly: return interfaces.filter{ $0.hasPrefix("utun")}.joined(separator: ",")
+        case .manual(name: let interface): return interface
+        }
+    }
+    
+    private var listenInterfaces: String {
+        let interfaces = Utils.interfaceNames()
+        
+        switch interfaceType {
+        case .all: return "0.0.0.0:\(portRangeFirst),[::]:\(portRangeFirst)"
+        case .primary: return interfaces.filter{ $0.hasPrefix("en0") || $0.hasPrefix("utun")}.map{ "\($0):\(portRangeFirst)" }.joined(separator: ",")
+        case .vpnOnly: return interfaces.filter{ $0.hasPrefix("utun")}.map{ "\($0):\(portRangeFirst)" }.joined(separator: ",")
+        case .manual(name: let interface): return "\(interface):\(portRangeFirst)"
+        }
     }
 }
 
@@ -85,7 +110,9 @@ public extension SettingsPack {
         enableUtp = native.enable_utp
         enableUpnp = native.enable_upnp
         enableNatpmp = native.enable_natpmp
-        outgoingInterfaces = String(validatingUTF8: native.outgoing_interfaces) ?? ""
+        interfaceType = .all
+//        outgoingInterfaces = String(validatingUTF8: native.outgoing_interfaces) ?? ""
+//        listenInterfaces = String(validatingUTF8: native.listen_interfaces) ?? ""
         portRangeFirst = Int(native.port_range_first)
         portRangeSecond = Int(native.port_range_second)
         proxyType = ProxyType(rawValue: Int(native.proxy_type.rawValue))!
@@ -104,7 +131,9 @@ public extension SettingsPack {
          enableUtp: Bool,
          enableUpnp: Bool,
          enableNatpmp: Bool,
-         outgoingInterfaces: String,
+         interfaceType: InterfaceType,
+//         outgoingInterfaces: String,
+//         listenInterfaces: String,
          portRangeFirst: Int,
          portRangeSecond: Int,
          proxyType: ProxyType,
@@ -121,7 +150,9 @@ public extension SettingsPack {
         self.enableUtp = enableUtp
         self.enableUpnp = enableUpnp
         self.enableNatpmp = enableNatpmp
-        self.outgoingInterfaces = outgoingInterfaces
+        self.interfaceType = interfaceType
+//        self.outgoingInterfaces = outgoingInterfaces
+//        self.listenInterfaces = listenInterfaces
         self.portRangeFirst = portRangeFirst
         self.portRangeSecond = portRangeSecond
         self.proxyType = proxyType
