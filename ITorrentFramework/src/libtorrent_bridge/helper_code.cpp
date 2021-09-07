@@ -111,6 +111,10 @@ void applySettingsPackHelper(lt::settings_pack *pack, settings_pack_struct *_pac
     pack->set_str(lt::settings_pack::outgoing_interfaces, _pack->outgoing_interfaces);
     pack->set_str(lt::settings_pack::listen_interfaces, _pack->listen_interfaces);
     
+    pack->set_int(lt::settings_pack::active_limit, _pack->max_active_torrents_limit);
+    pack->set_int(lt::settings_pack::active_downloads, _pack->max_download_torrents_limit);
+    pack->set_int(lt::settings_pack::active_seeds, _pack->max_upload_torrents_limit);
+    
 //    if (strlen(_pack->outgoing_interfaces) != 0) {
 //        pack->set_str(lt::settings_pack::listen_interfaces, std::string(_pack->outgoing_interfaces) + ":" + std::to_string(_pack->port_range_first));
 //    } else {

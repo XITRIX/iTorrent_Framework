@@ -41,6 +41,10 @@ public struct SettingsPack {
     public var enableUtp: Bool
     public var enableUpnp: Bool
     public var enableNatpmp: Bool
+    
+    public var maxActiveTorrents: Int
+    public var maxDownloadingTorrents: Int
+    public var maxUplodingTorrents: Int
 
     public var interfaceType: InterfaceType
 //    public var outgoingInterfaces: String
@@ -60,6 +64,9 @@ public struct SettingsPack {
     public func asNative() -> settings_pack_struct {
         settings_pack_struct(download_limit: Int32(downloadLimit),
                              upload_limit: Int32(uploadLimit),
+                             max_active_torrents_limit: Int32(maxActiveTorrents),
+                             max_upload_torrents_limit: Int32(maxUplodingTorrents),
+                             max_download_torrents_limit: Int32(maxDownloadingTorrents),
                              enable_dht: enableDht,
                              enable_lsd: enableLsd,
                              enable_utp: enableUtp,
@@ -110,6 +117,9 @@ public extension SettingsPack {
         enableUtp = native.enable_utp
         enableUpnp = native.enable_upnp
         enableNatpmp = native.enable_natpmp
+        maxActiveTorrents = Int(native.max_active_torrents_limit)
+        maxUplodingTorrents = Int(native.max_upload_torrents_limit)
+        maxDownloadingTorrents = Int(native.max_download_torrents_limit)
         interfaceType = .all
 //        outgoingInterfaces = String(validatingUTF8: native.outgoing_interfaces) ?? ""
 //        listenInterfaces = String(validatingUTF8: native.listen_interfaces) ?? ""
@@ -131,6 +141,9 @@ public extension SettingsPack {
          enableUtp: Bool,
          enableUpnp: Bool,
          enableNatpmp: Bool,
+         maxActiveTorrents: Int,
+         maxUplodingTorrents: Int,
+         maxDownloadingTorrents: Int,
          interfaceType: InterfaceType,
 //         outgoingInterfaces: String,
 //         listenInterfaces: String,
@@ -150,6 +163,9 @@ public extension SettingsPack {
         self.enableUtp = enableUtp
         self.enableUpnp = enableUpnp
         self.enableNatpmp = enableNatpmp
+        self.maxActiveTorrents = maxActiveTorrents
+        self.maxUplodingTorrents = maxUplodingTorrents
+        self.maxDownloadingTorrents = maxDownloadingTorrents
         self.interfaceType = interfaceType
 //        self.outgoingInterfaces = outgoingInterfaces
 //        self.listenInterfaces = listenInterfaces

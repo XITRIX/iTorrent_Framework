@@ -15,7 +15,7 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "7C2AEB30257D1E2800B97050"
-               BuildableName = "libLibTorrent-tvOS.a"
+               BuildableName = "libTorrent-tvOS.a"
                BlueprintName = "LibTorrent-tvOS"
                ReferencedContainer = "container:ITorrentFramework.xcodeproj">
             </BuildableReference>
@@ -51,7 +51,7 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "7C2AEB30257D1E2800B97050"
-            BuildableName = "libLibTorrent-tvOS.a"
+            BuildableName = "libTorrent-tvOS.a"
             BlueprintName = "LibTorrent-tvOS"
             ReferencedContainer = "container:ITorrentFramework.xcodeproj">
          </BuildableReference>

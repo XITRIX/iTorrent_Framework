@@ -10,11 +10,10 @@ import Foundation
 
 public class FileModel {
     public enum TorrentDownloadPriority: Int {
-        //TODO: 0-1-4-7
         case dontDownload = 0
         case lowPriority = 1
-        case mediumPriority = 3
         case normalPriority = 4
+        case highPriority = 7
     }
     
     public var name: String
