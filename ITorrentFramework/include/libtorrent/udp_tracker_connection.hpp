@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2004-2008, 2010, 2012, 2014-2017, 2019-2020, Arvid Norberg
+Copyright (c) 2016, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,6 +46,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/tracker_manager.hpp"
 #include "libtorrent/config.hpp"
 #include "libtorrent/span.hpp"
+#include "libtorrent/string_view.hpp"
 
 namespace libtorrent {
 
@@ -54,7 +56,7 @@ namespace libtorrent {
 	public:
 
 		udp_tracker_connection(
-			io_service& ios
+			io_context& ios
 			, tracker_manager& man
 			, tracker_request const& req
 			, std::weak_ptr<request_callback> c);
@@ -87,13 +89,14 @@ namespace libtorrent {
 		void start_announce();
 
 		bool on_receive(udp::endpoint const& ep, span<char const> buf);
-		bool on_receive_hostname(char const* hostname, span<char const> buf);
+		bool on_receive_hostname(string_view hostname, span<char const> buf);
 		bool on_connect_response(span<char const> buf);
 		bool on_announce_response(span<char const> buf);
 		bool on_scrape_response(span<char const> buf);
 
 		// wraps tracker_connection::fail
 		void fail(error_code const& ec
+			, operation_t op
 			, char const* msg = ""
 			, seconds32 interval = seconds32(0)
 			, seconds32 min_interval = seconds32(30));

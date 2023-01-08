@@ -1,6 +1,7 @@
 /*
    Copyright (c) Marshall Clow 2012-2015.
    Copyright (c) Beman Dawes 2015
+   Copyright (c) Glen Joseph Fernandes 2019 (glenjofe@gmail.com)
 
    Distributed under the Boost Software License, Version 1.0. (See accompanying
    file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -19,9 +20,10 @@
 
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
+#include <boost/io/ostream_put.hpp>
 #include <boost/utility/string_view_fwd.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/container_hash/hash_fwd.hpp>
+#include <boost/assert.hpp>
 
 #include <cstddef>
 #include <stdexcept>
@@ -121,13 +123,13 @@ namespace boost {
         // capacity
         BOOST_CONSTEXPR size_type size()     const BOOST_NOEXCEPT { return len_; }
         BOOST_CONSTEXPR size_type length()   const BOOST_NOEXCEPT { return len_; }
-        BOOST_CONSTEXPR size_type max_size() const BOOST_NOEXCEPT { return len_; }
+        BOOST_CONSTEXPR size_type max_size() const BOOST_NOEXCEPT { return ~static_cast<size_type>(0) / (sizeof(value_type) * 2u); }
         BOOST_CONSTEXPR bool empty()         const BOOST_NOEXCEPT { return len_ == 0; }
 
         // element access
         BOOST_CONSTEXPR const_reference operator[](size_type pos) const BOOST_NOEXCEPT { return ptr_[pos]; }
 
-        BOOST_CONSTEXPR const_reference at(size_t pos) const {
+        BOOST_CONSTEXPR const_reference at(size_type pos) const {
             return pos >= len_ ? BOOST_THROW_EXCEPTION(std::out_of_range("boost::string_view::at")), ptr_[0] : ptr_[pos];
             }
 
@@ -139,6 +141,8 @@ namespace boost {
         void clear() BOOST_NOEXCEPT { len_ = 0; }          // Boost extension
 
         BOOST_CXX14_CONSTEXPR void remove_prefix(size_type n) {
+            BOOST_ASSERT(n <= size());
+            // This check is deprecated and is left for backward compatibility. It will be removed in the future.
             if ( n > len_ )
                 n = len_;
             ptr_ += n;
@@ -146,6 +150,8 @@ namespace boost {
             }
 
         BOOST_CXX14_CONSTEXPR void remove_suffix(size_type n) {
+            BOOST_ASSERT(n <= size());
+            // This check is deprecated and is left for backward compatibility. It will be removed in the future.
             if ( n > len_ )
                 n = len_;
             len_ -= n;
@@ -184,8 +190,12 @@ namespace boost {
             if (pos > size())
                 BOOST_THROW_EXCEPTION(std::out_of_range("string_view::copy" ));
             size_type rlen = (std::min)(n, len_ - pos);
-    		traits_type::copy(s, data() + pos, rlen);
+            traits_type::copy(s, data() + pos, rlen);
             return rlen;
+            }
+
+        BOOST_CXX14_CONSTEXPR basic_string_view substr() const {
+            return basic_string_view(data(), size());
             }
 
         BOOST_CXX14_CONSTEXPR basic_string_view substr(size_type pos, size_type n=npos) const {
@@ -200,7 +210,7 @@ namespace boost {
             }
 
         BOOST_CXX14_CONSTEXPR int compare(size_type pos1, size_type n1, basic_string_view x)
-          const BOOST_NOEXCEPT {
+          const {
             return substr(pos1, n1).compare(x);
             }
 
@@ -238,6 +248,18 @@ namespace boost {
         BOOST_CONSTEXPR bool ends_with(basic_string_view x) const BOOST_NOEXCEPT {    // Boost extension
             return len_ >= x.len_ &&
                traits::compare(ptr_ + len_ - x.len_, x.ptr_, x.len_) == 0;
+            }
+
+        BOOST_CXX14_CONSTEXPR bool contains(basic_string_view s) const BOOST_NOEXCEPT {
+            return find(s) != npos;
+            }
+
+        BOOST_CXX14_CONSTEXPR bool contains(charT c) const BOOST_NOEXCEPT {
+            return find(c) != npos;
+            }
+
+        BOOST_CXX14_CONSTEXPR bool contains(const charT* s) const BOOST_NOEXCEPT {
+            return find(s) != npos;
             }
 
         //  find
@@ -571,53 +593,12 @@ namespace boost {
         return basic_string_view<charT, traits>(x) >= y;
         }
 
-    namespace detail {
-
-        template<class charT, class traits>
-        inline void sv_insert_fill_chars(std::basic_ostream<charT, traits>& os, std::size_t n) {
-            enum { chunk_size = 8 };
-            charT fill_chars[chunk_size];
-            std::fill_n(fill_chars, static_cast< std::size_t >(chunk_size), os.fill());
-            for (; n >= chunk_size && os.good(); n -= chunk_size)
-                os.write(fill_chars, static_cast< std::size_t >(chunk_size));
-            if (n > 0 && os.good())
-                os.write(fill_chars, n);
-            }
-
-        template<class charT, class traits>
-        void sv_insert_aligned(std::basic_ostream<charT, traits>& os, const basic_string_view<charT,traits>& str) {
-            const std::size_t size = str.size();
-            const std::size_t alignment_size = static_cast< std::size_t >(os.width()) - size;
-            const bool align_left = (os.flags() & std::basic_ostream<charT, traits>::adjustfield) == std::basic_ostream<charT, traits>::left;
-            if (!align_left) {
-                detail::sv_insert_fill_chars(os, alignment_size);
-                if (os.good())
-                    os.write(str.data(), size);
-                }
-            else {
-                os.write(str.data(), size);
-                if (os.good())
-                    detail::sv_insert_fill_chars(os, alignment_size);
-                }
-            }
-
-        } // namespace detail
-
     // Inserter
     template<class charT, class traits>
     inline std::basic_ostream<charT, traits>&
     operator<<(std::basic_ostream<charT, traits>& os,
       const basic_string_view<charT,traits>& str) {
-        if (os.good()) {
-            const std::size_t size = str.size();
-            const std::size_t w = static_cast< std::size_t >(os.width());
-            if (w <= size)
-                os.write(str.data(), size);
-            else
-                detail::sv_insert_aligned(os, str);
-            os.width(0);
-            }
-        return os;
+        return boost::io::ostream_put(os, str.data(), str.size());
         }
 
 #if 0
@@ -690,6 +671,9 @@ namespace boost {
         return std::stold ( std::wstring(str), idx );
         }
 #endif
+
+    // Forward declaration of Boost.ContainerHash function
+    template <class It> std::size_t hash_range(It, It);
 
     template <class charT, class traits>
     std::size_t hash_value(basic_string_view<charT, traits> s) {

@@ -1,6 +1,12 @@
 /*
 
-Copyright (c) 2012-2018, Arvid Norberg
+Copyright (c) 2014-2022, Arvid Norberg
+Copyright (c) 2016-2018, Alden Torres
+Copyright (c) 2017, Andrei Kurushin
+Copyright (c) 2017, Steven Siloti
+Copyright (c) 2018, TheOriginalWinCat
+Copyright (c) 2019, Amir Abrams
+Copyright (c) 2022, Kevin Bracey
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -68,14 +74,15 @@ namespace aux {
 	struct bdecode_node;
 
 	TORRENT_EXTRA_EXPORT settings_pack load_pack_from_dict(bdecode_node const& settings);
-	TORRENT_EXTRA_EXPORT void save_settings_to_dict(aux::session_settings const& s, entry::dictionary_type& sett);
+
+	TORRENT_EXTRA_EXPORT void save_settings_to_dict(settings_pack const& sett, entry::dictionary_type& out);
+	TORRENT_EXTRA_EXPORT settings_pack non_default_settings(aux::session_settings const& sett);
 	TORRENT_EXTRA_EXPORT void apply_pack(settings_pack const* pack, aux::session_settings& sett
 		, aux::session_impl* ses = nullptr);
 	TORRENT_EXTRA_EXPORT void apply_pack_impl(settings_pack const* pack
 		, aux::session_settings_single_thread& sett
 		, std::vector<void(aux::session_impl::*)()>* callbacks = nullptr);
 	TORRENT_EXTRA_EXPORT void run_all_updates(aux::session_impl& ses);
-	TORRENT_EXTRA_EXPORT int default_int_value(int const name);
 
 	// converts a setting integer (from the enums string_types, int_types or
 	// bool_types) to a string, and vice versa.
@@ -85,14 +92,49 @@ namespace aux {
 	// returns a settings_pack with every setting set to its default value
 	TORRENT_EXPORT settings_pack default_settings();
 
+	// the common interface to settings_pack and the internal representation of
+	// settings.
+	struct TORRENT_EXPORT settings_interface
+	{
+		virtual void set_str(int name, std::string val) = 0;
+		virtual void set_int(int name, int val) = 0;
+		virtual void set_bool(int name, bool val) = 0;
+		virtual bool has_val(int name) const = 0;
+
+		virtual std::string const& get_str(int name) const = 0;
+		virtual int get_int(int name) const = 0;
+		virtual bool get_bool(int name) const = 0;
+
+		template <typename Type, typename Tag>
+		// hidden
+		void set_int(int name, flags::bitfield_flag<Type, Tag> const val)
+		{ set_int(name, static_cast<int>(static_cast<Type>(val))); }
+
+		// hidden
+		// these are here just to suppress the warning about virtual destructors
+		// internal
+		settings_interface() = default;
+		settings_interface(settings_interface const&) = default;
+		settings_interface(settings_interface&&) = default;
+		settings_interface& operator=(settings_interface const&) = default;
+		settings_interface& operator=(settings_interface&&) = default;
+	protected:
+		~settings_interface() = default;
+	};
+
 	// The ``settings_pack`` struct, contains the names of all settings as
 	// enum values. These values are passed in to the ``set_str()``,
 	// ``set_int()``, ``set_bool()`` functions, to specify the setting to
 	// change.
 	//
+	// The ``settings_pack`` only stores values for settings that have been
+	// explicitly set on this object. However, it can still be queried for
+	// settings that have not been set and returns the default value for those
+	// settings.
+	//
 	// .. include:: settings-ref.rst
 	//
-	struct TORRENT_EXPORT settings_pack
+	struct TORRENT_EXPORT settings_pack final : settings_interface
 	{
 		friend TORRENT_EXTRA_EXPORT void apply_pack_impl(settings_pack const*
 			, aux::session_settings_single_thread&
@@ -108,9 +150,9 @@ namespace aux {
 		// set a configuration option in the settings_pack. ``name`` is one of
 		// the enum values from string_types, int_types or bool_types. They must
 		// match the respective type of the set_* function.
-		void set_str(int name, std::string val);
-		void set_int(int name, int val);
-		void set_bool(int name, bool val);
+		void set_str(int name, std::string val) override;
+		void set_int(int name, int val) override;
+		void set_bool(int name, bool val) override;
 		template <typename Type, typename Tag>
 		void set_int(int name, flags::bitfield_flag<Type, Tag> const val)
 		{ set_int(name, static_cast<int>(static_cast<Type>(val))); }
@@ -118,7 +160,7 @@ namespace aux {
 		// queries whether the specified configuration option has a value set in
 		// this pack. ``name`` can be any enumeration value from string_types,
 		// int_types or bool_types.
-		bool has_val(int name) const;
+		bool has_val(int name) const override;
 
 		// clear the settings pack from all settings
 		void clear();
@@ -129,10 +171,11 @@ namespace aux {
 		// queries the current configuration option from the settings_pack.
 		// ``name`` is one of the enumeration values from string_types, int_types
 		// or bool_types. The enum value must match the type of the get_*
-		// function.
-		std::string const& get_str(int name) const;
-		int get_int(int name) const;
-		bool get_bool(int name) const;
+		// function. If the specified setting field has not been set, the default
+		// value is returned.
+		std::string const& get_str(int name) const override;
+		int get_int(int name) const override;
+		bool get_bool(int name) const override;
 
 		// setting names (indices) are 16 bits. The two most significant
 		// bits indicate what type the setting has. (string, int, bool)
@@ -144,6 +187,15 @@ namespace aux {
 			type_mask =        0xc000,
 			index_mask =       0x3fff
 		};
+
+		// internal
+		template <typename Fun>
+		void for_each(Fun&& f) const
+		{
+			for (auto const& s : m_strings) f(s.first, s.second);
+			for (auto const& i : m_ints) f(i.first, i.second);
+			for (auto const& b : m_bools) f(b.first, b.second);
+		}
 
 		// hidden
 		enum string_types
@@ -196,10 +248,12 @@ namespace aux {
 			// This controls which IP address outgoing TCP peer connections are bound
 			// to, in addition to controlling whether such connections are also
 			// bound to a specific network interface/adapter (*bind-to-device*).
+			//
 			// This string is a comma-separated list of IP addresses and
 			// interface names. An empty string will not bind TCP sockets to a
-			// device, and let the network stack assign the local address. A
-			// list of names will be used to bind outgoing TCP sockets in a
+			// device, and let the network stack assign the local address.
+			//
+			// A list of names will be used to bind outgoing TCP sockets in a
 			// round-robin fashion. An IP address will simply be used to `bind()`
 			// the socket. An interface name will attempt to bind the socket to
 			// that interface. If that fails, or is unsupported, one of the IP
@@ -211,6 +265,15 @@ namespace aux {
 			// clients that are multi-homed. Binding an outgoing connection to a
 			// local IP does not necessarily make the connection via the
 			// associated NIC/Adapter.
+			//
+			// When outgoing interfaces are specified, incoming connections or
+			// packets sent to a local interface or IP that's *not* in this list
+			// will be rejected with a peer_blocked_alert with
+			// ``invalid_local_interface`` as the reason.
+			//
+			// Note that these are just interface/adapter names or IP addresses.
+			// There are no ports specified in this list. IPv6 addresses without
+			// port should be specified without enclosing ``[``, ``]``.
 			outgoing_interfaces,
 
 			// a comma-separated list of (IP or device name, port) pairs. These are
@@ -381,28 +444,31 @@ namespace aux {
 			// passes the hash check, it is taken out of parole mode.
 			use_parole_mode,
 
+#if TORRENT_ABI_VERSION == 1
 			// enable and disable caching of blocks read from disk. the purpose of
 			// the read cache is partly read-ahead of requests but also to avoid
 			// reading blocks back from the disk multiple times for popular
 			// pieces.
-			use_read_cache,
-#if TORRENT_ABI_VERSION == 1
+			use_read_cache TORRENT_DEPRECATED_ENUM,
 			use_write_cache TORRENT_DEPRECATED_ENUM,
 
 			// this will make the disk cache never flush a write piece if it would
 			// cause is to have to re-read it once we want to calculate the piece
 			// hash
 			dont_flush_write_cache TORRENT_DEPRECATED_ENUM,
-#else
-			deprecated_use_write_cache,
-			deprecated_dont_flush_write_cache,
-#endif
 
 			// allocate separate, contiguous, buffers for read and write calls.
 			// Only used where writev/readv cannot be used will use more RAM but
 			// may improve performance
-			coalesce_reads,
-			coalesce_writes,
+			coalesce_reads TORRENT_DEPRECATED_ENUM,
+			coalesce_writes TORRENT_DEPRECATED_ENUM,
+#else
+			deprecated_use_read_cache,
+			deprecated_use_write_cache,
+			deprecated_flush_write_cache,
+			deprecated_coalesce_reads,
+			deprecated_coalesce_writes,
+#endif
 
 			// if true, prefer seeding torrents when determining which torrents to give
 			// active slots to. If false, give preference to downloading torrents
@@ -496,13 +562,17 @@ namespace aux {
 			deprecated_low_prio_disk,
 #endif
 
+#if TORRENT_ABI_VERSION <= 2
 			// ``volatile_read_cache``, if this is set to true, read cache blocks
 			// that are hit by peer read requests are removed from the disk cache
 			// to free up more space. This is useful if you don't expect the disk
 			// cache to create any cache hits from other peers than the one who
 			// triggered the cache line to be read into the cache in the first
 			// place.
-			volatile_read_cache,
+			volatile_read_cache TORRENT_DEPRECATED_ENUM,
+#else
+			deprecated_volatile_read_cache,
+#endif
 
 #if TORRENT_ABI_VERSION == 1
 			// ``guided_read_cache`` enables the disk cache to adjust the size of
@@ -560,9 +630,13 @@ namespace aux {
 			deprecated_broadcast_lsd,
 #endif
 
-			// when set to true, libtorrent will try to make outgoing utp
-			// connections controls whether libtorrent will accept incoming
-			// connections or make outgoing connections of specific type.
+			// Enables incoming and outgoing, TCP and uTP peer connections.
+			// ``false`` is disabled and ``true`` is enabled. When outgoing
+			// connections are disabled, libtorrent will simply not make
+			// outgoing peer connections with the specific transport protocol.
+			// Disabled incoming peer connections will simply be rejected.
+			// These options only apply to peer connections, not tracker- or any
+			// other kinds of connections.
 			enable_outgoing_utp,
 			enable_incoming_utp,
 			enable_outgoing_tcp,
@@ -592,19 +666,16 @@ namespace aux {
 			// will go straight to download mode.
 			no_recheck_incomplete_resume,
 
-			// ``anonymous_mode``: When set to true, the client
-			// tries to hide its identity to a certain degree. The user-agent will be
-			// reset to an empty string (except for private torrents). Trackers
-			// will only be used if they are using a proxy server.
-			// The listen sockets are closed, and incoming
-			// connections will only be accepted through a SOCKS5 or I2P proxy (if
-			// a peer proxy is set up and is run on the same machine as the
-			// tracker proxy). Since no incoming connections are accepted,
-			// NAT-PMP, UPnP, DHT and local peer discovery are all turned off when
-			// this setting is enabled.
+			// ``anonymous_mode``: When set to true, the client tries to hide
+			// its identity to a certain degree.
 			//
-			// If you're using I2P, it might make sense to enable anonymous mode
-			// as well.
+			// * A generic user-agent will be
+			//   used for trackers (except for private torrents).
+			// * Your local IPv4 and IPv6 address won't be sent as query string
+			//   parameters to private trackers.
+			// * If announce_ip is configured, it will not be sent to trackers
+			// * The client version will not be sent to peers in the extension
+			//   handshake.
 			anonymous_mode,
 
 			// specifies whether downloads from web seeds is reported to the
@@ -705,11 +776,15 @@ namespace aux {
 			// when true, web seeds sending bad data will be banned
 			ban_web_seeds,
 
+#if TORRENT_ABI_VERSION <= 2
 			// when set to false, the ``write_cache_line_size`` will apply across
 			// piece boundaries. this is a bad idea unless the piece picker also
 			// is configured to have an affinity to pick pieces belonging to the
 			// same write cache line as is configured in the disk cache.
-			allow_partial_disk_writes,
+			allow_partial_disk_writes TORRENT_DEPRECATED_ENUM,
+#else
+			deprecated_allow_partial_disk_writes,
+#endif
 
 #if TORRENT_ABI_VERSION == 1
 			// If true, disables any communication that's not going over a proxy.
@@ -726,9 +801,15 @@ namespace aux {
 			// if false, prevents libtorrent to advertise share-mode support
 			support_share_mode,
 
+#if TORRENT_ABI_VERSION <= 2
+			// support for BEP 30 merkle torrents has been removed
+
 			// if this is false, don't advertise support for the Tribler merkle
 			// tree piece message
-			support_merkle_torrents,
+			support_merkle_torrents TORRENT_DEPRECATED_ENUM,
+#else
+			deprecated_support_merkle_torrents,
+#endif
 
 			// if this is true, the number of redundant bytes is sent to the
 			// tracker
@@ -823,17 +904,112 @@ namespace aux {
 			// IP according to `BEP 42`_ are preferred in the routing table.
 			dht_prefer_verified_node_ids,
 
+			// determines if the routing table entries should restrict entries to one
+			// per IP. This defaults to true, which helps mitigate some attacks on
+			// the DHT. It prevents adding multiple nodes with IPs with a very close
+			// CIDR distance.
+			//
+			// when set, nodes whose IP address that's in the same /24 (or /64 for
+			// IPv6) range in the same routing table bucket. This is an attempt to
+			// mitigate node ID spoofing attacks also restrict any IP to only have a
+			// single entry in the whole routing table
+			dht_restrict_routing_ips,
+
+			// determines if DHT searches should prevent adding nodes with IPs with
+			// very close CIDR distance. This also defaults to true and helps
+			// mitigate certain attacks on the DHT.
+			dht_restrict_search_ips,
+
+			// makes the first buckets in the DHT routing table fit 128, 64, 32 and
+			// 16 nodes respectively, as opposed to the standard size of 8. All other
+			// buckets have size 8 still.
+			dht_extended_routing_table,
+
+			// slightly changes the lookup behavior in terms of how many outstanding
+			// requests we keep. Instead of having branch factor be a hard limit, we
+			// always keep *branch factor* outstanding requests to the closest nodes.
+			// i.e. every time we get results back with closer nodes, we query them
+			// right away. It lowers the lookup times at the cost of more outstanding
+			// queries.
+			dht_aggressive_lookups,
+
+			// when set, perform lookups in a way that is slightly more expensive,
+			// but which minimizes the amount of information leaked about you.
+			dht_privacy_lookups,
+
+			// when set, node's whose IDs that are not correctly generated based on
+			// its external IP are ignored. When a query arrives from such node, an
+			// error message is returned with a message saying "invalid node ID".
+			dht_enforce_node_id,
+
+			// ignore DHT messages from parts of the internet we wouldn't expect to
+			// see any traffic from
+			dht_ignore_dark_internet,
+
+			// when set, the other nodes won't keep this node in their routing
+			// tables, it's meant for low-power and/or ephemeral devices that
+			// cannot support the DHT, it is also useful for mobile devices which
+			// are sensitive to network traffic and battery life.
+			// this node no longer responds to 'query' messages, and will place a
+			// 'ro' key (value = 1) in the top-level message dictionary of outgoing
+			// query messages.
+			dht_read_only,
+
 			// when this is true, create an affinity for downloading 4 MiB extents
 			// of adjacent pieces. This is an attempt to achieve better disk I/O
 			// throughput by downloading larger extents of bytes, for torrents with
 			// small piece sizes
 			piece_extent_affinity,
 
-			// when set to true, the certificate of HTTPS trackers will be
-			// validated against the system's certificate store (as defined by
-			// OpenSSL). If the system does not have one, enabling this may cause
-			// HTTPS trackers to fail.
+			// when set to true, the certificate of HTTPS trackers and HTTPS web
+			// seeds will be validated against the system's certificate store
+			// (as defined by OpenSSL). If the system does not have a
+			// certificate store, this option may have to be disabled in order
+			// to get trackers and web seeds to work).
 			validate_https_trackers,
+
+			// when enabled, tracker and web seed requests are subject to
+			// certain restrictions.
+			//
+			// An HTTP(s) tracker requests to localhost (loopback)
+			// must have the request path start with "/announce". This is the
+			// conventional bittorrent tracker request. Any other HTTP(S)
+			// tracker request to loopback will be rejected. This applies to
+			// trackers that redirect to loopback as well.
+			//
+			// Web seeds that end up on the client's local network (i.e. in a
+			// private IP address range) may not include query string arguments.
+			// This applies to web seeds redirecting to the local network as
+			// well.
+			//
+			// Web seeds on global IPs (i.e. not local network) may not redirect
+			// to a local network address
+			ssrf_mitigation,
+
+			// when disabled, any tracker or web seed with an IDNA hostname
+			// (internationalized domain name) is ignored. This is a security
+			// precaution to avoid various unicode encoding attacks that might
+			// happen at the application level.
+			allow_idna,
+
+			// when set to true, enables the attempt to use SetFileValidData()
+			// to pre-allocate disk space. This system call will only work when
+			// running with Administrator privileges on Windows, and so this
+			// setting is only relevant in that scenario. Using
+			// SetFileValidData() poses a security risk, as it may reveal
+			// previously deleted information from the disk.
+			enable_set_file_valid_data,
+
+			// When using a SOCKS5 proxy, UDP traffic is routed through the
+			// proxy by sending a UDP ASSOCIATE command. If this option is true,
+			// the UDP ASSOCIATE command will include the IP address and
+			// listen port to the local UDP socket. This indicates to the proxy
+			// which source endpoint to expect our packets from. The benefit is
+			// that incoming packets can be forwarded correctly, before any
+			// outgoing packets are sent. The risk is that if there's a NAT
+			// between the client and the proxy, the IP address specified in the
+			// protocol may not be valid from the proxy's point of view.
+			socks5_udp_send_local_ep,
 
 			max_bool_setting_internal
 		};
@@ -1054,6 +1230,7 @@ namespace aux {
 			choking_algorithm,
 			seed_choking_algorithm,
 
+#if TORRENT_ABI_VERSION == 1
 			// ``cache_size`` is the disk write and read cache. It is specified
 			// in units of 16 kiB blocks. Buffers that are part of a peer's send
 			// or receive buffer also count against this limit. Send and receive
@@ -1063,19 +1240,28 @@ namespace aux {
 			// physical RAM on the machine. If the amount of physical RAM cannot
 			// be determined, it's set to 1024 (= 16 MiB).
 			//
-			// ``cache_expiry`` is the number of seconds from the last cached write
-			// to a piece in the write cache, to when it's forcefully flushed to
-			// disk.
-			//
 			// On 32 bit builds, the effective cache size will be limited to 3/4 of
 			// 2 GiB to avoid exceeding the virtual address space limit.
-			cache_size,
-#if TORRENT_ABI_VERSION == 1
+			cache_size TORRENT_DEPRECATED_ENUM,
+
+			// Disk buffers are allocated using a pool allocator, the number of
+			// blocks that are allocated at a time when the pool needs to grow can
+			// be specified in ``cache_buffer_chunk_size``. Lower numbers saves
+			// memory at the expense of more heap allocations. If it is set to 0,
+			// the effective chunk size is proportional to the total cache size,
+			// attempting to strike a good balance between performance and memory
+			// usage. It defaults to 0.
 			cache_buffer_chunk_size TORRENT_DEPRECATED_ENUM,
+
+			// ``cache_expiry`` is the number of seconds
+			// from the last cached write to a piece in the write cache, to when
+			// it's forcefully flushed to disk.
+			cache_expiry TORRENT_DEPRECATED_ENUM,
 #else
+			deprecated_cache_size,
 			deprecated_cache_buffer_chunk_size,
+			deprecated_cache_expiry,
 #endif
-			cache_expiry,
 
 			// determines how files are opened when they're in read only mode
 			// versus read and write mode. The options are:
@@ -1089,6 +1275,8 @@ namespace aux {
 			//   potentially evict all other processes' cache by simply handling
 			//   high throughput and large files. If libtorrent's read cache is
 			//   disabled, enabling this may reduce performance.
+			// write_through
+			//   flush pieces to disk as they complete validation.
 			//
 			// One reason to disable caching is that it may help the operating
 			// system from growing its file cache indefinitely.
@@ -1113,13 +1301,17 @@ namespace aux {
 			outgoing_port,
 			num_outgoing_ports,
 
-			// ``peer_tos`` determines the TOS byte set in the IP header of every
+			// ``peer_dscp`` determines the DSCP field in the IP header of every
 			// packet sent to peers (including web seeds). ``0x0`` means no marking,
-			// ``0x20`` represents the *QBone scavenger service*. For more
-			// details, see QBSS_.
+			// ``0x04`` represents Lower Effort. For more details see `RFC 8622`_.
 			//
-			// .. _`QBSS`: http://qbone.internet2.edu/qbss/
-			peer_tos,
+			// .. _`RFC 8622`: http://www.faqs.org/rfcs/rfc8622.html
+			//
+			// ``peer_tos`` is the backwards compatible name for this setting.
+			peer_dscp,
+
+			// hidden
+			peer_tos = peer_dscp,
 
 			// for auto managed torrents, these are the limits they are subject
 			// to. If there are too many torrents some of the auto managed ones
@@ -1263,6 +1455,7 @@ namespace aux {
 			deprecated_file_checks_delay_per_block,
 #endif
 
+#if TORRENT_ABI_VERSION <= 2
 			// ``read_cache_line_size`` is the number of blocks to read into the
 			// read cache when a read cache miss occurs. Setting this to 0 is
 			// essentially the same thing as disabling read cache. The number of
@@ -1274,6 +1467,10 @@ namespace aux {
 			// effectively disables the write cache.
 			read_cache_line_size,
 			write_cache_line_size,
+#else
+			deprecated_read_cache_line_size,
+			deprecated_write_cache_line_size,
+#endif
 
 			// ``optimistic_disk_retry`` is the number of seconds from a disk
 			// write errors occur on a torrent until libtorrent will take it out
@@ -1398,10 +1595,9 @@ namespace aux {
 			deprecated_local_download_rate_limit,
 #endif
 
-			// ``dht_upload_rate_limit`` sets the rate limit on the DHT. This is
-			// specified in bytes per second. For busy boxes
-			// with lots of torrents that requires more DHT traffic, this should
-			// be raised.
+			// the number of bytes per second (on average) the DHT is allowed to send.
+			// If the incoming requests causes to many bytes to be sent in responses,
+			// incoming requests will be dropped until the quota has been replenished.
 			dht_upload_rate_limit,
 
 			// ``unchoke_slots_limit`` is the max number of unchoked peers in the
@@ -1529,19 +1725,17 @@ namespace aux {
 			// received by the metadata extension, i.e. magnet links.
 			max_metadata_size,
 
-#if TORRENT_ABI_VERSION == 1
-			// DEPRECATED: use aio_threads instead
-
-			// ``hashing_threads`` is the number of threads to use for piece hash
-			// verification. For very high download rates, on
-			// machines with multiple cores, this could be incremented. Setting it
-			// higher than the number of CPU cores would presumably not provide
-			// any benefit of setting it to the number of cores. If it's set to 0,
-			// hashing is done in the disk thread.
-			hashing_threads TORRENT_DEPRECATED_ENUM,
-#else
-			deprecated_hashing_threads,
-#endif
+			// ``hashing_threads`` is the number of disk I/O threads to use for
+			// piece hash verification. These threads are *in addition* to the
+			// regular disk I/O threads specified by settings_pack::aio_threads.
+			// These threads are only used for full checking of torrents. The
+			// hash checking done while downloading are done by the regular disk
+			// I/O threads.
+			// The hasher threads do not only compute hashes, but also perform
+			// the read from disk. On storage optimal for sequential access,
+			// such as hard drives, this setting should be set to 1, which is
+			// also the default.
+			hashing_threads,
 
 			// the number of blocks to keep outstanding at any given time when
 			// checking torrents. Higher numbers give faster re-checks but uses
@@ -1693,6 +1887,7 @@ namespace aux {
 			// .. _i2p: http://www.i2p2.de
 			i2p_port,
 
+#if TORRENT_ABI_VERSION == 1
 			// this determines the max number of volatile disk cache blocks. If the
 			// number of volatile blocks exceed this limit, other volatile blocks
 			// will start to be evicted. A disk cache block is volatile if it has
@@ -1702,6 +1897,9 @@ namespace aux {
 			// represent potential interest among peers, so the value of keeping
 			// them in the cache is limited.
 			cache_size_volatile,
+#else
+			deprecated_cache_size_volatile,
+#endif
 
 			// The maximum request range of an url seed in bytes. This value
 			// defines the largest possible sequential web seed request. Lower values
@@ -1725,7 +1923,7 @@ namespace aux {
 			// periodically close files to trigger the operating system flushing
 			// disk cache. Specifically it has been observed to be required on
 			// windows to not have the disk cache grow indefinitely.
-			// This defaults to 120 seconds on windows, and disabled on other
+			// This defaults to 240 seconds on windows, and disabled on other
 			// systems.
 			close_file_interval,
 
@@ -1769,15 +1967,107 @@ namespace aux {
 			// outstanding announce completes.
 			max_concurrent_http_announces,
 
+			// the maximum number of peers to send in a reply to ``get_peers``
+			dht_max_peers_reply,
+
+			// the number of concurrent search request the node will send when
+			// announcing and refreshing the routing table. This parameter is called
+			// alpha in the kademlia paper
+			dht_search_branching,
+
+			// the maximum number of failed tries to contact a node before it is
+			// removed from the routing table. If there are known working nodes that
+			// are ready to replace a failing node, it will be replaced immediately,
+			// this limit is only used to clear out nodes that don't have any node
+			// that can replace them.
+			dht_max_fail_count,
+
+			// the total number of torrents to track from the DHT. This is simply an
+			// upper limit to make sure malicious DHT nodes cannot make us allocate
+			// an unbounded amount of memory.
+			dht_max_torrents,
+
+			// max number of items the DHT will store
+			dht_max_dht_items,
+
+			// the max number of peers to store per torrent (for the DHT)
+			dht_max_peers,
+
+			// the max number of torrents to return in a torrent search query to the
+			// DHT
+			dht_max_torrent_search_reply,
+
+			// the number of seconds a DHT node is banned if it exceeds the rate
+			// limit. The rate limit is averaged over 10 seconds to allow for bursts
+			// above the limit.
+			dht_block_timeout,
+
+			// the max number of packets per second a DHT node is allowed to send
+			// without getting banned.
+			dht_block_ratelimit,
+
+			// the number of seconds a immutable/mutable item will be expired.
+			// default is 0, means never expires.
+			dht_item_lifetime,
+
+			// the info-hashes sample recomputation interval (in seconds).
+			// The node will precompute a subset of the tracked info-hashes and return
+			// that instead of calculating it upon each request. The permissible range
+			// is between 0 and 21600 seconds (inclusive).
+			dht_sample_infohashes_interval,
+
+			// the maximum number of elements in the sampled subset of info-hashes.
+			// If this number is too big, expect the DHT storage implementations
+			// to clamp it in order to allow UDP packets go through
+			dht_max_infohashes_sample_count,
+
+			// ``max_piece_count`` is the maximum allowed number of pieces in
+			// metadata received via magnet links. Loading large torrents (with
+			// more pieces than the default limit) may also require passing in
+			// a higher limit to read_resume_data() and
+			// torrent_info::parse_info_section(), if those are used.
+			max_piece_count,
+
+			// when receiving metadata (torrent file) from peers, this is the
+			// max number of bencoded tokens we're willing to parse. This limit
+			// is meant to prevent DoS attacks on peers. For very large
+			// torrents, this limit may have to be raised.
+			metadata_token_limit,
+
+			// controls whether disk writes will be made through a memory mapped
+			// file or via normal write calls. This only affects the
+			// mmap_disk_io. When saving to a non-local drive (network share,
+			// NFS or NAS) using memory mapped files is most likely inferior.
+			// When writing to a local SSD (especially in DAX mode) using memory
+			// mapped files likely gives the best performance.
+			// The values for this setting are specified as mmap_write_mode_t.
+			disk_write_mode,
+
+			// when using mmap_disk_io, files smaller than this number of blocks
+			// will not be memory mapped, but will use normal pread/pwrite
+			// operations. This file size limit is specified in 16 kiB blocks.
+			mmap_file_size_cutoff,
+
 			max_int_setting_internal
 		};
 
 		// hidden
-		enum settings_counts_t : int
+		constexpr static int num_string_settings = int(max_string_setting_internal) - int(string_type_base);
+		constexpr static int num_bool_settings = int(max_bool_setting_internal) - int(bool_type_base);
+		constexpr static int num_int_settings = int(max_int_setting_internal) - int(int_type_base);
+
+		enum mmap_write_mode_t : std::uint8_t
 		{
-			num_string_settings = int(max_string_setting_internal) - int(string_type_base),
-			num_bool_settings = int(max_bool_setting_internal) - int(bool_type_base),
-			num_int_settings = int(max_int_setting_internal) - int(int_type_base)
+			// disable writing to disk via mmap, always use normal write calls
+			always_pwrite = 0,
+
+			// prefer using memory mapped files for disk writes (at least for
+			// large files where it might make sense)
+			always_mmap_write,
+
+			// determine whether to use pwrite or memory mapped files for disk
+			// writes depending on the kind of storage behind the save path
+			auto_mmap_write,
 		};
 
 		enum suggest_mode_t : std::uint8_t { no_piece_suggestions = 0, suggest_read_cache = 1 };
@@ -1831,7 +2121,9 @@ namespace aux {
 #else
 			deprecated_disable_os_cache_for_aligned_files = 1,
 #endif
-			disable_os_cache = 2
+			disable_os_cache = 2,
+
+			write_through = 3,
 		};
 
 		enum bandwidth_mixed_algo_t : std::uint8_t

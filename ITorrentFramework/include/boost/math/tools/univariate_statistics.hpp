@@ -8,10 +8,11 @@
 
 #include <algorithm>
 #include <iterator>
-#include <boost/type_traits/is_complex.hpp>
-#include <boost/assert.hpp>
-#include <boost/multiprecision/detail/number_base.hpp>
+#include <tuple>
+#include <boost/math/tools/assert.hpp>
+#include <boost/math/tools/header_deprecated.hpp>
 
+BOOST_MATH_HEADER_DEPRECATED("<boost/math/statistics/univariate_statistics.hpp>");
 
 namespace boost::math::tools {
 
@@ -19,7 +20,7 @@ template<class ForwardIterator>
 auto mean(ForwardIterator first, ForwardIterator last)
 {
     using Real = typename std::iterator_traits<ForwardIterator>::value_type;
-    BOOST_ASSERT_MSG(first != last, "At least one sample is required to compute the mean.");
+    BOOST_MATH_ASSERT_MSG(first != last, "At least one sample is required to compute the mean.");
     if constexpr (std::is_integral<Real>::value)
     {
         double mu = 0;
@@ -30,12 +31,47 @@ auto mean(ForwardIterator first, ForwardIterator last)
         }
         return mu;
     }
+    else if constexpr (std::is_same_v<typename std::iterator_traits<ForwardIterator>::iterator_category, std::random_access_iterator_tag>)
+    {
+        size_t elements = std::distance(first, last);
+        Real mu0 = 0;
+        Real mu1 = 0;
+        Real mu2 = 0;
+        Real mu3 = 0;
+        Real i = 1;
+        auto end = last - (elements % 4);
+        for(auto it = first; it != end;  it += 4) {
+            Real inv = Real(1)/i;
+            Real tmp0 = (*it - mu0);
+            Real tmp1 = (*(it+1) - mu1);
+            Real tmp2 = (*(it+2) - mu2);
+            Real tmp3 = (*(it+3) - mu3);
+            // please generate a vectorized fma here
+            mu0 += tmp0*inv;
+            mu1 += tmp1*inv;
+            mu2 += tmp2*inv;
+            mu3 += tmp3*inv;
+            i += 1;
+        }
+        Real num1 = Real(elements  - (elements %4))/Real(4);
+        Real num2 = num1 + Real(elements % 4);
+
+        for (auto it = end; it != last; ++it)
+        {
+            mu3 += (*it-mu3)/i;
+            i += 1;
+        }
+
+        return (num1*(mu0+mu1+mu2) + num2*mu3)/Real(elements);
+    }
     else
     {
-        Real mu = 0;
-        Real i = 1;
-        for(auto it = first; it != last; ++it) {
-            mu = mu + (*it - mu)/i;
+        auto it = first;
+        Real mu = *it;
+        Real i = 2;
+        while(++it != last)
+        {
+            mu += (*it - mu)/i;
             i += 1;
         }
         return mu;
@@ -52,7 +88,7 @@ template<class ForwardIterator>
 auto variance(ForwardIterator first, ForwardIterator last)
 {
     using Real = typename std::iterator_traits<ForwardIterator>::value_type;
-    BOOST_ASSERT_MSG(first != last, "At least one sample is required to compute mean and variance.");
+    BOOST_MATH_ASSERT_MSG(first != last, "At least one sample is required to compute mean and variance.");
     // Higham, Accuracy and Stability, equation 1.6a and 1.6b:
     if constexpr (std::is_integral<Real>::value)
     {
@@ -94,7 +130,7 @@ template<class ForwardIterator>
 auto sample_variance(ForwardIterator first, ForwardIterator last)
 {
     size_t n = std::distance(first, last);
-    BOOST_ASSERT_MSG(n > 1, "At least two samples are required to compute the sample variance.");
+    BOOST_MATH_ASSERT_MSG(n > 1, "At least two samples are required to compute the sample variance.");
     return n*variance(first, last)/(n-1);
 }
 
@@ -111,7 +147,7 @@ template<class ForwardIterator>
 auto skewness(ForwardIterator first, ForwardIterator last)
 {
     using Real = typename std::iterator_traits<ForwardIterator>::value_type;
-    BOOST_ASSERT_MSG(first != last, "At least one sample is required to compute skewness.");
+    BOOST_MATH_ASSERT_MSG(first != last, "At least one sample is required to compute skewness.");
     if constexpr (std::is_integral<Real>::value)
     {
         double M1 = *first;
@@ -133,7 +169,7 @@ auto skewness(ForwardIterator first, ForwardIterator last)
         {
             // The limit is technically undefined, but the interpretation here is clear:
             // A constant dataset has no skewness.
-            return double(0);
+            return static_cast<double>(0);
         }
         double skew = M3/(M2*sqrt(var));
         return skew;
@@ -178,7 +214,7 @@ template<class ForwardIterator>
 auto first_four_moments(ForwardIterator first, ForwardIterator last)
 {
     using Real = typename std::iterator_traits<ForwardIterator>::value_type;
-    BOOST_ASSERT_MSG(first != last, "At least one sample is required to compute the first four moments.");
+    BOOST_MATH_ASSERT_MSG(first != last, "At least one sample is required to compute the first four moments.");
     if constexpr (std::is_integral<Real>::value)
     {
         double M1 = *first;
@@ -264,7 +300,7 @@ template<class RandomAccessIterator>
 auto median(RandomAccessIterator first, RandomAccessIterator last)
 {
     size_t num_elems = std::distance(first, last);
-    BOOST_ASSERT_MSG(num_elems > 0, "The median of a zero length vector is undefined.");
+    BOOST_MATH_ASSERT_MSG(num_elems > 0, "The median of a zero length vector is undefined.");
     if (num_elems & 1)
     {
         auto middle = first + (num_elems - 1)/2;
@@ -291,7 +327,7 @@ template<class RandomAccessIterator>
 auto gini_coefficient(RandomAccessIterator first, RandomAccessIterator last)
 {
     using Real = typename std::iterator_traits<RandomAccessIterator>::value_type;
-    BOOST_ASSERT_MSG(first != last && std::next(first) != last, "Computation of the Gini coefficient requires at least two samples.");
+    BOOST_MATH_ASSERT_MSG(first != last && std::next(first) != last, "Computation of the Gini coefficient requires at least two samples.");
 
     std::sort(first, last);
     if constexpr (std::is_integral<Real>::value)
@@ -309,7 +345,7 @@ auto gini_coefficient(RandomAccessIterator first, RandomAccessIterator last)
         // If the l1 norm is zero, all elements are zero, so every element is the same.
         if (denom == 0)
         {
-            return double(0);
+            return static_cast<double>(0);
         }
 
         return ((2*num)/denom - i)/(i-1);
@@ -366,7 +402,7 @@ auto median_absolute_deviation(RandomAccessIterator first, RandomAccessIterator 
         center = boost::math::tools::median(first, last);
     }
     size_t num_elems = std::distance(first, last);
-    BOOST_ASSERT_MSG(num_elems > 0, "The median of a zero-length vector is undefined.");
+    BOOST_MATH_ASSERT_MSG(num_elems > 0, "The median of a zero-length vector is undefined.");
     auto comparator = [&center](Real a, Real b) { return abs(a-center) < abs(b-center);};
     if (num_elems & 1)
     {

@@ -15,6 +15,7 @@
 #include <boost/version.hpp>
 #include <boost/core/ignore_unused.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/preprocessor/cat.hpp>
 
 namespace boost {
 namespace asio
@@ -85,12 +86,31 @@ namespace net = boost::asio;
 
 #ifndef BOOST_BEAST_ASYNC_RESULT1
 #define BOOST_BEAST_ASYNC_RESULT1(type) \
-    BOOST_ASIO_INITFN_RESULT_TYPE(type, void(::boost::beast::error_code))
+    BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(type, void(::boost::beast::error_code))
 #endif
 
 #ifndef BOOST_BEAST_ASYNC_RESULT2
 #define BOOST_BEAST_ASYNC_RESULT2(type) \
-    BOOST_ASIO_INITFN_RESULT_TYPE(type, void(::boost::beast::error_code, std::size_t))
+    BOOST_ASIO_INITFN_AUTO_RESULT_TYPE(type, void(::boost::beast::error_code, ::std::size_t))
+#endif
+
+#ifndef BOOST_BEAST_ASYNC_TPARAM1
+#define BOOST_BEAST_ASYNC_TPARAM1 BOOST_ASIO_COMPLETION_TOKEN_FOR(void(::boost::beast::error_code))
+#endif
+
+#ifndef BOOST_BEAST_ASYNC_TPARAM2
+#define BOOST_BEAST_ASYNC_TPARAM2 BOOST_ASIO_COMPLETION_TOKEN_FOR(void(::boost::beast::error_code, ::std::size_t))
+#endif
+
+
+#ifdef BOOST_BEAST_NO_SOURCE_LOCATION
+#define BOOST_BEAST_ASSIGN_EC(ec, error) ec.assign(error)
+#else
+
+#define BOOST_BEAST_ASSIGN_EC(ec, error) \
+    static constexpr auto BOOST_PP_CAT(loc_, __LINE__) ((BOOST_CURRENT_LOCATION)); \
+    ec.assign(error, & BOOST_PP_CAT(loc_, __LINE__) )
+
 #endif
 
 #endif

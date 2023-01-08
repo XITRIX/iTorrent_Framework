@@ -1,6 +1,11 @@
 /*
 
-Copyright (c) 2006-2018, Arvid Norberg
+Copyright (c) 2006-2007, 2009-2019, 2021, Arvid Norberg
+Copyright (c) 2015-2016, Steven Siloti
+Copyright (c) 2015, Thomas Yuan
+Copyright (c) 2016-2017, Alden Torres
+Copyright (c) 2016, Andrei Kurushin
+Copyright (c) 2016, Pavel Pimenov
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -46,8 +51,13 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <libtorrent/assert.hpp>
 #include <libtorrent/time.hpp>
 #include <libtorrent/aux_/vector.hpp>
+#include <libtorrent/flags.hpp>
 
-namespace libtorrent { namespace dht {
+namespace libtorrent {
+namespace aux {
+	struct session_settings;
+}
+namespace dht {
 
 struct settings;
 struct dht_logger;
@@ -135,6 +145,8 @@ TORRENT_EXTRA_EXPORT bool all_in_same_bucket(span<node_entry const> b
 TORRENT_EXTRA_EXPORT bool mostly_verified_nodes(bucket_t const&);
 TORRENT_EXTRA_EXPORT bool compare_ip_cidr(address const& lhs, address const& rhs);
 
+using find_nodes_flags_t = flags::bitfield_flag<std::uint8_t, struct find_nodes_flags_tag>;
+
 class TORRENT_EXTRA_EXPORT routing_table
 {
 public:
@@ -145,14 +157,16 @@ public:
 
 	routing_table(node_id const& id, udp proto
 		, int bucket_size
-		, dht::settings const& settings
+		, aux::session_settings const& settings
 		, dht_logger* log);
 
 	routing_table(routing_table const&) = delete;
 	routing_table& operator=(routing_table const&) = delete;
 
 #if TORRENT_ABI_VERSION == 1
+#include "libtorrent/aux_/disable_deprecation_warnings_push.hpp"
 	void status(session_status& s) const;
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 #endif
 
 	void status(std::vector<dht_routing_bucket>& s) const;
@@ -194,16 +208,13 @@ public:
 
 	node_entry const* next_refresh();
 
-	enum
-	{
-		// nodes that have not been pinged are considered failed by this flag
-		include_failed = 1
-	};
+	// nodes that have not been pinged are considered failed by this flag
+	static constexpr find_nodes_flags_t include_failed = 0_bit;
 
 	// fills the vector with the count nodes from our buckets that
 	// are nearest to the given id.
-	void find_node(node_id const& id, std::vector<node_entry>& l
-		, int options, int count = 0);
+	std::vector<node_entry> find_node(node_id const& target
+		, find_nodes_flags_t options, int count = 0);
 	void remove_node(node_entry* n, bucket_t* b);
 
 	int bucket_size(int bucket) const
@@ -285,7 +296,7 @@ private:
 
 	void prune_empty_bucket();
 
-	dht::settings const& m_settings;
+	aux::session_settings const& m_settings;
 
 	// (k-bucket, replacement cache) pairs
 	// the first entry is the bucket the furthest

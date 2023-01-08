@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2008-2018, Arvid Norberg
+Copyright (c) 2008-2009, 2012-2019, Arvid Norberg
+Copyright (c) 2016-2018, Alden Torres
+Copyright (c) 2017, Falcosc
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -146,13 +148,13 @@ namespace libtorrent {
 #endif
 
 		// hidden
-		bitfield& operator=(bitfield const& rhs)
+		bitfield& operator=(bitfield const& rhs) &
 		{
 			if (&rhs == this) return *this;
 			assign(rhs.data(), rhs.size());
 			return *this;
 		}
-		bitfield& operator=(bitfield&& rhs) noexcept = default;
+		bitfield& operator=(bitfield&& rhs) & noexcept = default;
 
 		// swaps the bit-fields two variables refer to
 		void swap(bitfield& rhs) noexcept
@@ -286,12 +288,12 @@ namespace libtorrent {
 		{}
 		typed_bitfield(bitfield&& rhs) noexcept : bitfield(std::forward<bitfield>(rhs)) {} // NOLINT
 		typed_bitfield(bitfield const& rhs) : bitfield(rhs) {} // NOLINT
-		typed_bitfield& operator=(typed_bitfield&& rhs) noexcept
+		typed_bitfield& operator=(typed_bitfield&& rhs) & noexcept
 		{
 			this->bitfield::operator=(std::forward<bitfield>(rhs));
 			return *this;
 		}
-		typed_bitfield& operator=(typed_bitfield const& rhs)
+		typed_bitfield& operator=(typed_bitfield const& rhs) &
 		{
 			this->bitfield::operator=(rhs);
 			return *this;

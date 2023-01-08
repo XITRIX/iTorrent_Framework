@@ -1,4 +1,4 @@
-// Copyright 2015-2017 Hans Dembinski
+// Copyright 2015-2019 Hans Dembinski
 //
 // Distributed under the Boost Software License, Version 1.0.
 // (See accompanying file LICENSE_1_0.txt
@@ -12,9 +12,10 @@
   Forward declarations, tag types and type aliases.
 */
 
+#include <boost/config.hpp> // BOOST_ATTRIBUTE_NODISCARD
 #include <boost/core/use_default.hpp>
-#include <boost/histogram/detail/attribute.hpp> // BOOST_HISTOGRAM_DETAIL_NODISCARD
-#include <string>
+#include <tuple>
+#include <type_traits>
 #include <vector>
 
 namespace boost {
@@ -32,15 +33,27 @@ using index_type = int;
 using real_index_type = double;
 
 /// Empty metadata type
-struct null_type {};
+struct null_type {
+  template <class Archive>
+  void serialize(Archive&, unsigned /* version */) {}
+};
 
+/// Another alias for an empty metadata type
+using empty_type = null_type;
+
+// some forward declarations must be hidden from doxygen to fix the reference docu :(
 #ifndef BOOST_HISTOGRAM_DOXYGEN_INVOKED
 
 namespace transform {
+
 struct id;
+
 struct log;
+
 struct sqrt;
+
 struct pow;
+
 } // namespace transform
 
 template <class Value = double, class Transform = use_default,
@@ -58,6 +71,9 @@ template <class Value = int, class MetaData = use_default, class Options = use_d
           class Allocator = std::allocator<Value>>
 class category;
 
+template <class MetaData = use_default>
+class boolean;
+
 template <class... Ts>
 class variant;
 
@@ -74,14 +90,25 @@ template <class T>
 struct sample_type;
 
 namespace accumulators {
-template <class Value = double>
+
+template <class ValueType = double, bool ThreadSafe = false>
+class count;
+
+template <class ValueType = double>
+class fraction;
+
+template <class ValueType = double>
 class sum;
-template <class Value = double>
+
+template <class ValueType = double>
 class weighted_sum;
-template <class Value = double>
+
+template <class ValueType = double>
 class mean;
-template <class Value = double>
+
+template <class ValueType = double>
 class weighted_mean;
+
 } // namespace accumulators
 
 struct unsafe_access;
@@ -94,28 +121,73 @@ class storage_adaptor;
 
 #endif // BOOST_HISTOGRAM_DOXYGEN_INVOKED
 
-/// Vector-like storage for fast zero-overhead access to cells
+/// Vector-like storage for fast zero-overhead access to cells.
 template <class T, class A = std::allocator<T>>
 using dense_storage = storage_adaptor<std::vector<T, A>>;
 
 /// Default storage, optimized for unweighted histograms
 using default_storage = unlimited_storage<>;
 
-/// Dense storage which tracks sums of weights and a variance estimate
+/// Dense storage which tracks sums of weights and a variance estimate.
 using weight_storage = dense_storage<accumulators::weighted_sum<>>;
 
-/// Dense storage which tracks means of samples in each cell
+/// Dense storage which tracks means of samples in each cell.
 using profile_storage = dense_storage<accumulators::mean<>>;
 
-/// Dense storage which tracks means of weighted samples in each cell
+/// Dense storage which tracks means of weighted samples in each cell.
 using weighted_profile_storage = dense_storage<accumulators::weighted_mean<>>;
 
+// some forward declarations must be hidden from doxygen to fix the reference docu :(
 #ifndef BOOST_HISTOGRAM_DOXYGEN_INVOKED
 
 template <class Axes, class Storage = default_storage>
-class BOOST_HISTOGRAM_DETAIL_NODISCARD histogram;
+class BOOST_ATTRIBUTE_NODISCARD histogram;
 
+#endif // BOOST_HISTOGRAM_DOXYGEN_INVOKED
+
+namespace utility {
+
+template <class ValueType = double>
+class clopper_pearson_interval;
+
+template <class ValueType = double>
+class jeffreys_interval;
+
+template <class ValueType = double>
+class wald_interval;
+
+template <class ValueType = double>
+class wilson_interval;
+
+} // namespace utility
+
+namespace detail {
+
+/*
+ Most of the histogram code is generic and works for any number of axes. Buffers with a
+ fixed maximum capacity are used in some places, which have a size equal to the rank of
+ a histogram. The buffers are allocated from the stack to improve performance, which
+ means in C++ that they need a preset maximum capacity. 32 seems like a safe upper limit
+ for the rank. You can nevertheless increase it with the compile-time flag
+ BOOST_HISTOGRAM_DETAIL_AXES_LIMIT, if necessary.
+*/
+#ifndef BOOST_HISTOGRAM_DETAIL_AXES_LIMIT
+#define BOOST_HISTOGRAM_DETAIL_AXES_LIMIT 32
 #endif
+
+template <class T>
+struct buffer_size_impl
+    : std::integral_constant<std::size_t, BOOST_HISTOGRAM_DETAIL_AXES_LIMIT> {};
+
+template <class... Ts>
+struct buffer_size_impl<std::tuple<Ts...>>
+    : std::integral_constant<std::size_t, sizeof...(Ts)> {};
+
+template <class T>
+using buffer_size = typename buffer_size_impl<T>::type;
+
+} // namespace detail
+
 } // namespace histogram
 } // namespace boost
 

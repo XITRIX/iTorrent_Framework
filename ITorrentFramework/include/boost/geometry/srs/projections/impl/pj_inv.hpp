@@ -3,8 +3,8 @@
 
 // Copyright (c) 2008-2012 Barend Gehrels, Amsterdam, the Netherlands.
 
-// This file was modified by Oracle on 2017.
-// Modifications copyright (c) 2017, Oracle and/or its affiliates.
+// This file was modified by Oracle on 2017, 2019.
+// Modifications copyright (c) 2017-2019, Oracle and/or its affiliates.
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
 // Use, modification and distribution is subject to the Boost Software License,
@@ -62,10 +62,22 @@ inline void pj_inv(PRJ const& prj, PAR const& par, XY const& xy, LL& ll)
 
     /* can't do as much preliminary checking as with forward */
     /* descale and de-offset */
-    calc_t xy_x = (geometry::get<0>(xy) * par.to_meter - par.x0) * par.ra;
-    calc_t xy_y = (geometry::get<1>(xy) * par.to_meter - par.y0) * par.ra;
-    calc_t lon = 0, lat = 0;
-    prj.inv(xy_x, xy_y, lon, lat); /* inverse project */
+    calc_t lon = 0;
+    calc_t lat = 0;
+    calc_t xy_x = 0;
+    calc_t xy_y = 0;
+
+    if (par.axis[0] == 1)
+    {
+        xy_x = (geometry::get<1>(xy) * par.to_meter * par.sign[1] - par.x0) * par.ra;
+        xy_y = (geometry::get<0>(xy) * par.to_meter * par.sign[0] - par.y0) * par.ra;
+    } else {
+        xy_x = (geometry::get<0>(xy) * par.to_meter * par.sign[0] - par.x0) * par.ra;
+        xy_y = (geometry::get<1>(xy) * par.to_meter * par.sign[1] - par.y0) * par.ra;
+    }
+
+    prj.inv(par, xy_x, xy_y, lon, lat); /* inverse project */
+
     lon += par.lam0; /* reduce from del lp.lam */
     if (!par.over)
         lon = adjlon(lon); /* adjust longitude to CM */

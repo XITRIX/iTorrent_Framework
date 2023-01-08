@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2008-2010, 2012-2021, Arvid Norberg
+Copyright (c) 2016, 2020, Alden Torres
+Copyright (c) 2017, 2019, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -48,6 +50,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/aux_/vector.hpp"
 #include "libtorrent/index_range.hpp"
 #include "libtorrent/flags.hpp"
+#include "libtorrent/error_code.hpp"
+#include "libtorrent/units.hpp"
+#include "libtorrent/disk_interface.hpp" // for default_block_size
+#include "libtorrent/fwd.hpp"
 
 namespace libtorrent {
 
@@ -55,10 +61,7 @@ namespace libtorrent {
 	// information about a file in a file_storage
 	struct TORRENT_DEPRECATED_EXPORT file_entry
 	{
-#if defined __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
+#include "libtorrent/aux_/disable_deprecation_warnings_push.hpp"
 		// hidden
 		file_entry();
 		// hidden
@@ -66,11 +69,9 @@ namespace libtorrent {
 		file_entry(file_entry const&) = default;
 		file_entry& operator=(file_entry const&) & = default;
 		file_entry(file_entry&&) noexcept = default;
-		file_entry& operator=(file_entry&&) & noexcept = default;
+		file_entry& operator=(file_entry&&) & = default;
 
-#if defined __GNUC__
-#pragma GCC diagnostic pop
-#endif
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 
 		// the full path of this file. The paths are unicode strings
 		// encoded in UTF-8.
@@ -113,31 +114,34 @@ namespace libtorrent {
 		// where the data for this file was found.
 		bool symlink_attribute:1;
 	};
+
 #endif // TORRENT_ABI_VERSION
 
-	// internal
-	struct internal_file_entry
-	{
-		friend class file_storage;
-#if TORRENT_USE_INVARIANT_CHECKS
-		// for torrent_info::invariant_check
-		friend class torrent_info;
-#endif
+namespace aux {
+	struct path_index_tag;
+	using path_index_t = aux::strong_typedef<std::uint32_t, path_index_tag>;
 
-		internal_file_entry();
-		internal_file_entry(internal_file_entry const& fe);
-		internal_file_entry& operator=(internal_file_entry const& fe) &;
-		internal_file_entry(internal_file_entry&& fe) noexcept;
-		internal_file_entry& operator=(internal_file_entry&& fe) & noexcept;
-		~internal_file_entry();
+	// internal
+	struct file_entry
+	{
+		friend class ::lt::file_storage;
+		file_entry();
+		file_entry(file_entry const& fe);
+		file_entry& operator=(file_entry const& fe) &;
+		file_entry(file_entry&& fe) noexcept;
+		file_entry& operator=(file_entry&& fe) & noexcept;
+		~file_entry();
 
 		void set_name(string_view n, bool borrow_string = false);
 		string_view filename() const;
 
 		enum {
 			name_is_owned = (1 << 12) - 1,
-			not_a_symlink = (1 << 15) - 1
+			not_a_symlink = (1 << 15) - 1,
 		};
+
+		static constexpr aux::path_index_t no_path{(1 << 30) - 1};
+		static constexpr aux::path_index_t path_is_absolute{(1 << 30) - 2};
 
 		// the offset of this file inside the torrent
 		std::uint64_t offset:48;
@@ -168,21 +172,25 @@ namespace libtorrent {
 	private:
 		// This string is not necessarily 0-terminated!
 		// that's why it's private, to keep people away from it
-		char const* name;
+		char const* name = nullptr;
 	public:
+		// the SHA-256 root of the merkle tree for this file
+		// this is a pointer into the .torrent file
+		char const* root = nullptr;
 
 		// the index into file_storage::m_paths. To get
 		// the full path to this file, concatenate the path
 		// from that array with the 'name' field in
 		// this struct
 		// values for path_index include:
-		// -1 means no path (i.e. single file torrent)
-		// -2, it means the filename
+		// no_path means no path (i.e. single file torrent)
+		// path_is_absolute means the filename
 		// in this field contains the full, absolute path
 		// to the file
-		int path_index;
+		aux::path_index_t path_index = file_entry::no_path;
 	};
 
+} // aux namespace
 
 	// represents a window of a file in a torrent.
 	//
@@ -211,16 +219,24 @@ namespace libtorrent {
 	// file structure.
 	class TORRENT_EXPORT file_storage
 	{
-	friend class torrent_info;
 	public:
 		// hidden
 		file_storage();
 		// hidden
 		~file_storage();
 		file_storage(file_storage const&);
-		file_storage& operator=(file_storage const&);
+		file_storage& operator=(file_storage const&) &;
 		file_storage(file_storage&&) noexcept;
-		file_storage& operator=(file_storage&&) = default;
+		file_storage& operator=(file_storage&&) &;
+
+		// internal limitations restrict file sizes to not be larger than this
+		// We use int to index into file merkle trees, so a file may not contain more
+		// than INT_MAX entries. That means INT_MAX / 2 blocks (leafs) in each
+		// tree.
+		static constexpr std::int64_t max_file_size = (std::min)(
+			(std::int64_t(1) << 48) - 1
+			, std::int64_t((std::numeric_limits<int>::max)() / 2) * default_block_size);
+		static constexpr std::int64_t max_file_offset = (std::int64_t(1) << 48) - 1;
 
 		// returns true if the piece length has been initialized
 		// on the file_storage. This is typically taken as a proxy
@@ -230,10 +246,10 @@ namespace libtorrent {
 
 #if TORRENT_ABI_VERSION == 1
 		using flags_t = file_flags_t;
-		static constexpr file_flags_t TORRENT_DEPRECATED_MEMBER pad_file = 0_bit;
-		static constexpr file_flags_t TORRENT_DEPRECATED_MEMBER attribute_hidden = 1_bit;
-		static constexpr file_flags_t TORRENT_DEPRECATED_MEMBER attribute_executable = 2_bit;
-		static constexpr file_flags_t TORRENT_DEPRECATED_MEMBER attribute_symlink = 3_bit;
+		TORRENT_DEPRECATED static constexpr file_flags_t pad_file = 0_bit;
+		TORRENT_DEPRECATED static constexpr file_flags_t attribute_hidden = 1_bit;
+		TORRENT_DEPRECATED static constexpr file_flags_t attribute_executable = 2_bit;
+		TORRENT_DEPRECATED static constexpr file_flags_t attribute_symlink = 3_bit;
 #endif
 
 		// allocates space for ``num_files`` in the internal file list. This can
@@ -271,6 +287,16 @@ namespace libtorrent {
 		// ``symlink_path`` is the path the file is a symlink to. To make this a
 		// symlink you also need to set the file_storage::flag_symlink file flag.
 		//
+		// ``root_hash`` is an optional pointer to a 32 byte SHA-256 hash, being
+		// the merkle tree root hash for this file. This is only used for v2
+		// torrents. If the ``root hash`` is specified for one file, it has to
+		// be specified for all, otherwise this function will fail.
+		// Note that the buffer ``root_hash`` points to must out-live the
+		// file_storage object, it will not be copied. This parameter is only
+		// used when *loading* torrents, that already have their file hashes
+		// computed. When creating torrents, the file hashes will be computed by
+		// the piece hashes.
+		//
 		// If more files than one are added, certain restrictions to their paths
 		// apply. In a multi-file file storage (torrent), all files must share
 		// the same root directory.
@@ -278,27 +304,37 @@ namespace libtorrent {
 		// That is, the first path element of all files must be the same.
 		// This shared path element is also set to the name of the torrent. It
 		// can be changed by calling ``set_name``.
+		//
+		// The overloads that take an `error_code` reference will report failures
+		// via that variable, otherwise `system_error` is thrown.
+#ifndef BOOST_NO_EXCEPTIONS
 		void add_file_borrow(string_view filename
 			, std::string const& path, std::int64_t file_size
 			, file_flags_t file_flags = {}, char const* filehash = nullptr
-			, std::int64_t mtime = 0, string_view symlink_path = string_view());
+			, std::int64_t mtime = 0, string_view symlink_path = string_view()
+			, char const* root_hash = nullptr);
 		void add_file(std::string const& path, std::int64_t file_size
 			, file_flags_t file_flags = {}
-			, std::time_t mtime = 0, string_view symlink_path = string_view());
+			, std::time_t mtime = 0, string_view symlink_path = string_view()
+			, char const* root_hash = nullptr);
+#endif // BOOST_NO_EXCEPTIONS
+		void add_file_borrow(error_code& ec, string_view filename
+			, std::string const& path, std::int64_t file_size
+			, file_flags_t file_flags = {}, char const* filehash = nullptr
+			, std::int64_t mtime = 0, string_view symlink_path = string_view()
+			, char const* root_hash = nullptr);
+		void add_file(error_code& ec, std::string const& path, std::int64_t file_size
+			, file_flags_t file_flags = {}
+			, std::time_t mtime = 0, string_view symlink_path = string_view()
+			, char const* root_hash = nullptr);
 
 		// renames the file at ``index`` to ``new_filename``. Keep in mind
 		// that filenames are expected to be UTF-8 encoded.
 		void rename_file(file_index_t index, std::string const& new_filename);
 
 #if TORRENT_ABI_VERSION == 1
-#ifdef __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
-#ifdef _MSC_VER
-#pragma warning(push, 1)
-#pragma warning(disable: 4996)
-#endif
+#include "libtorrent/aux_/disable_deprecation_warnings_push.hpp"
+
 		TORRENT_DEPRECATED
 		void add_file_borrow(char const* filename, int filename_len
 			, std::string const& path, std::int64_t file_size
@@ -307,27 +343,11 @@ namespace libtorrent {
 		TORRENT_DEPRECATED
 		void add_file(file_entry const& fe, char const* filehash = nullptr);
 
-		// all wstring APIs are deprecated since 0.16.11
-		// instead, use the wchar -> utf8 conversion functions
-		// and pass in utf8 strings
-#if defined TORRENT_WINDOWS
-		TORRENT_DEPRECATED
-		void add_file(std::wstring const& p, std::int64_t size
-			, file_flags_t flags = {}
-			, std::time_t mtime = 0, string_view s_p = "");
-		TORRENT_DEPRECATED
-		void rename_file(file_index_t index, std::wstring const& new_filename);
-		TORRENT_DEPRECATED
-		void set_name(std::wstring const& n);
-
-		void rename_file_deprecated(file_index_t index, std::wstring const& new_filename);
-#endif
-
-		// all functions depending on internal_file_entry
+		// all functions depending on aux::file_entry
 		// were deprecated in 1.0. Use the variants that take an
 		// index instead
-		using iterator = std::vector<internal_file_entry>::const_iterator;
-		using reverse_iterator = std::vector<internal_file_entry>::const_reverse_iterator;
+		using iterator = std::vector<aux::file_entry>::const_iterator;
+		using reverse_iterator = std::vector<aux::file_entry>::const_reverse_iterator;
 
 		TORRENT_DEPRECATED
 		iterator file_at_offset(std::int64_t offset) const;
@@ -340,7 +360,7 @@ namespace libtorrent {
 		TORRENT_DEPRECATED
 		reverse_iterator rend() const { return m_files.rend(); }
 		TORRENT_DEPRECATED
-		internal_file_entry const& internal_at(int const index) const;
+		aux::file_entry const& internal_at(int const index) const;
 		TORRENT_DEPRECATED
 		file_entry at(iterator i) const;
 
@@ -356,12 +376,7 @@ namespace libtorrent {
 		iterator file_at_offset_deprecated(std::int64_t offset) const;
 		file_entry at_deprecated(int index) const;
 
-#ifdef __GNUC__
-#pragma GCC diagnostic pop
-#endif
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 #endif // TORRENT_ABI_VERSION
 
 		// returns a list of file_slice objects representing the portions of
@@ -375,7 +390,7 @@ namespace libtorrent {
 		//
 		// may not exceed the total size of the torrent.
 		std::vector<file_slice> map_block(piece_index_t piece, std::int64_t offset
-			, int size) const;
+			, std::int64_t size) const;
 
 		// returns a peer_request representing the piece index, byte offset
 		// and size the specified file range overlaps. This is the inverse
@@ -418,14 +433,23 @@ namespace libtorrent {
 		// pieces in the file_storage.
 		index_range<piece_index_t> piece_range() const noexcept;
 
-		// set and get the size of each piece in this torrent. This size is typically an even power
-		// of 2. It doesn't have to be though. It should be divisible by 16 kiB however.
+		// set and get the size of each piece in this torrent. It must be a power of two
+		// and at least 16 kiB.
 		void set_piece_length(int l)  { m_piece_length = l; }
 		int piece_length() const { TORRENT_ASSERT(m_piece_length > 0); return m_piece_length; }
 
 		// returns the piece size of ``index``. This will be the same as piece_length(), except
 		// for the last piece, which may be shorter.
 		int piece_size(piece_index_t index) const;
+
+		// Returns the size of the given piece. If the piece spans multiple files,
+		// only the first file is considered part of the piece. This is used for
+		// v2 torrents, where all files are piece aligned and padded. i.e. The pad
+		// files are not considered part of the piece for this purpose.
+		int piece_size2(piece_index_t index) const;
+
+		// returns the number of blocks in the specified piece, for v2 torrents.
+		int blocks_in_piece2(piece_index_t index) const;
 
 		// set and get the name of this torrent. For multi-file torrents, this is also
 		// the name of the root directory all the files are stored in.
@@ -435,17 +459,9 @@ namespace libtorrent {
 		// swap all content of *this* with *ti*.
 		void swap(file_storage& ti) noexcept;
 
-		// if pad_file_limit >= 0, files larger than that limit will be padded,
-		// default is to not add any padding (-1). The alignment specifies the
-		// alignment files should be padded to. This defaults to the piece size
-		// (-1) but it may also make sense to set it to 16 kiB, or something
-		// divisible by 16 kiB.
-		// If pad_file_limit is 0, every file will be padded (except empty ones).
-		// ``tail_padding`` indicates whether aligned files also are padded at
-		// the end to make them end aligned. This is required for mutable
-		// torrents, since piece hashes are compared
-		void optimize(int pad_file_limit = -1, int alignment = -1
-			, bool tail_padding = false);
+		// arrange files and padding to match the canonical form required
+		// by BEP 52
+		void canonicalize();
 
 		// These functions are used to query attributes of files at
 		// a given index.
@@ -453,6 +469,13 @@ namespace libtorrent {
 		// The ``hash()`` is a SHA-1 hash of the file, or 0 if none was
 		// provided in the torrent file. This can potentially be used to
 		// join a bittorrent network with other file sharing networks.
+		//
+		// ``root()`` returns the SHA-256 merkle tree root of the specified file,
+		// in case this is a v2 torrent. Otherwise returns zeros.
+		// ``root_ptr()`` returns a pointer to the SHA-256 merkle tree root hash
+		// for the specified file. The pointer points into storage referred to
+		// when the file was added, it is not owned by this object. Torrents
+		// that are not v2 torrents return nullptr.
 		//
 		// The ``mtime()`` is the modification time is the posix
 		// time when a file was last modified when the torrent
@@ -473,13 +496,29 @@ namespace libtorrent {
 		// where this file starts. It can be used to map the file to a piece
 		// index (given the piece size).
 		sha1_hash hash(file_index_t index) const;
-		std::string const& symlink(file_index_t index) const;
+		sha256_hash root(file_index_t index) const;
+		char const* root_ptr(file_index_t const index) const;
+		std::string symlink(file_index_t index) const;
 		std::time_t mtime(file_index_t index) const;
 		std::string file_path(file_index_t index, std::string const& save_path = "") const;
 		string_view file_name(file_index_t index) const;
 		std::int64_t file_size(file_index_t index) const;
 		bool pad_file_at(file_index_t index) const;
 		std::int64_t file_offset(file_index_t index) const;
+
+		// Returns the number of pieces or blocks the file at `index` spans,
+		// under the assumption that the file is aligned to the start of a piece.
+		// This is only meaningful for v2 torrents, where files are guaranteed
+		// such alignment.
+		// These numbers are used to size and navigate the merkle hash tree for
+		// each file.
+		int file_num_pieces(file_index_t index) const;
+		int file_num_blocks(file_index_t index) const;
+		index_range<piece_index_t::diff_type> file_piece_range(file_index_t) const;
+
+		// index of first piece node in the merkle tree
+		int file_first_piece_node(file_index_t index) const;
+		int file_first_block_node(file_index_t index) const;
 
 		// returns the crc32 hash of file_path(index)
 		std::uint32_t file_path_hash(file_index_t index, std::string const& save_path) const;
@@ -508,11 +547,12 @@ namespace libtorrent {
 		// target string associated with it.
 		static constexpr file_flags_t flag_symlink = 3_bit;
 
+		// internal
 		// returns all directories used in the torrent. Files in the torrent are
 		// located in one of these directories. This is not a tree, it's a flat
 		// list of all *leaf* directories. i.e. the union of the parent paths of
 		// all files.
-		std::vector<std::string> const& paths() const { return m_paths; }
+		aux::vector<std::string, aux::path_index_t> const& paths() const { return m_paths; }
 
 		// returns a bitmask of flags from file_flags_t that apply
 		// to file at ``index``.
@@ -525,70 +565,95 @@ namespace libtorrent {
 
 		// returns the index of the file at the given offset in the torrent
 		file_index_t file_index_at_offset(std::int64_t offset) const;
+		file_index_t file_index_at_piece(piece_index_t piece) const;
 
+		// finds the file with the given root hash and returns its index
+		// if there is no file with the root hash, file_index_t{-1} is returned
+		file_index_t file_index_for_root(sha256_hash const& root_hash) const;
+
+		// returns the piece index the given file starts at
+		piece_index_t piece_index_at_file(file_index_t f) const;
+
+#if TORRENT_USE_INVARIANT_CHECKS
+		// internal
+		bool owns_name(file_index_t const f) const
+		{ return m_files[f].name_len == aux::file_entry::name_is_owned; }
+#endif
+
+#if TORRENT_ABI_VERSION <= 2
 		// low-level function. returns a pointer to the internal storage for
 		// the filename. This string may not be 0-terminated!
 		// the ``file_name_len()`` function returns the length of the filename.
 		// prefer to use ``file_name()`` instead, which returns a ``string_view``.
+		TORRENT_DEPRECATED
 		char const* file_name_ptr(file_index_t index) const;
+		TORRENT_DEPRECATED
 		int file_name_len(file_index_t index) const;
+#endif
 
 #if TORRENT_ABI_VERSION == 1
 		// these were deprecated in 1.0. Use the versions that take an index instead
 		TORRENT_DEPRECATED
-		sha1_hash hash(internal_file_entry const& fe) const;
+		sha1_hash hash(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		std::string const& symlink(internal_file_entry const& fe) const;
+		std::string symlink(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		std::time_t mtime(internal_file_entry const& fe) const;
+		std::time_t mtime(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		int file_index(internal_file_entry const& fe) const;
+		int file_index(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		std::string file_path(internal_file_entry const& fe, std::string const& save_path = "") const;
+		std::string file_path(aux::file_entry const& fe, std::string const& save_path = "") const;
 		TORRENT_DEPRECATED
-		std::string file_name(internal_file_entry const& fe) const;
+		std::string file_name(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		std::int64_t file_size(internal_file_entry const& fe) const;
+		std::int64_t file_size(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		bool pad_file_at(internal_file_entry const& fe) const;
+		bool pad_file_at(aux::file_entry const& fe) const;
 		TORRENT_DEPRECATED
-		std::int64_t file_offset(internal_file_entry const& fe) const;
+		std::int64_t file_offset(aux::file_entry const& fe) const;
 #endif
-
-		// if the backing buffer changed for this storage, this is the pointer
-		// offset to add to any pointers to make them point into the new buffer
-		void apply_pointer_offset(std::ptrdiff_t off);
 
 		// validate any symlinks, to ensure they all point to
 		// other files or directories inside this storage. Any invalid symlinks
 		// are updated to point to themselves.
 		void sanitize_symlinks();
 
+		// returns true if this torrent contains v2 metadata.
+		bool v2() const { return m_v2; }
+
+		// internal
+		// this is an optimization for create_torrent
+		std::string const& internal_symlink(file_index_t index) const;
+
+		// internal
+		void remove_tail_padding();
+
+		// internal
+		void canonicalize_impl(bool backwards_compatible);
+
 	private:
 
 		std::string internal_file_path(file_index_t index) const;
 		file_index_t last_file() const noexcept;
 
-		int get_or_add_path(string_view path);
-
-		void add_pad_file(int size
-			, std::vector<internal_file_entry>::iterator& i
-			, std::int64_t& offset
-			, int& pad_file_counter);
+		aux::path_index_t get_or_add_path(string_view path);
 
 		// the number of bytes in a regular piece
 		// (i.e. not the potentially truncated last piece)
-		int m_piece_length;
+		int m_piece_length = 0;
 
 		// the number of pieces in the torrent
-		int m_num_pieces;
+		int m_num_pieces = 0;
 
-		void update_path_index(internal_file_entry& e, std::string const& path
+		// whether this is a v2 torrent or not. Additional requirements apply to
+		// v2 torrents
+		bool m_v2 = false;
+
+		void update_path_index(aux::file_entry& e, std::string const& path
 			, bool set_name = true);
-		void reorder_file(int index, int dst);
 
 		// the list of files that this torrent consists of
-		aux::vector<internal_file_entry, file_index_t> m_files;
+		aux::vector<aux::file_entry, file_index_t> m_files;
 
 		// if there are sha1 hashes for each individual file there are as many
 		// entries in this array as the m_files array. Each entry in m_files has
@@ -602,7 +667,7 @@ namespace libtorrent {
 		aux::vector<char const*, file_index_t> m_file_hashes;
 
 		// for files that are symlinks, the symlink
-		// path_index in the internal_file_entry indexes
+		// path_index in the aux::file_entry indexes
 		// this vector of strings
 		std::vector<std::string> m_symlinks;
 
@@ -612,22 +677,31 @@ namespace libtorrent {
 		// index in m_files
 		aux::vector<std::time_t, file_index_t> m_mtime;
 
-		// all unique paths files have. The internal_file_entry::path_index
+		// all unique paths files have. The aux::file_entry::path_index
 		// points into this array. The paths don't include the root directory
 		// name for multi-file torrents. The m_name field need to be
 		// prepended to these paths, and the filename of a specific file
 		// entry appended, to form full file paths
-		aux::vector<std::string> m_paths;
+		aux::vector<std::string, aux::path_index_t> m_paths;
 
 		// name of torrent. For multi-file torrents
 		// this is always the root directory
 		std::string m_name;
 
 		// the sum of all file sizes
-		std::int64_t m_total_size;
+		std::int64_t m_total_size = 0;
 	};
 
-	namespace aux {
+namespace aux {
+
+	TORRENT_EXTRA_EXPORT
+	int calc_num_pieces(file_storage const& fs);
+
+	// this is used when loading v2 torrents that are backwards compatible with
+	// v1 torrents. Both v1 and v2 structures must describe the same file layout,
+	// this compares the two.
+	TORRENT_EXTRA_EXPORT
+	bool files_compatible(file_storage const& lhs, file_storage const& rhs);
 
 	// returns the piece range that entirely falls within the specified file. the
 	// end piece is one-past the last piece that entirely falls within the file.
@@ -641,6 +715,9 @@ namespace libtorrent {
 	// used as loop boundaries.
 	TORRENT_EXTRA_EXPORT std::tuple<piece_index_t, piece_index_t>
 	file_piece_range_inclusive(file_storage const& fs, file_index_t file);
+
+	TORRENT_EXTRA_EXPORT
+	std::int64_t size_on_disk(file_storage const& fs);
 
 } // namespace aux
 } // namespace libtorrent

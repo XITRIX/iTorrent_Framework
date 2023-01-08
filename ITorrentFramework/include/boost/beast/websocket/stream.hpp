@@ -23,7 +23,6 @@
 #include <boost/beast/core/role.hpp>
 #include <boost/beast/core/stream_traits.hpp>
 #include <boost/beast/core/string.hpp>
-#include <boost/beast/core/detail/type_traits.hpp>
 #include <boost/beast/http/detail/type_traits.hpp>
 #include <boost/asio/async_result.hpp>
 #include <boost/asio/error.hpp>
@@ -83,7 +82,7 @@ class frame_test;
     To declare the @ref stream object with a @ref tcp_stream in a
     multi-threaded asynchronous program using a strand, you may write:
     @code
-    websocket::stream<tcp_stream> ws{net::io_context::strand(ioc)};
+    websocket::stream<tcp_stream> ws{net::make_strand(ioc)};
     @endcode
     Alternatively, for a single-threaded or synchronous application
     you may write:
@@ -140,6 +139,7 @@ class stream
     using control_cb_type =
         std::function<void(frame_type, string_view)>;
 
+#ifndef BOOST_BEAST_DOXYGEN
     friend class close_test;
     friend class frame_test;
     friend class ping_test;
@@ -154,6 +154,7 @@ class stream
     */
     static std::size_t constexpr max_control_frame_size = 2 + 8 + 4 + 125;
     static std::size_t constexpr tcp_frame_size = 1536;
+#endif
 
     static time_point never() noexcept
     {
@@ -161,6 +162,7 @@ class stream
     }
 
 public:
+
     /// Indicates if the permessage-deflate extension is supported
     using is_deflate_supported =
         std::integral_constant<bool, deflateSupported>;
@@ -172,6 +174,16 @@ public:
     /// The type of the executor associated with the object.
     using executor_type =
         beast::executor_type<next_layer_type>;
+
+    /// Rebinds the stream type to another executor.
+    template<class Executor1>
+    struct rebind_executor
+    {
+        /// The stream type when rebound to the specified executor.
+        using other = stream<
+                typename next_layer_type::template rebind_executor<Executor1>::other,
+                deflateSupported>;
+    };
 
     /** Destructor
 
@@ -210,6 +222,20 @@ public:
     explicit
     stream(Args&&... args);
 
+    /** Rebinding constructor
+     *
+     *  This constructor creates a the websocket stream from a
+     *  websocket stream with a different executor.
+     *
+     *  @throw Any exception thrown by the NextLayer rebind constructor.
+     *
+     *  @param other The other websocket stream to construct from.
+     */
+    template<class Other>
+    explicit
+    stream(stream<Other> && other);
+
+
     //--------------------------------------------------------------------------
 
     /** Get the executor associated with the object.
@@ -220,7 +246,7 @@ public:
         @return A copy of the executor that stream will use to dispatch handlers.
     */
     executor_type
-    get_executor() const noexcept;
+    get_executor() noexcept;
 
     /** Get a reference to the next layer
 
@@ -343,20 +369,30 @@ public:
     //--------------------------------------------------------------------------
 
 #if BOOST_BEAST_DOXYGEN
+    /// Get the option value
     template<class Option>
     void
     get_option(Option& opt);
 
+    /// Set the option value
     template<class Option>
     void
     set_option(Option opt);
 #else
-
     void set_option(decorator opt);
-
-    void get_option(timeout& opt);
-    void set_option(timeout const& opt);
 #endif
+
+    /** Set the timeout option
+
+        @throws system_error on failure to reset the
+        timer.
+    */
+    void
+    set_option(timeout const& opt);
+
+    /// Get the timeout option
+    void
+    get_option(timeout& opt);
 
     /** Set the permessage-deflate extension options
 
@@ -586,6 +622,42 @@ public:
     bool
     text() const;
 
+    /** Set the compress message write option.
+
+        This controls whether or not outgoing messages should be
+        compressed. The setting is only applied when
+
+        @li The template parameter `deflateSupported` is true
+        @li Compression is enable. This is controlled with `stream::set_option`
+        @li Client and server have negotiated permessage-deflate settings
+        @li The message is larger than `permessage_deflate::msg_size_threshold`
+
+        This function permits adjusting per-message compression.
+        Changing the opcode after a message is started will only take effect
+        after the current message being sent is complete.
+
+        The default setting is to compress messages whenever the conditions
+        above are true.
+
+        @param value `true` if outgoing messages should be compressed
+
+        @par Example
+        Disabling compression for a single message.
+        @code
+            ws.compress(false);
+            ws.write(net::buffer(s), ec);
+            ws.compress(true);
+        @endcode
+    */
+    void
+    compress(bool value);
+
+    /// Returns `true` if the compress message write option is set.
+    bool
+    compress() const;
+
+
+
     /*
         timer settings
 
@@ -676,7 +748,11 @@ public:
 
         @param res The HTTP Upgrade response returned by the remote
         endpoint. The caller may use the response to access any
-        additional information sent by the server.
+        additional information sent by the server. Note that the response object
+        referenced by this parameter will be updated as long as the stream has
+        received a valid HTTP response. If not (for example because of a communications
+        error), the response contents will be undefined except for the result() which
+        will bet set to 500, Internal Server Error.
 
         @param host The name of the remote host. This is required by
         the HTTP protocol to set the "Host" header field.
@@ -876,12 +952,17 @@ public:
         @li <a href="https://tools.ietf.org/html/rfc7230#section-3.1.1">request-target (RFC7230)</a>
         @li <a href="https://tools.ietf.org/html/rfc7230#section-5.3.1">origin-form (RFC7230)</a>
     */
-    template<class HandshakeHandler>
+    template<
+        BOOST_BEAST_ASYNC_TPARAM1 HandshakeHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(HandshakeHandler)
     async_handshake(
         string_view host,
         string_view target,
-        HandshakeHandler&& handler);
+        HandshakeHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     /** Perform the WebSocket handshake asynchronously in the client role.
 
@@ -957,13 +1038,18 @@ public:
         @li <a href="https://tools.ietf.org/html/rfc7230#section-3.1.1">request-target (RFC7230)</a>
         @li <a href="https://tools.ietf.org/html/rfc7230#section-5.3.1">origin-form (RFC7230)</a>
     */
-    template<class HandshakeHandler>
+    template<
+        BOOST_BEAST_ASYNC_TPARAM1 HandshakeHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(HandshakeHandler)
     async_handshake(
         response_type& res,
         string_view host,
         string_view target,
-        HandshakeHandler&& handler);
+        HandshakeHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
     //
@@ -1276,9 +1362,15 @@ public:
         @see
         @li <a href="https://tools.ietf.org/html/rfc6455#section-4.2">Websocket Opening Handshake Server Requirements (RFC6455)</a>
     */
-    template<class AcceptHandler>
+    template<
+        BOOST_BEAST_ASYNC_TPARAM1 AcceptHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)
-    async_accept(AcceptHandler&& handler);
+    async_accept(
+        AcceptHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     /** Perform the WebSocket handshake asynchronously in the server role.
 
@@ -1339,17 +1431,21 @@ public:
     */
     template<
         class ConstBufferSequence,
-        class AcceptHandler>
-#if BOOST_BEAST_DOXYGEN
-    void_or_deduced
-#else
-    typename std::enable_if<
-        ! http::detail::is_header<ConstBufferSequence>::value,
-        BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)>::type
-#endif
+        BOOST_BEAST_ASYNC_TPARAM1 AcceptHandler =
+            net::default_completion_token_t<executor_type>
+    >
+    BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)
     async_accept(
         ConstBufferSequence const& buffers,
-        AcceptHandler&& handler);
+        AcceptHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{}
+#ifndef BOOST_BEAST_DOXYGEN
+        , typename std::enable_if<
+            ! http::detail::is_header<
+            ConstBufferSequence>::value>::type* = 0
+#endif
+    );
 
     /** Perform the WebSocket handshake asynchronously in the server role.
 
@@ -1400,12 +1496,16 @@ public:
     */
     template<
         class Body, class Allocator,
-        class AcceptHandler>
+        BOOST_BEAST_ASYNC_TPARAM1 AcceptHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)
     async_accept(
         http::request<Body,
             http::basic_fields<Allocator>> const& req,
-        AcceptHandler&& handler);
+        AcceptHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
     //
@@ -1527,12 +1627,33 @@ public:
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
 
+         @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        @note `terminal` cancellation will may close the underlying socket.
+
         @see
         @li <a href="https://tools.ietf.org/html/rfc6455#section-7.1.2">Websocket Closing Handshake (RFC6455)</a>
     */
-    template<class CloseHandler>
+    template<
+        BOOST_BEAST_ASYNC_TPARAM1 CloseHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(CloseHandler)
-    async_close(close_reason const& cr, CloseHandler&& handler);
+    async_close(
+        close_reason const& cr,
+        CloseHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
     //
@@ -1624,10 +1745,32 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
-    template<class WriteHandler>
+    template<
+        BOOST_BEAST_ASYNC_TPARAM1 WriteHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(WriteHandler)
-    async_ping(ping_data const& payload, WriteHandler&& handler);
+    async_ping(
+        ping_data const& payload,
+        WriteHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     /** Send a websocket pong control frame.
 
@@ -1725,10 +1868,32 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
-    template<class WriteHandler>
+    template<
+        BOOST_BEAST_ASYNC_TPARAM1 WriteHandler =
+            net::default_completion_token_t<executor_type>
+    >
     BOOST_BEAST_ASYNC_RESULT1(WriteHandler)
-    async_pong(ping_data const& payload, WriteHandler&& handler);
+    async_pong(
+        ping_data const& payload,
+        WriteHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
     //
@@ -1879,12 +2044,33 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
-    template<class DynamicBuffer, class ReadHandler>
+    template<
+        class DynamicBuffer,
+        BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+            net::default_completion_token_t<
+                executor_type>>
     BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
     async_read(
         DynamicBuffer& buffer,
-        ReadHandler&& handler);
+        ReadHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
 
@@ -2052,13 +2238,34 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
-    template<class DynamicBuffer, class ReadHandler>
+    template<
+        class DynamicBuffer,
+        BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+            net::default_completion_token_t<
+                executor_type>>
     BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
     async_read_some(
         DynamicBuffer& buffer,
         std::size_t limit,
-        ReadHandler&& handler);
+        ReadHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
 
@@ -2150,6 +2357,21 @@ public:
         from the beginning.
 
         @param ec Set to indicate what error occurred, if any.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
     template<class MutableBufferSequence>
     std::size_t
@@ -2221,12 +2443,34 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
-    template<class MutableBufferSequence, class ReadHandler>
+    template<
+        class MutableBufferSequence,
+        BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+            net::default_completion_token_t<
+                executor_type>>
     BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
     async_read_some(
         MutableBufferSequence const& buffers,
-        ReadHandler&& handler);
+        ReadHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     //--------------------------------------------------------------------------
     //
@@ -2338,14 +2582,33 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
     template<
         class ConstBufferSequence,
-        class WriteHandler>
+        BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+            net::default_completion_token_t<
+                executor_type>>
     BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
     async_write(
         ConstBufferSequence const& buffers,
-        WriteHandler&& handler);
+        WriteHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
     /** Write some message data.
 
@@ -2372,6 +2635,7 @@ public:
         @return The number of bytes sent from the buffers.
 
         @throws system_error Thrown on failure.
+
     */
     template<class ConstBufferSequence>
     std::size_t
@@ -2457,138 +2721,34 @@ public:
         immediately or not, the handler will not be invoked from within
         this function. Invocation of the handler will be performed in a
         manner equivalent to using `net::post`.
+
+        @par Per-Operation Cancellation
+
+        This asynchronous operation supports cancellation for the following
+        net::cancellation_type values:
+
+        @li @c net::cancellation_type::terminal
+        @li @c net::cancellation_type::total
+
+        `total` cancellation succeeds if the operation is suspended due to ongoing
+        control operations such as a ping/pong.
+        `terminal` cancellation succeeds when supported by the underlying stream.
+
+        `terminal` cancellation leaves the stream in an undefined state,
+        so that only closing it is guaranteed to succeed.
     */
-    template<class ConstBufferSequence, class WriteHandler>
-    BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
-    async_write_some(bool fin,
-        ConstBufferSequence const& buffers, WriteHandler&& handler);
-
-    //
-    // Deprecated
-    //
-
-#if ! BOOST_BEAST_DOXYGEN
-    template<class RequestDecorator>
-    void
-    handshake_ex(
-        string_view host,
-        string_view target,
-        RequestDecorator const& decorator);
-
-    template<class RequestDecorator>
-    void
-    handshake_ex(
-        response_type& res,
-        string_view host,
-        string_view target,
-        RequestDecorator const& decorator);
-
-    template<class RequestDecorator>
-    void
-    handshake_ex(
-        string_view host,
-        string_view target,
-        RequestDecorator const& decorator,
-        error_code& ec);
-
-    template<class RequestDecorator>
-    void
-    handshake_ex(
-        response_type& res,
-        string_view host,
-        string_view target,
-        RequestDecorator const& decorator,
-        error_code& ec);
-
-    template<class RequestDecorator, class HandshakeHandler>
-    BOOST_BEAST_ASYNC_RESULT1(HandshakeHandler)
-    async_handshake_ex(
-        string_view host,
-        string_view target,
-        RequestDecorator const& decorator,
-        HandshakeHandler&& handler);
-
-    template<class RequestDecorator, class HandshakeHandler>
-    BOOST_BEAST_ASYNC_RESULT1(HandshakeHandler)
-    async_handshake_ex(
-        response_type& res,
-        string_view host,
-        string_view target,
-        RequestDecorator const& decorator,
-        HandshakeHandler&& handler);
-
-    template<class ResponseDecorator>
-    void
-    accept_ex(ResponseDecorator const& decorator);
-
-    template<class ResponseDecorator>
-    void
-    accept_ex(
-        ResponseDecorator const& decorator,
-        error_code& ec);
-
-    template<class ConstBufferSequence,
-        class ResponseDecorator>
-    typename std::enable_if<! http::detail::is_header<
-        ConstBufferSequence>::value>::type
-    accept_ex(
-        ConstBufferSequence const& buffers,
-        ResponseDecorator const& decorator);
-
-    template<class ConstBufferSequence, class ResponseDecorator>
-    typename std::enable_if<! http::detail::is_header<
-        ConstBufferSequence>::value>::type
-    accept_ex(
-        ConstBufferSequence const& buffers,
-        ResponseDecorator const& decorator,
-        error_code& ec);
-
-    template<class Body, class Allocator,
-        class ResponseDecorator>
-    void
-    accept_ex(http::request<Body,
-        http::basic_fields<Allocator>> const& req,
-            ResponseDecorator const& decorator);
-
-    template<class Body, class Allocator,
-        class ResponseDecorator>
-    void
-    accept_ex(http::request<Body,
-        http::basic_fields<Allocator>> const& req,
-            ResponseDecorator const& decorator,
-                error_code& ec);
-
-    template<
-        class ResponseDecorator,
-        class AcceptHandler>
-    BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)
-    async_accept_ex(
-        ResponseDecorator const& decorator,
-        AcceptHandler&& handler);
-
     template<
         class ConstBufferSequence,
-        class ResponseDecorator,
-        class AcceptHandler>
-    typename std::enable_if<
-        ! http::detail::is_header<ConstBufferSequence>::value,
-        BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)>::type
-    async_accept_ex(
+        BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+            net::default_completion_token_t<
+                executor_type>>
+    BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
+    async_write_some(
+        bool fin,
         ConstBufferSequence const& buffers,
-        ResponseDecorator const& decorator,
-        AcceptHandler&& handler);
-
-    template<
-        class Body, class Allocator,
-        class ResponseDecorator,
-        class AcceptHandler>
-    BOOST_BEAST_ASYNC_RESULT1(AcceptHandler)
-    async_accept_ex(
-        http::request<Body,
-            http::basic_fields<Allocator>> const& req,
-        ResponseDecorator const& decorator,
-        AcceptHandler&& handler);
-#endif
+        WriteHandler&& handler =
+            net::default_completion_token_t<
+                executor_type>{});
 
 private:
     template<class, class>  class accept_op;

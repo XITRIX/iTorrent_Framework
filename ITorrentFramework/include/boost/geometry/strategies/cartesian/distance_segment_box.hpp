@@ -1,6 +1,6 @@
 // Boost.Geometry (aka GGL, Generic Geometry Library)
 
-// Copyright (c) 2018-2019 Oracle and/or its affiliates.
+// Copyright (c) 2018-2021 Oracle and/or its affiliates.
 // Contributed and/or modified by Vissarion Fisikopoulos, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -14,6 +14,8 @@
 #include <boost/geometry/algorithms/detail/distance/segment_to_box.hpp>
 
 #include <boost/geometry/strategies/cartesian/distance_projected_point.hpp>
+#include <boost/geometry/strategies/cartesian/distance_pythagoras.hpp>
+#include <boost/geometry/strategies/cartesian/distance_pythagoras_point_box.hpp>
 #include <boost/geometry/strategies/cartesian/point_in_point.hpp>
 
 namespace boost { namespace geometry
@@ -43,55 +45,33 @@ struct cartesian_segment_box
           >
     {};
 
-    // point-point strategy getters
-    struct distance_pp_strategy
-    {
-        typedef Strategy type;
-    };
+    typedef cartesian_tag cs_tag;
 
-    inline typename distance_pp_strategy::type get_distance_pp_strategy() const
-    {
-        return typename distance_pp_strategy::type();
-    }
-    // point-segment strategy getters
-    struct distance_ps_strategy
-    {
-        typedef projected_point<CalculationType, Strategy> type;
-    };
-
-    inline typename distance_ps_strategy::type get_distance_ps_strategy() const
-    {
-        return typename distance_ps_strategy::type();
-    }
-
-    typedef within::cartesian_point_point equals_point_point_strategy_type;
-
-    static inline equals_point_point_strategy_type get_equals_point_point_strategy()
-    {
-        return equals_point_point_strategy_type();
-    }
-
-    template <typename LessEqual, typename ReturnType,
-              typename SegmentPoint, typename BoxPoint>
+    template
+    <
+        typename LessEqual, typename ReturnType,
+        typename SegmentPoint, typename BoxPoint,
+        typename Strategies
+    >
     inline ReturnType segment_below_of_box(SegmentPoint const& p0,
-                                   SegmentPoint const& p1,
-                                   BoxPoint const&,
-                                   BoxPoint const&,
-                                   BoxPoint const&,
-                                   BoxPoint const& bottom_right) const
+                                           SegmentPoint const& p1,
+                                           BoxPoint const&,
+                                           BoxPoint const&,
+                                           BoxPoint const&,
+                                           BoxPoint const& bottom_right,
+                                           Strategies const& strategies) const
     {
-
-
+        // TODO: The strategy should not call the algorithm like that
         return geometry::detail::distance::segment_to_box_2D
             <
                 ReturnType,
                 SegmentPoint,
                 BoxPoint,
-                cartesian_segment_box<CalculationType, Strategy>
+                Strategies
             >::template call_above_of_box
                 <
                     typename LessEqual::other
-                >(p1, p0, bottom_right, *this);
+                >(p1, p0, bottom_right, strategies);
     }
 
     template <typename SPoint, typename BPoint>

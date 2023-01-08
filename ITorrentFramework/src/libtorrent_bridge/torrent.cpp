@@ -72,9 +72,9 @@ public:
                         | lt::alert_category::file_progress);
         
         applySettingsPackHelper(&pack, &settings_pack);
-        
+
+        printf("LibTorrent version: %s\n", version());
         s = new lt::session(pack);
-        
     }
     
     char* addTorrentByName(char* torrent) {

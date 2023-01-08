@@ -41,8 +41,10 @@ namespace beast {
 class rate_policy_access
 {
 private:
+#ifndef BOOST_BEAST_DOXYGEN
     template<class, class, class>
     friend class basic_stream;
+#endif
 
     template<class Policy>
     static
@@ -101,7 +103,9 @@ private:
 */
 class unlimited_rate_policy
 {
+#ifndef BOOST_BEAST_DOXYGEN
     friend class rate_policy_access;
+#endif
 
     static std::size_t constexpr all =
         (std::numeric_limits<std::size_t>::max)();
@@ -149,10 +153,12 @@ class unlimited_rate_policy
 */
 class simple_rate_policy
 {
+#ifndef BOOST_BEAST_DOXYGEN
     friend class rate_policy_access;
+#endif
 
     static std::size_t constexpr all =
-        std::numeric_limits<std::size_t>::max();
+        (std::numeric_limits<std::size_t>::max)();
 
     std::size_t rd_remain_ = all;
     std::size_t wr_remain_ = all;

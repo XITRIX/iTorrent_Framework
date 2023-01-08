@@ -36,8 +36,10 @@ template<class T>
 struct span_body
 {
 private:
-    static_assert(std::is_pod<T>::value,
-        "POD requirements not met");
+    static_assert(
+        std::is_trivial<T>::value &&
+        std::is_standard_layout<T>::value,
+            "POD requirements not met");
 
 public:
     /** The type of container used for the body
@@ -85,7 +87,7 @@ public:
         {
             if(length && *length > body_.size())
             {
-                ec = error::buffer_overflow;
+                BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
                 return;
             }
             ec = {};
@@ -100,7 +102,7 @@ public:
             auto const len = body_.size();
             if(n > len)
             {
-                ec = error::buffer_overflow;
+                BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
                 return 0;
             }
             ec = {};

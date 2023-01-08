@@ -1,6 +1,14 @@
 /*
 
-Copyright (c) 2005-2018, Arvid Norberg
+Copyright (c) 2005, 2008-2022, Arvid Norberg
+Copyright (c) 2009, Daniel Wallin
+Copyright (c) 2015, John Sebastian Peterson
+Copyright (c) 2016-2017, 2019, 2021, Alden Torres
+Copyright (c) 2016, 2019, Andrei Kurushin
+Copyright (c) 2016, terry zhao
+Copyright (c) 2017, Steven Siloti
+Copyright (c) 2018, Pavel Pimenov
+Copyright (c) 2020, Paul-Louis Ageneau
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,20 +41,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef TORRENT_CONFIG_HPP_INCLUDED
 #define TORRENT_CONFIG_HPP_INCLUDED
 
-#include <cstddef>
-
 #include "libtorrent/aux_/disable_warnings_push.hpp"
 
 #define _FILE_OFFSET_BITS 64
+
+#include <cstddef>
 
 #include <boost/config.hpp>
 #include <boost/version.hpp>
 
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
-
-// TODO: don't include that here. Make each header that use the export macros
-// include it instead. and move it to aux_
-#include "libtorrent/aux_/export.hpp"
 
 #ifdef __linux__
 #include <linux/version.h> // for LINUX_VERSION_CODE and KERNEL_VERSION
@@ -78,12 +82,6 @@ POSSIBILITY OF SUCH DAMAGE.
 // class X needs to have dll-interface to be used by clients of class Y
 #pragma warning(disable:4251)
 
-// auto and decltype(auto) return types supports since MSVS2015
-// https://msdn.microsoft.com/en-us/library/hh567368.aspx
-// we need to force C++14 feature due VS2017 inability to parse C++11 syntax
-#if defined(_MSC_VER) && (_MSC_VER > 1900)
-#define TORRENT_AUTO_RETURN_TYPES 1
-#endif
 #endif
 
 
@@ -99,31 +97,29 @@ POSSIBILITY OF SUCH DAMAGE.
 // (disables some float-dependent APIs)
 #define TORRENT_NO_FPU 1
 #define TORRENT_USE_I2P 0
-#ifndef TORRENT_USE_ICONV
-#define TORRENT_USE_ICONV 0
-#endif
 
 // ==== Darwin/BSD ===
 #elif (defined __APPLE__ && defined __MACH__) || defined __FreeBSD__ || defined __NetBSD__ \
 	|| defined __OpenBSD__ || defined __bsdi__ || defined __DragonFly__ \
 	|| defined __FreeBSD_kernel__
 #define TORRENT_BSD
-// we don't need iconv on mac, because
-// the locale is always utf-8
+
 #if defined __APPLE__
 
-# ifndef TORRENT_USE_ICONV
-#  define TORRENT_USE_ICONV 0
-#  define TORRENT_USE_LOCALE 0
-# endif
 #include <AvailabilityMacros.h>
 #include <TargetConditionals.h>
+
+#if defined __MACH__ && MAC_OS_X_VERSION_MIN_REQUIRED >= 1050
+#define TORRENT_HAS_COPYFILE 1
+#endif
+
+#define TORRENT_NATIVE_UTF8 1
 
 #if MAC_OS_X_VERSION_MIN_REQUIRED >= 1070
 // on OSX, use the built-in common crypto for built-in
 # if !defined TORRENT_USE_LIBCRYPTO && !defined TORRENT_USE_LIBGCRYPT
 #  define TORRENT_USE_COMMONCRYPTO 1
-# endif // TORRENT_USE_OPENSSL
+# endif
 #endif // MAC_OS_X_VERSION_MIN_REQUIRED
 
 // execinfo.h is available in the MacOS X 10.5 SDK.
@@ -136,11 +132,23 @@ POSSIBILITY OF SUCH DAMAGE.
 #if TARGET_OS_IPHONE
 #define TORRENT_USE_SC_NETWORK_REACHABILITY 1
 #endif
+
+#define TORRENT_USE_DEV_RANDOM 1
+
+#else
+
+// non-Apple BSD
+#define TORRENT_USE_GETRANDOM 1
+#define TORRENT_HAS_PTHREAD_SET_NAME 1
+
 #endif // __APPLE__
 
 #define TORRENT_HAS_SYMLINK 1
-#define TORRENT_USE_DEV_RANDOM 1
+
+#ifndef TORRENT_HAVE_MMAP
 #define TORRENT_HAVE_MMAP 1
+#endif
+#define TORRENT_USE_MADVISE 1
 
 #define TORRENT_HAS_FALLOCATE 0
 
@@ -153,27 +161,58 @@ POSSIBILITY OF SUCH DAMAGE.
 #elif defined __linux__
 #define TORRENT_LINUX
 
-#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,30) && !defined __ANDROID__
-# define TORRENT_USE_PREADV 1
-# define TORRENT_USE_PREAD 0
-#else
-# define TORRENT_USE_PREADV 0
-# define TORRENT_USE_PREAD 1
+#ifndef TORRENT_HAVE_MMAP
+#define TORRENT_HAVE_MMAP 1
 #endif
 
+#if defined __GLIBC__ && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 27))
+#define TORRENT_HAS_COPY_FILE_RANGE 1
+#endif
+
+#define TORRENT_HAS_PTHREAD_SET_NAME 1
 #define TORRENT_HAS_SYMLINK 1
-#define TORRENT_HAVE_MMAP 1
+#define TORRENT_USE_MADVISE 1
 #define TORRENT_USE_NETLINK 1
 #define TORRENT_USE_IFADDRS 0
 #define TORRENT_USE_IFCONF 1
 #define TORRENT_HAS_SALEN 0
 #define TORRENT_USE_FDATASYNC 1
 
+#if defined __GLIBC__ && (__GLIBC__ > 2 || (__GLIBC__ == 2 && __GLIBC_MINOR__ > 24))
+#define TORRENT_USE_GETRANDOM 1
+#endif
+
 // ===== ANDROID ===== (almost linux, sort of)
 #if defined __ANDROID__
 #define TORRENT_ANDROID
+#define TORRENT_HAS_PTHREAD_SET_NAME 1
+
+#if __ANDROID_API__ < 21
 #define TORRENT_HAS_FALLOCATE 0
-#define TORRENT_USE_ICONV 0
+#define TORRENT_HAS_FADVISE 0
+#endif // API < 21
+
+// android 32 bits has real problems with fseeko
+#if (__ANDROID_API__ < 24) || defined __arm__ || defined __i386__
+#define TORRENT_HAS_FSEEKO 0
+#endif
+
+#if __ANDROID_API__ < 24
+#define TORRENT_HAS_FTELLO 0
+#endif // API < 24
+
+// Starting Android 11 (API >= 30), the enum_routes using NETLINK
+// is not possible anymore. For other functions, it's not clear
+// that IFADDRS is working as expected for API >= 30, but at least
+// it is supported.
+// See https://developer.android.com/training/articles/user-data-ids#mac-11-plus
+#if __ANDROID_API__ >= 24
+#undef TORRENT_USE_NETLINK
+#undef TORRENT_USE_IFADDRS
+#define TORRENT_USE_NETLINK 0
+#define TORRENT_USE_IFADDRS 1
+#endif // API >= 24
+
 #else // ANDROID
 
 // posix_fallocate() is not available in glibc under these condition
@@ -182,6 +221,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #elif defined _POSIX_C_SOURCE && _POSIX_C_SOURCE < 200112L
 #define TORRENT_HAS_FALLOCATE 0
 #endif
+
+#define TORRENT_USE_SYNC_FILE_RANGE 1
 
 #endif // ANDROID
 
@@ -194,9 +235,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #elif defined __MINGW32__ || defined __MINGW64__
 #define TORRENT_MINGW
 #define TORRENT_WINDOWS
-#ifndef TORRENT_USE_ICONV
-# define TORRENT_USE_ICONV 0
-# define TORRENT_USE_LOCALE 1
+#ifndef TORRENT_HAVE_MAP_VIEW_OF_FILE
+#define TORRENT_HAVE_MAP_VIEW_OF_FILE 1
 #endif
 #define TORRENT_USE_RLIMIT 0
 #define TORRENT_USE_NETLINK 0
@@ -204,17 +244,27 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_HAS_SALEN 0
 #define TORRENT_USE_GETIPFORWARDTABLE 1
 #define TORRENT_USE_UNC_PATHS 1
-// these are emulated on windows
-#define TORRENT_USE_PREADV 1
-#define TORRENT_USE_PWRITEV 1
 
 // mingw doesn't implement random_device.
 #define TORRENT_BROKEN_RANDOM_DEVICE 1
 
 # if !defined TORRENT_USE_LIBCRYPTO && !defined TORRENT_USE_LIBGCRYPT
+
+#ifdef NTDDI_VERSION
+# if (NTDDI_VERSION >= NTDDI_VISTA)
+#  define TORRENT_USE_CNG 1
+# endif
+#else // NTDDI_VERSION not defined so use simple _WIN32_WINNT check
+# if _WIN32_WINNT >= 0x0600
+#  define TORRENT_USE_CNG 1
+# endif
+#endif
+
+# if !defined TORRENT_USE_CNG
 // unless some other crypto library has been specified, default to the native
 // windows CryptoAPI
 #define TORRENT_USE_CRYPTOAPI 1
+#define TORRENT_USE_DEV_RANDOM 0
 
 #ifdef NTDDI_VERSION
 # if (NTDDI_VERSION > NTDDI_WINXPSP2)
@@ -225,6 +275,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #  define TORRENT_USE_CRYPTOAPI_SHA_512 1
 # endif
 #endif
+
+#endif // !defined TORRENT_USE_LIBCRYPTO && !defined TORRENT_USE_LIBGCRYPT
 
 #endif
 // ==== WINDOWS ===
@@ -238,10 +290,27 @@ POSSIBILITY OF SUCH DAMAGE.
 #define NOMINMAX
 #endif
 
+#ifndef TORRENT_HAVE_MAP_VIEW_OF_FILE
+#define TORRENT_HAVE_MAP_VIEW_OF_FILE 1
+#endif
+
 # if !defined TORRENT_USE_LIBCRYPTO && !defined TORRENT_USE_LIBGCRYPT
+
+#ifdef NTDDI_VERSION
+# if (NTDDI_VERSION >= NTDDI_VISTA)
+#  define TORRENT_USE_CNG 1
+# endif
+#else // NTDDI_VERSION not defined so use simple _WIN32_WINNT check
+# if _WIN32_WINNT >= 0x0600
+#  define TORRENT_USE_CNG 1
+# endif
+#endif
+
+# if !defined TORRENT_USE_CNG
 // unless some other crypto library has been specified, default to the native
 // windows CryptoAPI
 #define TORRENT_USE_CRYPTOAPI 1
+#define TORRENT_USE_DEV_RANDOM 0
 
 #ifdef NTDDI_VERSION
 # if (NTDDI_VERSION > NTDDI_WINXPSP2)
@@ -253,21 +322,15 @@ POSSIBILITY OF SUCH DAMAGE.
 # endif
 #endif
 
+#endif // !defined TORRENT_USE_LIBCRYPTO && !defined TORRENT_USE_LIBGCRYPT
+
 #endif
 
 #define TORRENT_USE_GETADAPTERSADDRESSES 1
 #define TORRENT_HAS_SALEN 0
-// windows has its own functions to convert
-#ifndef TORRENT_USE_ICONV
-# define TORRENT_USE_ICONV 0
-# define TORRENT_USE_LOCALE 1
-#endif
 #define TORRENT_USE_RLIMIT 0
 #define TORRENT_HAS_FALLOCATE 0
 #define TORRENT_USE_UNC_PATHS 1
-// these are emulated on windows
-#define TORRENT_USE_PREADV 1
-#define TORRENT_USE_PWRITEV 1
 
 // ==== WINRT ===
 #if defined(WINAPI_FAMILY_PARTITION)
@@ -282,17 +345,21 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_SOLARIS
 #define TORRENT_USE_IFCONF 1
 #define TORRENT_HAS_SALEN 0
+#ifndef TORRENT_HAVE_MMAP
 #define TORRENT_HAVE_MMAP 1
+#endif
+#define TORRENT_USE_MADVISE 1
 #define TORRENT_HAS_SYMLINK 1
+#define TORRENT_USE_GETRANDOM 1
 
 // ==== BEOS ===
 #elif defined __BEOS__ || defined __HAIKU__
 #define TORRENT_BEOS
 #include <storage/StorageDefs.h> // B_PATH_NAME_LENGTH
 #define TORRENT_HAS_FALLOCATE 0
-#ifndef TORRENT_USE_ICONV
-#define TORRENT_USE_ICONV 0
-#endif
+#define TORRENT_NATIVE_UTF8 1
+#define TORRENT_USE_IFCONF 1
+#define TORRENT_USE_GRTTABLE 1
 
 // ==== GNU/Hurd ===
 #elif defined __GNU__
@@ -300,6 +367,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_USE_IFADDRS 1
 #define TORRENT_USE_IFCONF 1
 #define TORRENT_HAS_SYMLINK 1
+#define TORRENT_USE_GETRANDOM 1
 
 // ==== eCS(OS/2) ===
 #elif defined __OS2__
@@ -307,8 +375,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_HAS_FALLOCATE 0
 #define TORRENT_USE_IFCONF 1
 #define TORRENT_USE_SYSCTL 1
-#define TORRENT_USE_WRITEV 0
-#define TORRENT_USE_READV 0
 
 #else
 
@@ -331,11 +397,6 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #ifndef TORRENT_BROKEN_RANDOM_DEVICE
 #define TORRENT_BROKEN_RANDOM_DEVICE 0
-#endif
-
-// libiconv presence detection is not implemented yet
-#ifndef TORRENT_USE_ICONV
-#define TORRENT_USE_ICONV 1
 #endif
 
 #ifndef TORRENT_HAS_SALEN
@@ -362,16 +423,24 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_USE_GETIPFORWARDTABLE 0
 #endif
 
-#ifndef TORRENT_USE_LOCALE
-#define TORRENT_USE_LOCALE 0
-#endif
-
 #if defined BOOST_NO_STD_WSTRING
 #error your C++ standard library appears to be missing std::wstring. This type is required on windows
 #endif
 
 #ifndef TORRENT_HAS_FALLOCATE
 #define TORRENT_HAS_FALLOCATE 1
+#endif
+
+#ifndef TORRENT_HAS_FADVISE
+#define TORRENT_HAS_FADVISE 1
+#endif
+
+#ifndef TORRENT_HAS_FSEEKO
+#define TORRENT_HAS_FSEEKO 1
+#endif
+
+#ifndef TORRENT_HAS_FTELLO
+#define TORRENT_HAS_FTELLO 1
 #endif
 
 #ifndef TORRENT_USE_COMMONCRYPTO
@@ -394,13 +463,30 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_USE_CRYPTOAPI_SHA_512 0
 #endif
 
+#ifndef TORRENT_USE_CNG
+#define TORRENT_USE_CNG 0
+#endif
+
 #ifndef TORRENT_USE_DEV_RANDOM
-#define TORRENT_USE_DEV_RANDOM 0
+#define TORRENT_USE_DEV_RANDOM 1
 #endif
 
 #ifndef TORRENT_HAVE_MMAP
 #define TORRENT_HAVE_MMAP 0
 #endif
+
+#ifndef TORRENT_HAVE_MAP_VIEW_OF_FILE
+#define TORRENT_HAVE_MAP_VIEW_OF_FILE 0
+#endif
+
+#ifndef TORRENT_USE_MADVISE
+#define TORRENT_USE_MADVISE 0
+#endif
+
+#ifndef TORRENT_USE_SYNC_FILE_RANGE
+#define TORRENT_USE_SYNC_FILE_RANGE 0
+#endif
+
 
 #ifndef TORRENT_COMPLETE_TYPES_REQUIRED
 #define TORRENT_COMPLETE_TYPES_REQUIRED 0
@@ -422,16 +508,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_USE_IFADDRS 0
 #endif
 
-// if preadv() exists, we assume pwritev() does as well
-#ifndef TORRENT_USE_PREADV
-#define TORRENT_USE_PREADV 0
-#endif
-
-// if pread() exists, we assume pwrite() does as well
-#ifndef TORRENT_USE_PREAD
-#define TORRENT_USE_PREAD 1
-#endif
-
 #ifndef TORRENT_NO_FPU
 #define TORRENT_NO_FPU 0
 #endif
@@ -448,34 +524,32 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_USE_I2P 1
 #endif
 
-#ifndef TORRENT_AUTO_RETURN_TYPES
-#define TORRENT_AUTO_RETURN_TYPES 0
-#endif
-
-#if !defined(TORRENT_READ_HANDLER_MAX_SIZE)
-# if defined _GLIBCXX_DEBUG || !defined NDEBUG
-// internal
-constexpr std::size_t TORRENT_READ_HANDLER_MAX_SIZE = 432;
-# else
-// internal
-// if this is not divisible by 8, we're wasting space
-constexpr std::size_t TORRENT_READ_HANDLER_MAX_SIZE = 342;
-# endif
-#endif
-
-#if !defined(TORRENT_WRITE_HANDLER_MAX_SIZE)
-# if defined _GLIBCXX_DEBUG || !defined NDEBUG
-// internal
-constexpr std::size_t TORRENT_WRITE_HANDLER_MAX_SIZE = 432;
-# else
-// internal
-// if this is not divisible by 8, we're wasting space
-constexpr std::size_t TORRENT_WRITE_HANDLER_MAX_SIZE = 342;
-# endif
-#endif
-
 #ifndef TORRENT_HAS_SYMLINK
 #define TORRENT_HAS_SYMLINK 0
+#endif
+
+#ifndef TORRENT_USE_IFCONF
+#define TORRENT_USE_IFCONF 0
+#endif
+
+#ifndef TORRENT_USE_GETRANDOM
+#define TORRENT_USE_GETRANDOM 0
+#endif
+
+#ifndef TORRENT_NATIVE_UTF8
+#define TORRENT_NATIVE_UTF8 0
+#endif
+
+#ifndef TORRENT_HAS_PTHREAD_SET_NAME
+#define TORRENT_HAS_PTHREAD_SET_NAME 0
+#endif
+
+#ifndef TORRENT_HAS_COPY_FILE_RANGE
+#define TORRENT_HAS_COPY_FILE_RANGE 0
+#endif
+
+#ifndef TORRENT_HAS_COPYFILE
+#define TORRENT_HAS_COPYFILE 0
 #endif
 
 // debug builds have asserts enabled by default, release
@@ -569,6 +643,18 @@ constexpr std::size_t TORRENT_WRITE_HANDLER_MAX_SIZE = 342;
 #	define TORRENT_HAS_ARM_CRC32 0
 #endif
 #endif // TORRENT_HAS_ARM_CRC32
+
+#if defined TORRENT_USE_OPENSSL || defined TORRENT_USE_GNUTLS
+#define TORRENT_USE_SSL 1
+#else
+#define TORRENT_USE_SSL 0
+#endif
+
+#if defined TORRENT_SSL_PEERS && !TORRENT_USE_SSL
+#error compiling with TORRENT_SSL_PEERS requires TORRENT_USE_OPENSSL or TORRENT_USE_GNUTLS
+#endif
+
+#include "libtorrent/aux_/export.hpp"
 
 namespace libtorrent {}
 

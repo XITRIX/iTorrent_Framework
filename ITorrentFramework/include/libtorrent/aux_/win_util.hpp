@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2016-2018, Arvid Norberg
+Copyright (c) 2016, Andrei Kurushin
+Copyright (c) 2017, 2019-2020, Arvid Norberg
+Copyright (c) 2020, Tiger Wang
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,16 +39,38 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent { namespace aux {
 
+#ifdef TORRENT_WINRT
+	using LoadLibraryASignature = HMODULE WINAPI(_In_ LPCSTR lpLibFileName);
+#endif
+
 	template <typename Library>
 	HMODULE get_library_handle()
 	{
 		static bool handle_checked = false;
-		static HMODULE handle = 0;
+		static HMODULE handle = nullptr;
 
 		if (!handle_checked)
 		{
-			handle = LoadLibraryA(Library::library_name);
 			handle_checked = true;
+
+#ifdef TORRENT_WINRT
+			MEMORY_BASIC_INFORMATION Information;
+
+			if (::VirtualQuery(&VirtualQuery, &Information, sizeof(Information)) == 0)
+			{
+				return nullptr;
+			}
+
+			const auto SyscallBegin = static_cast<HMODULE>(Information.AllocationBase);
+			const auto LoadLibraryA = reinterpret_cast<LoadLibraryASignature *>(::GetProcAddress(SyscallBegin, "LoadLibraryA"));
+
+			if (LoadLibraryA == nullptr)
+			{
+				return nullptr;
+			}
+#endif
+
+			handle = LoadLibraryA(Library::library_name);
 		}
 		return handle;
 	}

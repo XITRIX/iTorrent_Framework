@@ -13,20 +13,24 @@
 #include <boost/gil/image.hpp>
 #include <boost/gil/point.hpp>
 #include <boost/gil/virtual_locator.hpp>
-
-#include <boost/mpl/if.hpp>
-#include <boost/type_traits/is_integral.hpp>
+#include <boost/gil/detail/is_channel_integral.hpp>
+#include <boost/gil/detail/mp11.hpp>
 
 #include <cstddef>
 #include <memory>
 
-namespace boost{ namespace gil {
+namespace boost { namespace gil {
 
 template< typename Locator >
-struct get_pixel_type_locator : mpl::if_< typename is_bit_aligned< typename Locator::value_type >::type
-                                        , typename Locator::reference
-                                        , typename Locator::value_type
-                                        > {};
+struct get_pixel_type_locator
+{
+    using type = mp11::mp_if
+        <
+            typename is_bit_aligned<typename Locator::value_type>::type,
+            typename Locator::reference,
+            typename Locator::value_type
+        >;
+};
 
 // used for virtual locator
 template< typename IndicesLoc
@@ -96,7 +100,7 @@ struct indexed_image_deref_fn : indexed_image_deref_fn_base< IndicesLoc
             )
     {}
 
-    typename base_t::result_type operator()( const point_t& p ) const
+    typename base_t::result_type operator()( point_t const& p ) const
     {
         return * this->_palette_loc.xy_at( at_c<0>( *this->_indices_loc.xy_at( p )), 0 );
     }
@@ -110,7 +114,7 @@ struct indexed_image_deref_fn
     PaletteLoc,
     typename std::enable_if
     <
-        std::is_integral<typename IndicesLoc::value_type>::value
+        detail::is_channel_integral<typename IndicesLoc::value_type>::value
     >::type
 > : indexed_image_deref_fn_base<IndicesLoc, PaletteLoc>
 {
@@ -162,7 +166,7 @@ public:
     , _num_colors( 0 )
     {}
 
-    indexed_image_view( const point_t& dimensions
+    indexed_image_view( point_t const& dimensions
                       , std::size_t    num_colors
                       , const Locator& locator
                       )
@@ -276,7 +280,7 @@ public:
         init( point_t( width, height ), num_colors );
     }
 
-    indexed_image( const point_t&    dimensions
+    indexed_image( point_t const&    dimensions
                  , const std::size_t num_colors = 1
                  , const std::size_t indices_alignment = 0
                  , const std::size_t palette_alignment = 0
@@ -319,7 +323,7 @@ public:
 
 private:
 
-    void init( const point_t&    dimensions
+    void init( point_t const&    dimensions
              , const std::size_t num_colors
              )
     {

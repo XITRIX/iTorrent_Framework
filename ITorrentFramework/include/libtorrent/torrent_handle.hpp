@@ -1,6 +1,14 @@
 /*
 
-Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2019, Amir Abrams
+Copyright (c) 2003-2022, Arvid Norberg
+Copyright (c) 2004, Magnus Jonsson
+Copyright (c) 2015, 2018, Steven Siloti
+Copyright (c) 2016-2017, Alden Torres
+Copyright (c) 2017, 2020, AllSeeingEyeTolledEweSew
+Copyright (c) 2017, Falcosc
+Copyright (c) 2019, Andrei Kurushin
+Copyright (c) 2019, ghbplayer
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -48,7 +56,6 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 
 #include "libtorrent/fwd.hpp"
-#include "libtorrent/address.hpp"
 #include "libtorrent/socket.hpp" // tcp::endpoint
 #include "libtorrent/span.hpp"
 #include "libtorrent/sha1_hash.hpp"
@@ -56,10 +63,12 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/aux_/vector.hpp"
 #include "libtorrent/storage_defs.hpp"
 #include "libtorrent/torrent_flags.hpp"
+#include "libtorrent/torrent_info.hpp"
 #include "libtorrent/peer_info.hpp" // for peer_source_flags_t
 #include "libtorrent/download_priority.hpp"
 #include "libtorrent/pex_flags.hpp"
-#include "libtorrent/broadcast_socket.hpp" // for is_v6
+#include "libtorrent/client_data.hpp"
+#include "libtorrent/address.hpp" // for address_v4 and address_v6
 
 namespace libtorrent {
 namespace aux {
@@ -69,7 +78,8 @@ namespace aux {
 #if TORRENT_ABI_VERSION == 1
 	struct peer_list_entry;
 #endif
-	class torrent;
+	struct torrent;
+	struct client_data_t;
 
 #ifndef BOOST_NO_EXCEPTIONS
 	[[noreturn]] void throw_invalid_handle();
@@ -82,6 +92,7 @@ namespace aux {
 	using resume_data_flags_t = flags::bitfield_flag<std::uint8_t, struct resume_data_flags_tag>;
 	using reannounce_flags_t = flags::bitfield_flag<std::uint8_t, struct reannounce_flags_tag>;
 	using queue_position_t = aux::strong_typedef<int, struct queue_position_tag>;
+	using file_progress_flags_t = flags::bitfield_flag<std::uint8_t, struct file_progress_flags_tag>;
 
 	// holds the state of a block in a piece. Who we requested
 	// it from and how far along we are at downloading it.
@@ -113,22 +124,8 @@ namespace aux {
 	public:
 
 		// The peer is the ip address of the peer this block was downloaded from.
-		void set_peer(tcp::endpoint const& ep)
-		{
-			is_v6_addr = is_v6(ep);
-			if (is_v6_addr)
-				addr.v6 = ep.address().to_v6().to_bytes();
-			else
-				addr.v4 = ep.address().to_v4().to_bytes();
-			port = ep.port();
-		}
-		tcp::endpoint peer() const
-		{
-			if (is_v6_addr)
-				return tcp::endpoint(address_v6(addr.v6), port);
-			else
-				return tcp::endpoint(address_v4(addr.v4), port);
-		}
+		void set_peer(tcp::endpoint const& ep);
+		tcp::endpoint peer() const;
 
 		// the number of bytes that have been received for this block
 		unsigned bytes_progress:15;
@@ -157,8 +154,8 @@ namespace aux {
 		partial_piece_info() = default;
 		partial_piece_info(partial_piece_info&&) noexcept = default;
 		partial_piece_info(partial_piece_info const&) = default;
-		partial_piece_info& operator=(partial_piece_info const&) = default;
-		partial_piece_info& operator=(partial_piece_info&&) noexcept = default;
+		partial_piece_info& operator=(partial_piece_info const&) & = default;
+		partial_piece_info& operator=(partial_piece_info&&) & noexcept = default;
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 #endif
 		// the index of the piece in question. ``blocks_in_piece`` is the number
@@ -185,7 +182,7 @@ namespace aux {
 		// .. warning:: This is a pointer that points to an array
 		//	that's owned by the session object. The next time
 		//	get_download_queue() is called, it will be invalidated.
-		block_info* blocks;
+		block_info const* blocks;
 
 #if TORRENT_ABI_VERSION == 1
 		// the speed classes. These may be used by the piece picker to
@@ -204,7 +201,7 @@ namespace aux {
 		// downloaded pieces down. Pieces set to ``none`` can be converted into
 		// any of ``fast``, ``medium`` or ``slow`` as soon as a peer want to
 		// download from it.
-		state_t TORRENT_DEPRECATED_MEMBER piece_state;
+		TORRENT_DEPRECATED state_t piece_state;
 #endif
 	};
 
@@ -241,7 +238,7 @@ namespace aux {
 	{
 		friend struct aux::session_impl;
 		friend struct session_handle;
-		friend class torrent;
+		friend struct torrent;
 		friend TORRENT_EXPORT std::size_t hash_value(torrent_handle const& th);
 
 		// constructs a torrent handle that does not refer to a torrent.
@@ -251,8 +248,8 @@ namespace aux {
 		// hidden
 		torrent_handle(torrent_handle const& t) = default;
 		torrent_handle(torrent_handle&& t) noexcept = default;
-		torrent_handle& operator=(torrent_handle const&) = default;
-		torrent_handle& operator=(torrent_handle&&) noexcept = default;
+		torrent_handle& operator=(torrent_handle const&) & = default;
+		torrent_handle& operator=(torrent_handle&&) & noexcept = default;
 
 
 #if TORRENT_ABI_VERSION == 1
@@ -264,14 +261,14 @@ namespace aux {
 #endif
 
 		// instruct libtorrent to overwrite any data that may already have been
-		// downloaded with the data of the new piece being added.
+		// downloaded with the data of the new piece being added. Using this
+		// flag when adding a piece that is actively being downloaded from other
+		// peers may have some unexpected consequences, as blocks currently
+		// being downloaded from peers may not be replaced.
 		static constexpr add_piece_flags_t overwrite_existing = 0_bit;
 
 		// This function will write ``data`` to the storage as piece ``piece``,
-		// as if it had been downloaded from a peer. ``data`` is expected to
-		// point to a buffer of as many bytes as the size of the specified piece.
-		// The data in the buffer is copied and passed on to the disk IO thread
-		// to be written at a later point.
+		// as if it had been downloaded from a peer.
 		//
 		// By default, data that's already been downloaded is not overwritten by
 		// this buffer. If you trust this data to be correct (and pass the piece
@@ -285,7 +282,20 @@ namespace aux {
 		//
 		// Adding pieces while the torrent is being checked (i.e. in
 		// torrent_status::checking_files state) is not supported.
+		//
+		// The overload taking a raw pointer to the data is a blocking call. It
+		// won't return until the libtorrent thread has copied the data into its
+		// disk write buffer. ``data`` is expected to point to a buffer of as
+		// many bytes as the size of the specified piece. See
+		// file_storage::piece_size().
+		//
+		// The data in the buffer is copied and passed on to the disk IO thread
+		// to be written at a later point.
+		//
+		// The overload taking a ``std::vector<char>`` is not blocking, it will
+		// send the buffer to the main thread and return immediately.
 		void add_piece(piece_index_t piece, char const* data, add_piece_flags_t flags = {}) const;
+		void add_piece(piece_index_t piece, std::vector<char> data, add_piece_flags_t flags = {}) const;
 
 		// This function starts an asynchronous read operation of the specified
 		// piece from this torrent. You must have completed the download of the
@@ -355,10 +365,11 @@ namespace aux {
 		// what to *include* are defined in this class.
 		torrent_status status(status_flags_t flags = status_flags_t::all()) const;
 
-		// ``get_download_queue()`` takes a non-const reference to a vector which
-		// it will fill with information about pieces that are partially
-		// downloaded or not downloaded at all but partially requested. See
-		// partial_piece_info for the fields in the returned vector.
+		// ``get_download_queue()`` returns a vector with information about pieces
+		// that are partially downloaded or not downloaded but partially
+		// requested. See partial_piece_info for the fields in the returned
+		// vector.
+		std::vector<partial_piece_info> get_download_queue() const;
 		void get_download_queue(std::vector<partial_piece_info>& queue) const;
 
 		// used to ask libtorrent to send an alert once the piece has been
@@ -429,22 +440,23 @@ namespace aux {
 		void file_status(std::vector<open_file_state>& status) const;
 #endif
 
-		// flags to be passed in file_progress().
-		enum file_progress_flags_t
-		{
-			// only calculate file progress at piece granularity. This makes
-			// the file_progress() call cheaper and also only takes bytes that
-			// have passed the hash check into account, so progress cannot
-			// regress in this mode.
-			piece_granularity = 1
-		};
+#if TORRENT_ABI_VERSION <= 2
+		using file_progress_flags_t = libtorrent::file_progress_flags_t;
+#endif
+		// only calculate file progress at piece granularity. This makes
+		// the file_progress() call cheaper and also only takes bytes that
+		// have passed the hash check into account, so progress cannot
+		// regress in this mode.
+		static constexpr file_progress_flags_t piece_granularity = 0_bit;
 
-		// This function fills in the supplied vector with the number of
-		// bytes downloaded of each file in this torrent. The progress values are
-		// ordered the same as the files in the torrent_info. This operation is
-		// not very cheap. Its complexity is *O(n + mj)*. Where *n* is the number
-		// of files, *m* is the number of downloading pieces and *j* is the
-		// number of blocks in a piece.
+		// This function fills in the supplied vector, or returns a vector, with
+		// the number of bytes downloaded of each file in this torrent. The
+		// progress values are ordered the same as the files in the
+		// torrent_info.
+		//
+		// This operation is not very cheap. Its complexity is *O(n + mj)*.
+		// Where *n* is the number of files, *m* is the number of currently
+		// downloading pieces and *j* is the number of blocks in a piece.
 		//
 		// The ``flags`` parameter can be used to specify the granularity of the
 		// file progress. If left at the default value of 0, the progress will be
@@ -454,7 +466,8 @@ namespace aux {
 		// fully downloaded and passed the hash check count. When specifying
 		// piece granularity, the operation is a lot cheaper, since libtorrent
 		// already keeps track of this internally and no calculation is required.
-		void file_progress(std::vector<std::int64_t>& progress, int flags = 0) const;
+		void file_progress(std::vector<std::int64_t>& progress, file_progress_flags_t flags = {}) const;
+		std::vector<std::int64_t> file_progress(file_progress_flags_t flags = {}) const;
 
 		// This function returns a vector with status about files
 		// that are open for this torrent. Any file that is not open
@@ -522,8 +535,8 @@ namespace aux {
 		// pointer. The function is expected to return a shared pointer to
 		// a torrent_plugin instance.
 		void add_extension(
-			std::function<std::shared_ptr<torrent_plugin>(torrent_handle const&, void*)> const& ext
-			, void* userdata = nullptr);
+			std::function<std::shared_ptr<torrent_plugin>(torrent_handle const&, client_data_t)> const& ext
+			, client_data_t userdata = client_data_t{});
 
 		// ``set_metadata`` expects the *info* section of metadata. i.e. The
 		// buffer passed in will be hashed and verified against the info-hash. If
@@ -542,12 +555,20 @@ namespace aux {
 
 		// Returns true if this handle refers to a valid torrent and false if it
 		// hasn't been initialized or if the torrent it refers to has been
-		// aborted. Note that a handle may become invalid after it has been added
-		// to the session. Usually this is because the storage for the torrent is
-		// somehow invalid or if the filenames are not allowed (and hence cannot
-		// be opened/created) on your filesystem. If such an error occurs, a
-		// file_error_alert is generated and all handles that refers to that
-		// torrent will become invalid.
+		// removed from the session AND destructed.
+		//
+		// To tell if the torrent_handle is in the session, use
+		// torrent_handle::in_session(). This will return true before
+		// session_handle::remove_torrent() is called, and false
+		// afterward.
+		//
+		// Clients should only use is_valid() to determine if the result of
+		// session::find_torrent() was successful.
+		//
+		// Unlike other member functions which return a value, is_valid()
+		// completes immediately, without blocking on a result from the
+		// network thread. Also unlike other functions, it never throws
+		// the system_error exception.
 		bool is_valid() const;
 
 		// will delay the disconnect of peers that we're still downloading
@@ -557,7 +578,9 @@ namespace aux {
 		// disconnected. This is a graceful shut down of the torrent in the sense
 		// that no downloaded bytes are wasted.
 		static constexpr pause_flags_t graceful_pause = 0_bit;
-		static constexpr pause_flags_t clear_disk_cache = 1_bit;
+
+		// hidden
+		TORRENT_DEPRECATED static constexpr pause_flags_t clear_disk_cache = 1_bit;
 
 		// ``pause()``, and ``resume()`` will disconnect all peers and reconnect
 		// all peers respectively. When a torrent is paused, it will however
@@ -566,8 +589,11 @@ namespace aux {
 		// file error (e.g. disk full) or something similar. See
 		// file_error_alert.
 		//
+		// For possible values of the ``flags`` parameter, see pause_flags_t.
+		//
 		// To know if a torrent is paused or not, call
-		// ``torrent_handle::status()`` and inspect ``torrent_status::paused``.
+		// ``torrent_handle::flags()`` and check for the
+		// ``torrent_status::paused`` flag.
 		//
 		// .. note::
 		// 	Torrents that are auto-managed may be automatically resumed again. It
@@ -635,53 +661,41 @@ namespace aux {
 		static constexpr resume_data_flags_t only_if_modified = 2_bit;
 
 		// ``save_resume_data()`` asks libtorrent to generate fast-resume data for
-		// this torrent.
+		// this torrent. The fast resume data (stored in an add_torrent_params
+		// object) can be used to resume a torrent in the next session without
+		// having to check all files for which pieces have been downloaded. It
+		// can also be used to save a .torrent file for a torrent_handle.
 		//
 		// This operation is asynchronous, ``save_resume_data`` will return
-		// immediately. The resume data is delivered when it's done through an
+		// immediately. The resume data is delivered when it's done through a
 		// save_resume_data_alert.
 		//
-		// The fast resume data will be empty in the following cases:
+		// The operation will fail, and post a save_resume_data_failed_alert
+		// instead, in the following cases:
 		//
-		//	1. The torrent handle is invalid.
-		//	2. The torrent hasn't received valid metadata and was started without
+		//	1. The torrent is in the process of being removed.
+		//	2. No torrent state has changed since the last saving of resume
+		//	   data, and the only_if_modified flag is set.
 		//	   metadata (see libtorrent's metadata-from-peers_ extension)
 		//
-		// Note that by the time you receive the fast resume data, it may already
-		// be invalid if the torrent is still downloading! The recommended
-		// practice is to first pause the session, then generate the fast resume
-		// data, and then close it down. Make sure to not remove_torrent() before
-		// you receive the save_resume_data_alert though. There's no need to
-		// pause when saving intermittent resume data.
+		// Note that some counters may be outdated by the time you receive the fast resume data
 		//
-		//.. warning::
-		//   If you pause every torrent individually instead of pausing the
-		//   session, every torrent will have its paused state saved in the
-		//   resume data!
+		// When saving resume data because of shutting down, make sure not to
+		// remove_torrent() before you receive the save_resume_data_alert.
+		// There's no need to pause the session or torrent when saving resume
+		// data.
+		//
+		// The paused state of a torrent is saved in the resume data, so pausing
+		// all torrents before saving resume data will all torrents be restored
+		// in a paused state.
 		//
 		//.. note::
 		//   It is typically a good idea to save resume data whenever a torrent
-		//   is completed or paused. In those cases you don't need to pause the
-		//   torrent or the session, since the torrent will do no more writing to
-		//   its files. If you save resume data for torrents when they are
+		//   is completed or paused. If you save resume data for torrents when they are
 		//   paused, you can accelerate the shutdown process by not saving resume
-		//   data again for paused torrents. Completed torrents should have their
+		//   data again for those torrents. Completed torrents should have their
 		//   resume data saved when they complete and on exit, since their
 		//   statistics might be updated.
-		//
-		//	In full allocation mode the resume data is never invalidated by
-		//	subsequent writes to the files, since pieces won't move around. This
-		//	means that you don't need to pause before writing resume data in full
-		//	or sparse mode. If you don't, however, any data written to disk after
-		//	you saved resume data and before the session closed is lost.
-		//
-		// It also means that if the resume data is out dated, libtorrent will
-		// not re-check the files, but assume that it is fairly recent. The
-		// assumption is that it's better to loose a little bit than to re-check
-		// the entire file.
-		//
-		// It is still a good idea to save resume data periodically during
-		// download as well as when closing down.
 		//
 		// Example code to pause and save resume data for all torrents and wait
 		// for the alerts:
@@ -690,22 +704,21 @@ namespace aux {
 		//
 		//	extern int outstanding_resume_data; // global counter of outstanding resume data
 		//	std::vector<torrent_handle> handles = ses.get_torrents();
-		//	ses.pause();
-		//	for (torrent_handle const& h : handles)
+		//	for (torrent_handle const& h : handles) try
 		//	{
-		//		if (!h.is_valid()) continue;
-		//		torrent_status s = h.status();
-		//		if (!s.has_metadata || !s.need_save_resume_data()) continue;
-		//
-		//		h.save_resume_data();
+		//		h.save_resume_data(torrent_handle::only_if_modified);
 		//		++outstanding_resume_data;
+		//	}
+		//	catch (lt::system_error const& e)
+		//	{
+		//		// the handle was invalid, ignore this one and move to the next
 		//	}
 		//
 		//	while (outstanding_resume_data > 0)
 		//	{
-		//		alert const* a = ses.wait_for_alert(seconds(10));
+		//		alert const* a = ses.wait_for_alert(seconds(30));
 		//
-		//		// if we don't get an alert within 10 seconds, abort
+		//		// if we don't get an alert within 30 seconds, abort
 		//		if (a == nullptr) break;
 		//
 		//		std::vector<alert*> alerts;
@@ -727,11 +740,8 @@ namespace aux {
 		//				continue;
 		//			}
 		//
-		//			torrent_handle h = rd->handle;
-		//			torrent_status st = h.status(torrent_handle::query_save_path
-		//				| torrent_handle::query_name);
-		//			std::ofstream out((st.save_path
-		//				+ "/" + st.name + ".fastresume").c_str()
+		//			std::ofstream out((rd->params.save_path
+		//				+ "/" + rd->params.name + ".fastresume").c_str()
 		//				, std::ios_base::binary);
 		//			std::vector<char> buf = write_resume_data_buf(rd->params);
 		//			out.write(buf.data(), buf.size());
@@ -829,17 +839,47 @@ namespace aux {
 			, std::string const& private_key
 			, std::string const& dh_params);
 
-		// Returns the storage implementation for this torrent. This depends on the
-		// storage constructor function that was passed to add_torrent.
-		storage_interface* get_storage_impl() const;
-
-		// Returns a pointer to the torrent_info object associated with this
-		// torrent. The torrent_info object may be a copy of the internal object.
-		// If the torrent doesn't have metadata, the pointer will not be
-		// initialized (i.e. a nullptr). The torrent may be in a state
-		// without metadata only if it was started without a .torrent file, e.g.
-		// by being added by magnet link
+		// torrent_file() returns a pointer to the torrent_info object
+		// associated with this torrent. The torrent_info object may be a copy
+		// of the internal object. If the torrent doesn't have metadata, the
+		// pointer will not be initialized (i.e. a nullptr). The torrent may be
+		// in a state without metadata only if it was started without a .torrent
+		// file, e.g. by being added by magnet link.
+		//
+		// Note that the torrent_info object returned here may be a different
+		// instance than the one added to the session, with different attributes
+		// like piece layers, dht nodes and trackers. A torrent_info object does
+		// not round-trip cleanly when added to a session.
+		//
+		// If you want to save a .torrent file from the torrent_handle, instead
+		// call save_resume_data() and write_torrent_file() the
+		// add_torrent_params object passed back in the alert.
+		//
+		// torrent_file_with_hashes() returns a *copy* of the internal
+		// torrent_info and piece layer hashes (if it's a v2 torrent). The piece
+		// layers will only be included if they are available. If this torrent
+		// was added from a .torrent file with piece layers or if it's seeding,
+		// the piece layers are available. This function is more expensive than
+		// torrent_file() since it needs to make copies of this information.
+		//
+		// The torrent_file_with_hashes() is here for backwards compatibility
+		// when constructing a create_torrent object from a torrent_info that's
+		// in a session. Prefer save_resume_data() + write_torrent_file().
+		//
+		// Note that a torrent added from a magnet link may not have the full
+		// merkle trees for all files, and hence not have the complete piece
+		// layers. In that state, you cannot create a .torrent file even from
+		// the torrent_info returned from torrent_file_with_hashes(). Once the
+		// torrent completes downloading all files, becoming a seed, you can
+		// make a .torrent file from it.
 		std::shared_ptr<const torrent_info> torrent_file() const;
+		std::shared_ptr<torrent_info> torrent_file_with_hashes() const;
+
+		// returns the piece layers for all files in the torrent. If this is a
+		// v1 torrent (and doesn't have any piece layers) it returns an empty
+		// vector. This is a blocking call that will synchronize with the
+		// libtorrent network thread.
+		std::vector<std::vector<sha256_hash>> piece_layers() const;
 
 #if TORRENT_ABI_VERSION == 1
 
@@ -894,9 +934,7 @@ namespace aux {
 		TORRENT_DEPRECATED
 		void set_ratio(float up_down_ratio) const;
 
-		// deprecated in 0.16. use status() instead, and inspect the
-		// torrent_status::flags field. Alternatively, call flags() directly on
-		// the torrent_handle
+		// deprecated in 0.16. use flags() instead
 		TORRENT_DEPRECATED
 		bool is_seed() const;
 		TORRENT_DEPRECATED
@@ -1017,11 +1055,16 @@ namespace aux {
 		// files in- and out of the part file), the internal accounting of file
 		// priorities happen asynchronously. i.e. setting file priorities and then
 		// immediately querying them may not yield the same priorities just set.
-		// However, the *piece* priorities are updated immediately.
+		// To synchronize with the priorities taking effect, wait for the
+		// file_prio_alert.
 		//
-		// when combining file- and piece priorities, the resume file will record
+		// When combining file- and piece priorities, the resume file will record
 		// both. When loading the resume data, the file priorities will be applied
 		// first, then the piece priorities.
+		//
+		// Moving data from a file into the part file is currently not
+		// supported. If a file has its priority set to 0 *after* it has already
+		// been created, it will not be moved into the partfile.
 		void file_priority(file_index_t index, download_priority_t priority) const;
 		download_priority_t file_priority(file_index_t index) const;
 		void prioritize_files(std::vector<download_priority_t> const& files) const;
@@ -1056,8 +1099,12 @@ namespace aux {
 		//
 		// ``force_dht_announce`` will announce the torrent to the DHT
 		// immediately.
-		void force_reannounce(int seconds = 0, int tracker_index = -1, reannounce_flags_t = {}) const;
+		//
+		// ``force_lsd_announce`` will announce the torrent on LSD
+		// immediately.
+		void force_reannounce(int seconds = 0, int idx = -1, reannounce_flags_t = {}) const;
 		void force_dht_announce() const;
+		void force_lsd_announce() const;
 
 #if TORRENT_ABI_VERSION == 1
 		// forces a reannounce in the specified amount of time.
@@ -1196,6 +1243,11 @@ namespace aux {
 		// torrent but are stored in the torrent's directory may be moved as
 		// well. This goes for files that have been renamed to absolute paths
 		// that still end up inside the save path.
+		//
+		// When copying files, sparse regions are not likely to be preserved.
+		// This makes it proportionally more expensive to move a large torrent
+		// when only few pieces have been downloaded, since the files are then
+		// allocated with zeros in the destination directory.
 		void move_storage(std::string const& save_path
 			, move_flags_t flags = move_flags_t::always_replace_files
 			) const;
@@ -1212,26 +1264,20 @@ namespace aux {
 		void rename_file(file_index_t index, std::string const& new_name) const;
 
 #if TORRENT_ABI_VERSION == 1
-		// all wstring APIs are deprecated since 0.16.11
-		// instead, use the wchar -> utf8 conversion functions
-		// and pass in utf8 strings
-#ifdef TORRENT_WINDOWS
-		TORRENT_DEPRECATED
-		void move_storage(std::wstring const& save_path, int flags = 0) const;
-		TORRENT_DEPRECATED
-		void rename_file(file_index_t index, std::wstring const& new_name) const;
-#endif // TORRENT_WINDOWS
-
 		// Enables or disabled super seeding/initial seeding for this torrent.
 		// The torrent needs to be a seed for this to take effect.
 		TORRENT_DEPRECATED
 		void super_seeding(bool on) const;
 #endif // TORRENT_ABI_VERSION
 
-		// ``info_hash()`` returns the info-hash of the torrent. If this handle
-		// is to a torrent that hasn't loaded yet (for instance by being added)
-		// by a URL, the returned value is undefined.
+		// returns the info-hash(es) of the torrent. If this handle is to a
+		// torrent that hasn't loaded yet (for instance by being added) by a
+		// URL, the returned value is undefined.
+		// The ``info_hash()`` returns the SHA-1 info-hash for v1 torrents and a
+		// truncated hash for v2 torrents. For the full v2 info-hash, use
+		// ``info_hashes()`` instead.
 		sha1_hash info_hash() const;
+		info_hash_t info_hashes() const;
 
 		// comparison operators. The order of the torrents is unspecified
 		// but stable.
@@ -1265,6 +1311,16 @@ namespace aux {
 		// client builds.
 		std::shared_ptr<torrent> native_handle() const;
 
+		// returns the userdata pointer as set in add_torrent_params
+		client_data_t userdata() const;
+
+		// Returns true if the torrent is in the session. It returns true before
+		// session::remove_torrent() is called, and false afterward.
+		//
+		// Note that this is a blocking function, unlike torrent_handle::is_valid()
+		// which returns immediately.
+		bool in_session() const;
+
 	private:
 
 		template<typename Fun, typename... Args>
@@ -1283,8 +1339,7 @@ namespace aux {
 	};
 }
 
-namespace std
-{
+namespace std {
 	template <>
 	struct hash<libtorrent::torrent_handle>
 	{

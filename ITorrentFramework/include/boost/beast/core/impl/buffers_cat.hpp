@@ -11,7 +11,6 @@
 #define BOOST_BEAST_IMPL_BUFFERS_CAT_HPP
 
 #include <boost/beast/core/detail/tuple.hpp>
-#include <boost/beast/core/detail/type_traits.hpp>
 #include <boost/beast/core/detail/variant.hpp>
 #include <boost/asio/buffer.hpp>
 #include <cstdint>
@@ -23,9 +22,37 @@
 namespace boost {
 namespace beast {
 
+template<class Buffer>
+class buffers_cat_view<Buffer>
+{
+    Buffer buffer_;
+public:
+    using value_type = buffers_type<Buffer>;
+
+    using const_iterator = buffers_iterator_type<Buffer>;
+
+    explicit
+    buffers_cat_view(Buffer const& buffer)
+        : buffer_(buffer)
+    {
+    }
+
+    const_iterator
+    begin() const
+    {
+        return net::buffer_sequence_begin(buffer_);
+    }
+
+    const_iterator
+    end() const
+    {
+        return net::buffer_sequence_end(buffer_);
+    }
+};
+
 #if defined(_MSC_VER) && ! defined(__clang__)
 # define BOOST_BEAST_UNREACHABLE() __assume(false)
-# define BOOST_BEAST_UNREACHABLE_RETURN(v) __assume(false)
+# define BOOST_BEAST_UNREACHABLE_RETURN(v) return v
 #else
 # define BOOST_BEAST_UNREACHABLE() __builtin_unreachable()
 # define BOOST_BEAST_UNREACHABLE_RETURN(v) \
@@ -73,8 +100,12 @@ struct buffers_cat_view_iterator_base
         net::mutable_buffer
         operator*() const
         {
+        #if 1
+            throw std::logic_error("");
+        #else
             BOOST_BEAST_LOGIC_ERROR_RETURN({},
                 "Dereferencing a one-past-the-end iterator");
+        #endif
         }
 
         operator bool() const noexcept
@@ -161,8 +192,12 @@ private:
         reference
         operator()(mp11::mp_size_t<0>)
         {
+        #if 1
+            throw std::logic_error("");
+        #else
             BOOST_BEAST_LOGIC_ERROR_RETURN({},
                 "Dereferencing a default-constructed iterator");
+        #endif
         }
 
         template<class I>

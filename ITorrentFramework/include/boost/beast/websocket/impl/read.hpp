@@ -48,7 +48,7 @@ template<class Handler, class MutableBufferSequence>
 class stream<NextLayer, deflateSupported>::read_some_op
     : public beast::async_base<
         Handler, beast::executor_type<stream>>
-    , public net::coroutine
+    , public asio::coroutine
 {
     boost::weak_ptr<impl_type> wp_;
     MutableBufferSequence bs_;
@@ -87,7 +87,7 @@ public:
         auto sp = wp_.lock();
         if(! sp)
         {
-            ec = net::error::operation_aborted;
+            BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
             bytes_written_ = 0;
             return this->complete(cont, ec, bytes_written_);
         }
@@ -102,17 +102,38 @@ public:
             {
             do_suspend:
                 BOOST_ASIO_CORO_YIELD
-                impl.op_r_rd.emplace(std::move(*this));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        "websocket::async_read_some"));
+
+                    this->set_allowed_cancellation(net::cancellation_type::all);
+                    impl.op_r_rd.emplace(std::move(*this), net::cancellation_type::all);
+                }
+                if (ec)
+                    return this->complete(cont, ec, bytes_written_);
+
+                this->set_allowed_cancellation(net::cancellation_type::terminal);
+
                 impl.rd_block.lock(this);
                 BOOST_ASIO_CORO_YIELD
-                net::post(std::move(*this));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        "websocket::async_read_some"));
+
+                    net::post(std::move(*this));
+                }
                 BOOST_ASSERT(impl.rd_block.is_locked(this));
 
-                // VFALCO Is this check correct here?
-                BOOST_ASSERT(! ec && impl.check_stop_now(ec));
+                BOOST_ASSERT(!ec);
                 if(impl.check_stop_now(ec))
                 {
-                    BOOST_ASSERT(ec == net::error::operation_aborted);
+                    // Issue 2264 - There is no guarantee that the next
+                    // error will be operation_aborted.
+                    // The error could be a result of the peer resetting the 
+                    // connection
+                    // BOOST_ASSERT(ec == net::error::operation_aborted);
                     goto upcall;
                 }
                 // VFALCO Should never get here
@@ -121,7 +142,7 @@ public:
                 // a `close_op` wrote a close frame
                 BOOST_ASSERT(impl.wr_close);
                 BOOST_ASSERT(impl.status_ != status::open);
-                ec = net::error::operation_aborted;
+                BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
                 goto upcall;
             }
             else
@@ -130,7 +151,7 @@ public:
                 if( impl.status_ == status::closed ||
                     impl.status_ == status::failed)
                 {
-                    ec = net::error::operation_aborted;
+                    BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
                     goto upcall;
                 }
             }
@@ -163,10 +184,16 @@ public:
                     }
                     BOOST_ASSERT(impl.rd_block.is_locked(this));
                     BOOST_ASIO_CORO_YIELD
-                    impl.stream().async_read_some(
-                        impl.rd_buf.prepare(read_size(
-                            impl.rd_buf, impl.rd_buf.max_size())),
-                                std::move(*this));
+                    {
+                        BOOST_ASIO_HANDLER_LOCATION((
+                            __FILE__, __LINE__,
+                            "websocket::async_read_some"));
+
+                        impl.stream().async_read_some(
+                            impl.rd_buf.prepare(read_size(
+                                impl.rd_buf, impl.rd_buf.max_size())),
+                                    std::move(*this));
+                    }
                     BOOST_ASSERT(impl.rd_block.is_locked(this));
                     impl.rd_buf.commit(bytes_transferred);
                     if(impl.check_stop_now(ec))
@@ -206,7 +233,13 @@ public:
                             if(! cont)
                             {
                                 BOOST_ASIO_CORO_YIELD
-                                net::post(std::move(*this));
+                                {
+                                    BOOST_ASIO_HANDLER_LOCATION((
+                                        __FILE__, __LINE__,
+                                        "websocket::async_read_some"));
+
+                                    net::post(std::move(*this));
+                                }
                                 BOOST_ASSERT(cont);
                                 // VFALCO call check_stop_now() here?
                             }
@@ -225,7 +258,7 @@ public:
                                 goto loop;
                             if(impl.ctrl_cb)
                                 impl.ctrl_cb(
-                                    frame_type::ping, payload);
+                                    frame_type::ping, to_string_view(payload));
                             impl.rd_fb.clear();
                             impl.template write_ping<
                                 flat_static_buffer_base>(impl.rd_fb,
@@ -241,10 +274,25 @@ public:
                         if(! impl.wr_block.try_lock(this))
                         {
                             BOOST_ASIO_CORO_YIELD
-                            impl.op_rd.emplace(std::move(*this));
+                            {
+                                BOOST_ASIO_HANDLER_LOCATION((
+                                    __FILE__, __LINE__,
+                                    "websocket::async_read_some"));
+
+                                impl.op_rd.emplace(std::move(*this));
+                            }
+                            if (ec)
+                                return this->complete(cont, ec, bytes_written_);
+
                             impl.wr_block.lock(this);
                             BOOST_ASIO_CORO_YIELD
-                            net::post(std::move(*this));
+                            {
+                                BOOST_ASIO_HANDLER_LOCATION((
+                                    __FILE__, __LINE__,
+                                    "websocket::async_read_some"));
+
+                                net::post(std::move(*this));
+                            }
                             BOOST_ASSERT(impl.wr_block.is_locked(this));
                             if(impl.check_stop_now(ec))
                                 goto upcall;
@@ -253,9 +301,15 @@ public:
                         // Send pong
                         BOOST_ASSERT(impl.wr_block.is_locked(this));
                         BOOST_ASIO_CORO_YIELD
-                        net::async_write(
-                            impl.stream(), impl.rd_fb.data(),
-                            beast::detail::bind_continuation(std::move(*this)));
+                        {
+                            BOOST_ASIO_HANDLER_LOCATION((
+                                __FILE__, __LINE__,
+                                "websocket::async_read_some"));
+
+                            net::async_write(
+                                impl.stream(), net::const_buffer(impl.rd_fb.data()),
+                                beast::detail::bind_continuation(std::move(*this)));
+                        }
                         BOOST_ASSERT(impl.wr_block.is_locked(this));
                         if(impl.check_stop_now(ec))
                             goto upcall;
@@ -276,7 +330,13 @@ public:
                             if(! cont)
                             {
                                 BOOST_ASIO_CORO_YIELD
-                                net::post(std::move(*this));
+                                {
+                                    BOOST_ASIO_HANDLER_LOCATION((
+                                        __FILE__, __LINE__,
+                                        "websocket::async_read_some"));
+
+                                    net::post(std::move(*this));
+                                }
                                 BOOST_ASSERT(cont);
                             }
                         }
@@ -289,7 +349,7 @@ public:
                         impl.rd_buf.consume(len);
                         // Ignore pong when closing
                         if(! impl.wr_close && impl.ctrl_cb)
-                            impl.ctrl_cb(frame_type::pong, payload);
+                            impl.ctrl_cb(frame_type::pong, to_string_view(payload));
                         goto loop;
                     }
 
@@ -301,7 +361,13 @@ public:
                             if(! cont)
                             {
                                 BOOST_ASIO_CORO_YIELD
-                                net::post(std::move(*this));
+                                {
+                                    BOOST_ASIO_HANDLER_LOCATION((
+                                        __FILE__, __LINE__,
+                                        "websocket::async_read_some"));
+
+                                    net::post(std::move(*this));
+                                }
                                 BOOST_ASSERT(cont);
                             }
                         }
@@ -323,7 +389,7 @@ public:
                         impl.rd_buf.consume(len);
                         if(impl.ctrl_cb)
                             impl.ctrl_cb(frame_type::close,
-                                impl.cr.reason);
+                                to_string_view(impl.cr.reason));
                         // See if we are already closing
                         if(impl.status_ == status::closing)
                         {
@@ -359,10 +425,16 @@ public:
                         // Fill the read buffer first, otherwise we
                         // get fewer bytes at the cost of one I/O.
                         BOOST_ASIO_CORO_YIELD
-                        impl.stream().async_read_some(
-                            impl.rd_buf.prepare(read_size(
-                                impl.rd_buf, impl.rd_buf.max_size())),
-                                    std::move(*this));
+                        {
+                            BOOST_ASIO_HANDLER_LOCATION((
+                                __FILE__, __LINE__,
+                                "websocket::async_read_some"));
+
+                            impl.stream().async_read_some(
+                                impl.rd_buf.prepare(read_size(
+                                    impl.rd_buf, impl.rd_buf.max_size())),
+                                        std::move(*this));
+                        }
                         impl.rd_buf.commit(bytes_transferred);
                         if(impl.check_stop_now(ec))
                             goto upcall;
@@ -405,8 +477,14 @@ public:
                         BOOST_ASSERT(buffer_bytes(buffers_prefix(
                             clamp(impl.rd_remain), cb_)) > 0);
                         BOOST_ASIO_CORO_YIELD
-                        impl.stream().async_read_some(buffers_prefix(
-                            clamp(impl.rd_remain), cb_), std::move(*this));
+                        {
+                            BOOST_ASIO_HANDLER_LOCATION((
+                                __FILE__, __LINE__,
+                                "websocket::async_read_some"));
+
+                            impl.stream().async_read_some(buffers_prefix(
+                                clamp(impl.rd_remain), cb_), std::move(*this));
+                        }
                         if(impl.check_stop_now(ec))
                             goto upcall;
                         impl.reset_idle();
@@ -432,7 +510,9 @@ public:
                         impl.rd_size += bytes_transferred;
                     }
                 }
-                impl.rd_done = impl.rd_remain == 0 && impl.rd_fh.fin;
+                BOOST_ASSERT( ! impl.rd_done );
+                if( impl.rd_remain == 0 && impl.rd_fh.fin )
+                    impl.rd_done = true;
             }
             else
             {
@@ -447,10 +527,16 @@ public:
                     {
                         // read new
                         BOOST_ASIO_CORO_YIELD
-                        impl.stream().async_read_some(
-                            impl.rd_buf.prepare(read_size(
-                                impl.rd_buf, impl.rd_buf.max_size())),
-                                    std::move(*this));
+                        {
+                            BOOST_ASIO_HANDLER_LOCATION((
+                                __FILE__, __LINE__,
+                                "websocket::async_read_some"));
+
+                            impl.stream().async_read_some(
+                                impl.rd_buf.prepare(read_size(
+                                    impl.rd_buf, impl.rd_buf.max_size())),
+                                        std::move(*this));
+                        }
                         if(impl.check_stop_now(ec))
                             goto upcall;
                         impl.reset_idle();
@@ -469,6 +555,8 @@ public:
                         zs.avail_out = out.size();
                         BOOST_ASSERT(zs.avail_out > 0);
                     }
+                    // boolean to track the end of the message.
+                    bool fin = false;
                     if(impl.rd_remain > 0)
                     {
                         if(impl.rd_buf.size() > 0)
@@ -488,22 +576,11 @@ public:
                     else if(impl.rd_fh.fin)
                     {
                         // append the empty block codes
-                        std::uint8_t constexpr
+                        static std::uint8_t constexpr
                             empty_block[4] = { 0x00, 0x00, 0xff, 0xff };
                         zs.next_in = empty_block;
                         zs.avail_in = sizeof(empty_block);
-                        impl.inflate(zs, zlib::Flush::sync, ec);
-                        if(! ec)
-                        {
-                            // https://github.com/madler/zlib/issues/280
-                            if(zs.total_out > 0)
-                                ec = error::partial_deflate_block;
-                        }
-                        if(impl.check_stop_now(ec))
-                            goto upcall;
-                        impl.do_context_takeover_read(impl.role);
-                        impl.rd_done = true;
-                        break;
+                        fin = true;
                     }
                     else
                     {
@@ -512,6 +589,11 @@ public:
                     impl.inflate(zs, zlib::Flush::sync, ec);
                     if(impl.check_stop_now(ec))
                         goto upcall;
+                    if(fin && zs.total_out == 0) {
+                        impl.do_context_takeover_read(impl.role);
+                        impl.rd_done = true;
+                        break;
+                    }
                     if(impl.rd_msg_max && beast::detail::sum_exceeds(
                         impl.rd_size, zs.total_out, impl.rd_msg_max))
                     {
@@ -522,8 +604,10 @@ public:
                     }
                     cb_.consume(zs.total_out);
                     impl.rd_size += zs.total_out;
-                    impl.rd_remain -= zs.total_in;
-                    impl.rd_buf.consume(zs.total_in);
+                    if (! fin) {
+                        impl.rd_remain -= zs.total_in;
+                        impl.rd_buf.consume(zs.total_in);
+                    }
                     bytes_written_ += zs.total_out;
                 }
                 if(impl.rd_op == detail::opcode::text)
@@ -547,10 +631,25 @@ public:
             if(! impl.wr_block.try_lock(this))
             {
                 BOOST_ASIO_CORO_YIELD
-                impl.op_rd.emplace(std::move(*this));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        "websocket::async_read_some"));
+
+                    impl.op_rd.emplace(std::move(*this));
+                }
+                if (ec)
+                    return this->complete(cont, ec, bytes_written_);
+
                 impl.wr_block.lock(this);
                 BOOST_ASIO_CORO_YIELD
-                net::post(std::move(*this));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        "websocket::async_read_some"));
+
+                    net::post(std::move(*this));
+                }
                 BOOST_ASSERT(impl.wr_block.is_locked(this));
                 if(impl.check_stop_now(ec))
                     goto upcall;
@@ -571,8 +670,14 @@ public:
                 // Send close frame
                 BOOST_ASSERT(impl.wr_block.is_locked(this));
                 BOOST_ASIO_CORO_YIELD
-                net::async_write(impl.stream(), impl.rd_fb.data(),
-                    beast::detail::bind_continuation(std::move(*this)));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        "websocket::async_read_some"));
+
+                    net::async_write(impl.stream(), net::const_buffer(impl.rd_fb.data()),
+                        beast::detail::bind_continuation(std::move(*this)));
+                }
                 BOOST_ASSERT(impl.wr_block.is_locked(this));
                 if(impl.check_stop_now(ec))
                     goto upcall;
@@ -582,8 +687,14 @@ public:
             using beast::websocket::async_teardown;
             BOOST_ASSERT(impl.wr_block.is_locked(this));
             BOOST_ASIO_CORO_YIELD
-            async_teardown(impl.role, impl.stream(),
-                beast::detail::bind_continuation(std::move(*this)));
+            {
+                BOOST_ASIO_HANDLER_LOCATION((
+                    __FILE__, __LINE__,
+                    "websocket::async_read_some"));
+
+                async_teardown(impl.role, impl.stream(),
+                    beast::detail::bind_continuation(std::move(*this)));
+            }
             BOOST_ASSERT(impl.wr_block.is_locked(this));
             if(ec == net::error::eof)
             {
@@ -592,7 +703,9 @@ public:
                 ec = {};
             }
             if(! ec)
-                ec = result_;
+            {
+                BOOST_BEAST_ASSIGN_EC(ec, result_);
+            }
             if(ec && ec != error::closed)
                 impl.change_status(status::failed);
             else
@@ -619,7 +732,7 @@ template<class Handler,  class DynamicBuffer>
 class stream<NextLayer, deflateSupported>::read_op
     : public beast::async_base<
         Handler, beast::executor_type<stream>>
-    , public net::coroutine
+    , public asio::coroutine
 {
     boost::weak_ptr<impl_type> wp_;
     DynamicBuffer& b_;
@@ -657,28 +770,34 @@ public:
         auto sp = wp_.lock();
         if(! sp)
         {
-            ec = net::error::operation_aborted;
+            BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
             bytes_written_ = 0;
             return this->complete(cont, ec, bytes_written_);
         }
         auto& impl = *sp;
         using mutable_buffers_type = typename
             DynamicBuffer::mutable_buffers_type;
-        boost::optional<mutable_buffers_type> mb;
         BOOST_ASIO_CORO_REENTER(*this)
         {
             do
             {
-                mb = beast::detail::dynamic_buffer_prepare(b_,
-                    clamp(impl.read_size_hint_db(b_), limit_),
-                        ec, error::buffer_overflow);
-                if(impl.check_stop_now(ec))
-                    goto upcall;
-
                 // VFALCO TODO use boost::beast::bind_continuation
                 BOOST_ASIO_CORO_YIELD
-                read_some_op<read_op, mutable_buffers_type>(
-                    std::move(*this), sp, *mb);
+                {
+                    auto mb = beast::detail::dynamic_buffer_prepare(b_,
+                        clamp(impl.read_size_hint_db(b_), limit_),
+                            ec, error::buffer_overflow);
+                    if(impl.check_stop_now(ec))
+                        goto upcall;
+
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        "websocket::async_read"));
+
+                    read_some_op<read_op, mutable_buffers_type>(
+                        std::move(*this), sp, *mb);
+                }
+
                 b_.commit(bytes_transferred);
                 bytes_written_ += bytes_transferred;
                 if(ec)
@@ -801,7 +920,7 @@ read(DynamicBuffer& buffer, error_code& ec)
 }
 
 template<class NextLayer, bool deflateSupported>
-template<class DynamicBuffer, class ReadHandler>
+template<class DynamicBuffer, BOOST_BEAST_ASYNC_TPARAM2 ReadHandler>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 stream<NextLayer, deflateSupported>::
 async_read(DynamicBuffer& buffer, ReadHandler&& handler)
@@ -875,7 +994,7 @@ read_some(
 }
 
 template<class NextLayer, bool deflateSupported>
-template<class DynamicBuffer, class ReadHandler>
+template<class DynamicBuffer, BOOST_BEAST_ASYNC_TPARAM2 ReadHandler>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 stream<NextLayer, deflateSupported>::
 async_read_some(
@@ -1002,7 +1121,7 @@ loop:
                     goto loop;
                 }
                 if(impl.ctrl_cb)
-                    impl.ctrl_cb(frame_type::ping, payload);
+                    impl.ctrl_cb(frame_type::ping, to_string_view(payload));
                 detail::frame_buffer fb;
                 impl.template write_ping<flat_static_buffer_base>(fb,
                     detail::opcode::pong, payload);
@@ -1018,7 +1137,7 @@ loop:
                 detail::read_ping(payload, b);
                 impl.rd_buf.consume(len);
                 if(impl.ctrl_cb)
-                    impl.ctrl_cb(frame_type::pong, payload);
+                    impl.ctrl_cb(frame_type::pong, to_string_view(payload));
                 goto loop;
             }
             // Handle close frame
@@ -1038,7 +1157,7 @@ loop:
                 impl.cr = cr;
                 impl.rd_buf.consume(len);
                 if(impl.ctrl_cb)
-                    impl.ctrl_cb(frame_type::close, impl.cr.reason);
+                    impl.ctrl_cb(frame_type::close, to_string_view(impl.cr.reason));
                 BOOST_ASSERT(! impl.wr_close);
                 // _Start the WebSocket Closing Handshake_
                 do_fail(
@@ -1141,7 +1260,9 @@ loop:
                 impl.rd_size += bytes_transferred;
             }
         }
-        impl.rd_done = impl.rd_remain == 0 && impl.rd_fh.fin;
+        BOOST_ASSERT( ! impl.rd_done );
+        if( impl.rd_remain == 0 && impl.rd_fh.fin )
+            impl.rd_done = true;
     }
     else
     {
@@ -1160,6 +1281,8 @@ loop:
                 zs.avail_out = out.size();
                 BOOST_ASSERT(zs.avail_out > 0);
             }
+            // boolean to track the end of the message.
+            bool fin = false;
             if(impl.rd_remain > 0)
             {
                 if(impl.rd_buf.size() > 0)
@@ -1203,22 +1326,10 @@ loop:
             {
                 // append the empty block codes
                 static std::uint8_t constexpr
-                    empty_block[4] = {
-                        0x00, 0x00, 0xff, 0xff };
+                    empty_block[4] = { 0x00, 0x00, 0xff, 0xff };
                 zs.next_in = empty_block;
                 zs.avail_in = sizeof(empty_block);
-                impl.inflate(zs, zlib::Flush::sync, ec);
-                if(! ec)
-                {
-                    // https://github.com/madler/zlib/issues/280
-                    if(zs.total_out > 0)
-                        ec = error::partial_deflate_block;
-                }
-                if(impl.check_stop_now(ec))
-                    return bytes_written;
-                impl.do_context_takeover_read(impl.role);
-                impl.rd_done = true;
-                break;
+                fin = true;
             }
             else
             {
@@ -1227,6 +1338,11 @@ loop:
             impl.inflate(zs, zlib::Flush::sync, ec);
             if(impl.check_stop_now(ec))
                 return bytes_written;
+            if (fin && zs.total_out == 0) {
+                impl.do_context_takeover_read(impl.role);
+                impl.rd_done = true;
+                break;
+            }
             if(impl.rd_msg_max && beast::detail::sum_exceeds(
                 impl.rd_size, zs.total_out, impl.rd_msg_max))
             {
@@ -1236,8 +1352,10 @@ loop:
             }
             cb.consume(zs.total_out);
             impl.rd_size += zs.total_out;
-            impl.rd_remain -= zs.total_in;
-            impl.rd_buf.consume(zs.total_in);
+            if (! fin) {
+                impl.rd_remain -= zs.total_in;
+                impl.rd_buf.consume(zs.total_in);
+            }
             bytes_written += zs.total_out;
         }
         if(impl.rd_op == detail::opcode::text)
@@ -1258,7 +1376,7 @@ loop:
 }
 
 template<class NextLayer, bool deflateSupported>
-template<class MutableBufferSequence, class ReadHandler>
+template<class MutableBufferSequence, BOOST_BEAST_ASYNC_TPARAM2 ReadHandler>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 stream<NextLayer, deflateSupported>::
 async_read_some(

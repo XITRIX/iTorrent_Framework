@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2007-2018, Un Shyam & Arvid Norberg
+Copyright (c) 2007, Un Shyam
+Copyright (c) 2007-2009, 2011-2012, 2014-2019, Arvid Norberg
+Copyright (c) 2016-2017, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,12 +43,11 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <boost/multiprecision/cpp_int.hpp>
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 
-#include "libtorrent/receive_buffer.hpp"
+#include "libtorrent/aux_/receive_buffer.hpp"
 #include "libtorrent/sha1_hash.hpp"
 #include "libtorrent/extensions.hpp"
 #include "libtorrent/assert.hpp"
 #include "libtorrent/span.hpp"
-#include "libtorrent/buffer.hpp"
 #include "libtorrent/aux_/array.hpp"
 
 #include <list>
@@ -73,7 +74,6 @@ namespace libtorrent {
 	{
 	public:
 		dh_key_exchange();
-		bool good() const { return true; }
 
 		// Get local public key
 		key_t const& get_local_key() const { return m_dh_local_key; }
@@ -100,14 +100,14 @@ namespace libtorrent {
 		std::tuple<int, span<span<char const>>>
 		encrypt(span<span<char>> iovec);
 
-		int decrypt(crypto_receive_buffer& recv_buffer
+		int decrypt(aux::crypto_receive_buffer& recv_buffer
 			, std::size_t& bytes_transferred);
 
 		bool switch_send_crypto(std::shared_ptr<crypto_plugin> crypto
 			, int pending_encryption);
 
 		void switch_recv_crypto(std::shared_ptr<crypto_plugin> crypto
-			, crypto_receive_buffer& recv_buffer);
+			, aux::crypto_receive_buffer& recv_buffer);
 
 		bool is_send_plaintext() const
 		{

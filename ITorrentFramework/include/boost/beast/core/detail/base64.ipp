@@ -154,7 +154,7 @@ decode(void* dest, char const* src, std::size_t len)
 {
     char* out = static_cast<char*>(dest);
     auto in = reinterpret_cast<unsigned char const*>(src);
-    unsigned char c3[3], c4[4];
+    unsigned char c3[3], c4[4] = {0,0,0,0};
     int i = 0;
     int j = 0;
 
@@ -194,24 +194,6 @@ decode(void* dest, char const* src, std::size_t len)
 }
 
 } // base64
-
-std::string
-base64_encode(
-    std::uint8_t const* data,
-    std::size_t len)
-{
-    std::string dest;
-    dest.resize(base64::encoded_size(len));
-    dest.resize(base64::encode(&dest[0], data, len));
-    return dest;
-}
-
-std::string
-base64_encode(string_view s)
-{
-    return base64_encode (reinterpret_cast <
-        std::uint8_t const*> (s.data()), s.size());
-}
 
 } // detail
 } // beast

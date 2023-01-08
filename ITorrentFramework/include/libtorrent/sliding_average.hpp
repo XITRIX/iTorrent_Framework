@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2010-2018, Arvid Norberg
+Copyright (c) 2010, 2014, 2016-2019, Arvid Norberg
+Copyright (c) 2019, Amir Abrams
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,6 +37,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <cstdint>
 #include <cstdlib> // for std::abs
 #include <limits>
+#include <type_traits> // for is_integral
 
 #include "libtorrent/assert.hpp"
 

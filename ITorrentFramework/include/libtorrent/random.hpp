@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2011-2018, Arvid Norberg
+Copyright (c) 2011-2013, 2016-2021, Arvid Norberg
+Copyright (c) 2016, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,6 +42,9 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 
 namespace libtorrent {
+
+	TORRENT_EXTRA_EXPORT std::uint32_t random(std::uint32_t m);
+
 namespace aux {
 
 	TORRENT_EXTRA_EXPORT std::mt19937& random_engine();
@@ -48,10 +52,22 @@ namespace aux {
 	template <typename Range>
 	void random_shuffle(Range& range)
 	{
+#ifdef TORRENT_BUILD_SIMULATOR
+		// in simulations, we want all shuffles to be deterministic (as long as
+		// the random engine is deterministic
+		if (range.size() == 0) return;
+		for (auto i = range.size() - 1; i > 0; --i) {
+			auto const other = random(std::uint32_t(i));
+			if (i == other) continue;
+			using std::swap;
+			swap(range.data()[i], range.data()[other]);
+		}
+#else
 		std::shuffle(range.data(), range.data() + range.size(), random_engine());
+#endif
 	}
 
-	// Fills the buffer with random bytes.
+	// Fills the buffer with pseudo random bytes.
 	//
 	// This functions perform differently under different setups
 	// For Windows and all platforms when compiled with libcrypto, it
@@ -59,9 +75,11 @@ namespace aux {
 	// If the above conditions are not true, then a standard
 	// fill of bytes is used.
 	TORRENT_EXTRA_EXPORT void random_bytes(span<char> buffer);
-}
 
-	TORRENT_EXTRA_EXPORT std::uint32_t random(std::uint32_t m);
+	// Fills the buffer with random bytes from a strong entropy source. This can
+	// be used to generate secrets.
+	TORRENT_EXTRA_EXPORT void crypto_random_bytes(span<char> buffer);
+}
 }
 
 #endif // TORRENT_RANDOM_HPP_INCLUDED

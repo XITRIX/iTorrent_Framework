@@ -8,61 +8,31 @@
 #ifndef BOOST_GIL_IO_PATH_SPEC_HPP
 #define BOOST_GIL_IO_PATH_SPEC_HPP
 
-#ifdef BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
-// Disable warning: conversion to 'std::atomic<int>::__integral_type {aka int}' from 'long int' may alter its value
-#if defined(BOOST_CLANG)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshorten-64-to-32"
-#endif
-
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wconversion"
-#endif
-
-#define BOOST_FILESYSTEM_VERSION 3
-#include <boost/filesystem/path.hpp>
-
-#if defined(BOOST_CLANG)
-#pragma clang diagnostic pop
-#endif
-
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
-#pragma GCC diagnostic pop
-#endif
-#endif // BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
-
-#include <boost/mpl/bool.hpp> // for complete types of true_ and false_
+#include <boost/gil/io/detail/filesystem.hpp>
 
 #include <cstdlib>
 #include <string>
+#include <type_traits>
 
 namespace boost { namespace gil { namespace detail {
 
-template<typename P> struct is_supported_path_spec              : mpl::false_ {};
-template<> struct is_supported_path_spec< std::string >         : mpl::true_ {};
-template<> struct is_supported_path_spec< const std::string >   : mpl::true_ {};
-template<> struct is_supported_path_spec< std::wstring >        : mpl::true_ {};
-template<> struct is_supported_path_spec< const std::wstring >  : mpl::true_ {};
-template<> struct is_supported_path_spec< const char* >         : mpl::true_ {};
-template<> struct is_supported_path_spec< char* >               : mpl::true_ {};
-template<> struct is_supported_path_spec< const wchar_t* >      : mpl::true_ {};
-template<> struct is_supported_path_spec< wchar_t* >            : mpl::true_ {};
+template<typename P> struct is_supported_path_spec              : std::false_type {};
+template<> struct is_supported_path_spec< std::string >         : std::true_type {};
+template<> struct is_supported_path_spec< const std::string >   : std::true_type {};
+template<> struct is_supported_path_spec< std::wstring >        : std::true_type {};
+template<> struct is_supported_path_spec< const std::wstring >  : std::true_type {};
+template<> struct is_supported_path_spec< char const* >         : std::true_type {};
+template<> struct is_supported_path_spec< char* >               : std::true_type {};
+template<> struct is_supported_path_spec< const wchar_t* >      : std::true_type {};
+template<> struct is_supported_path_spec< wchar_t* >            : std::true_type {};
 
-template<int i> struct is_supported_path_spec<const char [i]>       : mpl::true_ {};
-template<int i> struct is_supported_path_spec<char [i]>             : mpl::true_ {};
-template<int i> struct is_supported_path_spec<const wchar_t [i]>    : mpl::true_ {};
-template<int i> struct is_supported_path_spec<wchar_t [i]>          : mpl::true_ {};
+template<int i> struct is_supported_path_spec<const char [i]>       : std::true_type {};
+template<int i> struct is_supported_path_spec<char [i]>             : std::true_type {};
+template<int i> struct is_supported_path_spec<const wchar_t [i]>    : std::true_type {};
+template<int i> struct is_supported_path_spec<wchar_t [i]>          : std::true_type {};
 
-#ifdef BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
-template<> struct is_supported_path_spec< filesystem::path > : mpl::true_ {};
-template<> struct is_supported_path_spec< const filesystem::path > : mpl::true_ {};
-#endif // BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
-
-
-///
-/// convert_to_string
-///
+template<> struct is_supported_path_spec<filesystem::path> : std::true_type {};
+template<> struct is_supported_path_spec<filesystem::path const> : std::true_type {};
 
 inline std::string convert_to_string( std::string const& obj)
 {
@@ -78,7 +48,7 @@ inline std::string convert_to_string( std::wstring const& s )
     return std::string( c, c + len );
 }
 
-inline std::string convert_to_string( const char* str )
+inline std::string convert_to_string( char const* str )
 {
     return std::string( str );
 }
@@ -88,33 +58,27 @@ inline std::string convert_to_string( char* str )
     return std::string( str );
 }
 
-#ifdef BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
-inline std::string convert_to_string( const filesystem::path& path )
+inline std::string convert_to_string(filesystem::path const& path)
 {
-    return convert_to_string( path.string() );
+    return convert_to_string(path.string());
 }
-#endif // BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
 
-///
-/// convert_to_native_string
-///
-
-inline const char* convert_to_native_string( char* str )
+inline char const* convert_to_native_string( char* str )
 {
     return str;
 }
 
-inline const char* convert_to_native_string( const char* str )
+inline char const* convert_to_native_string( char const* str )
 {
     return str;
 }
 
-inline const char* convert_to_native_string( const std::string& str )
+inline char const* convert_to_native_string( const std::string& str )
 {
    return str.c_str();
 }
 
-inline const char* convert_to_native_string( const wchar_t* str )
+inline char const* convert_to_native_string( const wchar_t* str )
 {
     std::size_t len = wcslen( str ) + 1;
     char* c = new char[len];
@@ -123,7 +87,7 @@ inline const char* convert_to_native_string( const wchar_t* str )
     return c;
 }
 
-inline const char* convert_to_native_string( const std::wstring& str )
+inline char const* convert_to_native_string( std::wstring const& str )
 {
     std::size_t len = wcslen( str.c_str() ) + 1;
     char* c = new char[len];
@@ -132,8 +96,6 @@ inline const char* convert_to_native_string( const std::wstring& str )
     return c;
 }
 
-} // namespace detail
-} // namespace gil
-} // namespace boost
+}}} // namespace boost::gil::detail
 
 #endif

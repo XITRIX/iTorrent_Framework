@@ -80,17 +80,14 @@ template<class... T> using mp_and = typename detail::mp_and_impl<mp_list<T...>>:
 #endif
 
 // mp_all<T...>
-#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 100000 )
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86355
+#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, != 0 )
 
 template<class... T> using mp_all = mp_bool< mp_count_if< mp_list<T...>, mp_not >::value == 0 >;
 
-#elif defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS )
-
-template<class... T> using mp_all = mp_bool<(static_cast<bool>(T::value) && ...)>;
-
 #else
 
-template<class... T> using mp_all = mp_and<mp_to_bool<T>...>;
+template<class... T> using mp_all = mp_bool< mp_count< mp_list<mp_to_bool<T>...>, mp_false >::value == 0 >;
 
 #endif
 
@@ -125,13 +122,14 @@ template<class T1, class... T> struct mp_or_impl<T1, T...>
 } // namespace detail
 
 // mp_any<T...>
-#if defined( BOOST_MP11_HAS_FOLD_EXPRESSIONS ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, < 100000 ) && !BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 )
+// https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86356
+#if BOOST_MP11_WORKAROUND( BOOST_MP11_MSVC, < 1920 ) || BOOST_MP11_WORKAROUND( BOOST_MP11_GCC, != 0 )
 
-template<class... T> using mp_any = mp_bool<(static_cast<bool>(T::value) || ...)>;
+template<class... T> using mp_any = mp_bool< mp_count_if< mp_list<T...>, mp_to_bool >::value != 0 >;
 
 #else
 
-template<class... T> using mp_any = mp_bool< mp_count_if< mp_list<T...>, mp_to_bool >::value != 0 >;
+template<class... T> using mp_any = mp_bool< mp_count< mp_list<mp_to_bool<T>...>, mp_true >::value != 0 >;
 
 #endif
 
@@ -148,7 +146,7 @@ template<> struct mp_same_impl<>
 
 template<class T1, class... T> struct mp_same_impl<T1, T...>
 {
-    using type = mp_all<std::is_same<T1, T>...>;
+    using type = mp_bool< mp_count<mp_list<T...>, T1>::value == sizeof...(T) >;
 };
 
 } // namespace detail
@@ -182,6 +180,11 @@ template<class T1, class T2> struct mp_similar_impl<T1, T2>
 };
 
 template<template<class...> class L, class... T1, class... T2> struct mp_similar_impl<L<T1...>, L<T2...>>
+{
+    using type = mp_true;
+};
+
+template<template<class...> class L, class... T> struct mp_similar_impl<L<T...>, L<T...>>
 {
     using type = mp_true;
 };

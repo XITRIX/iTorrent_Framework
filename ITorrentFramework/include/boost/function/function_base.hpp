@@ -86,11 +86,20 @@ namespace boost {
         typedef void (*func_ptr_t)();
         mutable func_ptr_t func_ptr;
 
+#if defined(BOOST_MSVC) && BOOST_MSVC >= 1929
+# pragma warning(push)
+# pragma warning(disable: 5243)
+#endif
+
         // For bound member pointers
         struct bound_memfunc_ptr_t {
           void (X::*memfunc_ptr)(int);
           void* obj_ptr;
         } bound_memfunc_ptr;
+
+#if defined(BOOST_MSVC) && BOOST_MSVC >= 1929
+# pragma warning(pop)
+#endif
 
         // For references to function objects. We explicitly keep
         // track of the cv-qualifiers on the object referenced.
@@ -396,16 +405,12 @@ namespace boost {
                functor_manager_operation_type op)
         {
           typedef typename get_function_tag<functor_type>::type tag_type;
-          switch (op) {
-          case get_functor_type_tag:
+          if (op == get_functor_type_tag) {
             out_buffer.members.type.type = &boost::typeindex::type_id<functor_type>().type_info();
             out_buffer.members.type.const_qualified = false;
             out_buffer.members.type.volatile_qualified = false;
-            return;
-
-          default:
+          } else {
             manager(in_buffer, out_buffer, op, tag_type());
-            return;
           }
         }
       };
@@ -510,16 +515,12 @@ namespace boost {
                functor_manager_operation_type op)
         {
           typedef typename get_function_tag<functor_type>::type tag_type;
-          switch (op) {
-          case get_functor_type_tag:
+          if (op == get_functor_type_tag) {
             out_buffer.members.type.type = &boost::typeindex::type_id<functor_type>().type_info();
             out_buffer.members.type.const_qualified = false;
             out_buffer.members.type.volatile_qualified = false;
-            return;
-
-          default:
+          } else {
             manager(in_buffer, out_buffer, op, tag_type());
-            return;
           }
         }
       };

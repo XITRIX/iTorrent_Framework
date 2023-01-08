@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2013-2015, Arvid Norberg
+Copyright (c) 2010, 2014-2017, 2020, Arvid Norberg
+Copyright (c) 2015, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -69,13 +70,22 @@ inline std::uint16_t network_to_host(std::uint16_t x)
 
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 
-inline std::uint32_t little_endian_to_host(std::uint32_t x)
+inline std::uint32_t swap_byteorder(std::uint32_t const x)
 {
-#if BOOST_ENDIAN_BIG_BYTE
+#ifdef __GNUC__
+	return __builtin_bswap32(x);
+#else
 	return (x & 0xff000000) >> 24
 		| (x & 0x00ff0000) >> 8
 		| (x & 0x0000ff00) << 8
 		| (x & 0x000000ff) << 24;
+#endif
+}
+
+inline std::uint32_t little_endian_to_host(std::uint32_t x)
+{
+#if BOOST_ENDIAN_BIG_BYTE
+	return swap_byteorder(x);
 #elif BOOST_ENDIAN_LITTLE_BYTE
 	return x;
 #else

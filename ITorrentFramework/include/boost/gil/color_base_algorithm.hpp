@@ -1,5 +1,6 @@
 //
 // Copyright 2005-2007 Adobe Systems Incorporated
+// Copyright 2019 Mateusz Loskot <mateusz at loskot dot net>
 //
 // Distributed under the Boost Software License, Version 1.0
 // See accompanying file LICENSE_1_0.txt or copy at
@@ -10,12 +11,9 @@
 
 #include <boost/gil/concepts.hpp>
 #include <boost/gil/utilities.hpp>
+#include <boost/gil/detail/mp11.hpp>
 
 #include <boost/config.hpp>
-#include <boost/mpl/at.hpp>
-#include <boost/mpl/contains.hpp>
-#include <boost/mpl/size.hpp>
-#include <boost/type_traits.hpp>
 
 #include <algorithm>
 #include <type_traits>
@@ -23,15 +21,13 @@
 namespace boost { namespace gil {
 
 ///////////////////////////////////////
-///
 /// size:   Semantic channel size
-///
 ///////////////////////////////////////
 
 /**
 \defgroup ColorBaseAlgorithmSize size
 \ingroup ColorBaseAlgorithm
-\brief Returns an MPL integral type specifying the number of elements in a color base
+\brief Returns an integral constant type specifying the number of elements in a color base
 
 Example:
 \code
@@ -40,15 +36,13 @@ static_assert(size<cmyk8_planar_ptr_t>::value == 4, "");
 \endcode
 */
 
-/// \brief Returns an MPL integral type specifying the number of elements in a color base
+/// \brief Returns an integral constant type specifying the number of elements in a color base
 /// \ingroup ColorBaseAlgorithmSize
 template <typename ColorBase>
-struct size : public mpl::size<typename ColorBase::layout_t::color_space_t> {};
+struct size : public mp11::mp_size<typename ColorBase::layout_t::color_space_t> {};
 
 ///////////////////////////////////////
-///
 /// semantic_at_c:   Semantic channel accessors
-///
 ///////////////////////////////////////
 
 /**
@@ -63,7 +57,7 @@ All GIL color base algorithms taking multiple color bases use semantic indexing 
 Example:
 \code
 // 16-bit BGR pixel, 4 bits for the blue, 3 bits for the green, 2 bits for the red channel and 7 unused bits
-using bgr432_pixel_t = packed_pixel_type<uint16_t, mpl::vector3_c<unsigned,4,3,2>, bgr_layout_t>::type;
+using bgr432_pixel_t = packed_pixel_type<uint16_t, mp11::mp_list_c<unsigned,4,3,2>, bgr_layout_t>::type;
 
 // A reference to its red channel. Although the red channel is the third, its semantic index is 0 in the RGB color space
 using red_channel_reference_t = kth_semantic_element_reference_type<bgr432_pixel_t, 0>::type;
@@ -83,10 +77,10 @@ template <typename ColorBase, int K>
 struct kth_semantic_element_type
 {
     using channel_mapping_t = typename ColorBase::layout_t::channel_mapping_t;
-    static_assert(K < mpl::size<channel_mapping_t>::value,
+    static_assert(K < mp11::mp_size<channel_mapping_t>::value,
         "K index should be less than size of channel_mapping_t sequence");
 
-    static constexpr int semantic_index = mpl::at_c<channel_mapping_t, K>::type::value;
+    static constexpr int semantic_index = mp11::mp_at_c<channel_mapping_t, K>::type::value;
     using type = typename kth_element_type<ColorBase, semantic_index>::type;
 };
 
@@ -96,23 +90,24 @@ template <typename ColorBase, int K>
 struct kth_semantic_element_reference_type
 {
     using channel_mapping_t = typename ColorBase::layout_t::channel_mapping_t;
-    static_assert(K < mpl::size<channel_mapping_t>::value,
+    static_assert(K < mp11::mp_size<channel_mapping_t>::value,
         "K index should be less than size of channel_mapping_t sequence");
 
-    static constexpr int semantic_index = mpl::at_c<channel_mapping_t, K>::type::value;
+    static constexpr int semantic_index = mp11::mp_at_c<channel_mapping_t, K>::type::value;
     using type = typename kth_element_reference_type<ColorBase, semantic_index>::type;
     static type get(ColorBase& cb) { return gil::at_c<semantic_index>(cb); }
 };
 
 /// \brief Specifies the return type of the constant semantic_at_c<K>(color_base);
 /// \ingroup ColorBaseAlgorithmSemanticAtC
-template <typename ColorBase, int K> struct kth_semantic_element_const_reference_type
+template <typename ColorBase, int K>
+struct kth_semantic_element_const_reference_type
 {
     using channel_mapping_t = typename ColorBase::layout_t::channel_mapping_t;
-    static_assert(K < mpl::size<channel_mapping_t>::value,
+    static_assert(K < mp11::mp_size<channel_mapping_t>::value,
         "K index should be less than size of channel_mapping_t sequence");
 
-    static constexpr int semantic_index = mpl::at_c<channel_mapping_t, K>::type::value;
+    static constexpr int semantic_index = mp11::mp_at_c<channel_mapping_t, K>::type::value;
     using type = typename kth_element_const_reference_type<ColorBase,semantic_index>::type;
     static type get(const ColorBase& cb) { return gil::at_c<semantic_index>(cb); }
 };
@@ -128,21 +123,21 @@ auto semantic_at_c(ColorBase& p)
         typename kth_semantic_element_reference_type<ColorBase, K>::type
     >::type
 {
-    return kth_semantic_element_reference_type<ColorBase,K>::get(p);
+    return kth_semantic_element_reference_type<ColorBase, K>::get(p);
 }
 
 /// \brief A constant accessor to the K-th semantic element of a color base
 /// \ingroup ColorBaseAlgorithmSemanticAtC
-template <int K, typename ColorBase> inline
-typename kth_semantic_element_const_reference_type<ColorBase,K>::type
-semantic_at_c(const ColorBase& p) {
-    return kth_semantic_element_const_reference_type<ColorBase,K>::get(p);
+template <int K, typename ColorBase>
+inline
+auto semantic_at_c(ColorBase const& p)
+    -> typename kth_semantic_element_const_reference_type<ColorBase, K>::type
+{
+    return kth_semantic_element_const_reference_type<ColorBase, K>::get(p);
 }
 
 ///////////////////////////////////////
-///
 /// get_color:   Named channel accessors
-///
 ///////////////////////////////////////
 
 /**
@@ -167,7 +162,9 @@ void set_red_to_max(Pixel& pixel) {
 /// \brief A predicate metafunction determining whether a given color base contains a given color
 /// \ingroup ColorBaseAlgorithmColor
 template <typename ColorBase, typename Color>
-struct contains_color : public mpl::contains<typename ColorBase::layout_t::color_space_t,Color> {};
+struct contains_color
+    : mp11::mp_contains<typename ColorBase::layout_t::color_space_t, Color>
+{};
 
 template <typename ColorBase, typename Color>
 struct color_index_type : public detail::type_to_index<typename ColorBase::layout_t::color_space_t,Color> {};
@@ -190,14 +187,18 @@ struct color_element_const_reference_type : public kth_semantic_element_const_re
 /// \brief Mutable accessor to the element associated with a given color name
 /// \ingroup ColorBaseAlgorithmColor
 template <typename ColorBase, typename Color>
-typename color_element_reference_type<ColorBase,Color>::type get_color(ColorBase& cb, Color=Color()) {
+auto get_color(ColorBase& cb, Color=Color()) 
+    -> typename color_element_reference_type<ColorBase,Color>::type
+{
     return color_element_reference_type<ColorBase,Color>::get(cb);
 }
 
 /// \brief Constant accessor to the element associated with a given color name
 /// \ingroup ColorBaseAlgorithmColor
 template <typename ColorBase, typename Color>
-typename color_element_const_reference_type<ColorBase,Color>::type get_color(const ColorBase& cb, Color=Color()) {
+auto get_color(const ColorBase& cb, Color=Color())
+    -> typename color_element_const_reference_type<ColorBase,Color>::type
+{
     return color_element_const_reference_type<ColorBase,Color>::get(cb);
 }
 
@@ -241,7 +242,7 @@ template <int N>
 struct element_recursion
 {
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40900)
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wconversion"
 #pragma GCC diagnostic ignored "-Wfloat-equal"
@@ -275,7 +276,7 @@ struct element_recursion
         semantic_at_c<N-1>(dst)=op();
     }
 
-#if defined(BOOST_GCC) && (BOOST_GCC >= 40600)
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40900)
 #pragma GCC diagnostic pop
 #endif
 
@@ -438,36 +439,63 @@ template<> struct element_recursion<0> {
 };
 
 // std::min and std::max don't have the mutable overloads...
-template <typename Q> inline const Q& mutable_min(const Q& x, const Q& y) { return x<y ? x : y; }
-template <typename Q> inline       Q& mutable_min(      Q& x,       Q& y) { return x<y ? x : y; }
-template <typename Q> inline const Q& mutable_max(const Q& x, const Q& y) { return x<y ? y : x; }
-template <typename Q> inline       Q& mutable_max(      Q& x,       Q& y) { return x<y ? y : x; }
+template <typename Q>
+inline auto mutable_min(Q const& x, Q const& y) -> Q const& { return x<y ? x : y; }
+
+template <typename Q>
+inline auto mutable_min(Q& x, Q& y) -> Q& { return x<y ? x : y; }
+
+template <typename Q>
+inline auto mutable_max(Q const& x, Q const& y) -> Q const& { return x<y ? y : x; }
+
+template <typename Q>
+inline auto mutable_max(Q& x, Q& y) -> Q& { return x<y ? y : x; }
 
 
 // compile-time recursion for min/max element
 template <int N>
-struct min_max_recur {
-    template <typename P> static typename element_const_reference_type<P>::type max_(const P& p) {
+struct min_max_recur
+{
+    template <typename P>
+    static auto max_(P const& p) -> typename element_const_reference_type<P>::type
+    {
         return mutable_max(min_max_recur<N-1>::max_(p),semantic_at_c<N-1>(p));
     }
-    template <typename P> static typename element_reference_type<P>::type       max_(      P& p) {
+    
+    template <typename P>
+    static auto max_(P& p) -> typename element_reference_type<P>::type
+    {
         return mutable_max(min_max_recur<N-1>::max_(p),semantic_at_c<N-1>(p));
     }
-    template <typename P> static typename element_const_reference_type<P>::type min_(const P& p) {
+    
+    template <typename P>
+    static auto min_(P const& p) -> typename element_const_reference_type<P>::type 
+    {
         return mutable_min(min_max_recur<N-1>::min_(p),semantic_at_c<N-1>(p));
     }
-    template <typename P> static typename element_reference_type<P>::type       min_(      P& p) {
+    
+    template <typename P>
+    static auto min_(P& p) -> typename element_reference_type<P>::type
+    {
         return mutable_min(min_max_recur<N-1>::min_(p),semantic_at_c<N-1>(p));
     }
 };
 
 // termination condition of the compile-time recursion for min/max element
 template <>
-struct min_max_recur<1> {
-    template <typename P> static typename element_const_reference_type<P>::type max_(const P& p) { return semantic_at_c<0>(p); }
-    template <typename P> static typename element_reference_type<P>::type       max_(      P& p) { return semantic_at_c<0>(p); }
-    template <typename P> static typename element_const_reference_type<P>::type min_(const P& p) { return semantic_at_c<0>(p); }
-    template <typename P> static typename element_reference_type<P>::type       min_(      P& p) { return semantic_at_c<0>(p); }
+struct min_max_recur<1>
+{
+    template <typename P>
+    static auto max_(P const& p) -> typename element_const_reference_type<P>::type { return semantic_at_c<0>(p); }
+    
+    template <typename P>
+    static auto max_(P& p) -> typename element_reference_type<P>::type { return semantic_at_c<0>(p); }
+    
+    template <typename P>
+    static auto min_(P const& p) -> typename element_const_reference_type<P>::type { return semantic_at_c<0>(p); }
+    
+    template <typename P>
+    static auto min_(P& p) -> typename element_reference_type<P>::type { return semantic_at_c<0>(p); }
 };
 }  // namespace detail
 
@@ -486,19 +514,19 @@ struct min_max_recur<1> {
 
 template <typename P>
 BOOST_FORCEINLINE
-typename element_const_reference_type<P>::type static_max(const P& p) { return detail::min_max_recur<size<P>::value>::max_(p); }
+auto static_max(P const& p) -> typename element_const_reference_type<P>::type { return detail::min_max_recur<size<P>::value>::max_(p); }
 
 template <typename P>
 BOOST_FORCEINLINE
-typename element_reference_type<P>::type       static_max(      P& p) { return detail::min_max_recur<size<P>::value>::max_(p); }
+auto static_max(P& p) -> typename element_reference_type<P>::type { return detail::min_max_recur<size<P>::value>::max_(p); }
 
 template <typename P>
 BOOST_FORCEINLINE
-typename element_const_reference_type<P>::type static_min(const P& p) { return detail::min_max_recur<size<P>::value>::min_(p); }
+auto static_min(P const& p) -> typename element_const_reference_type<P>::type { return detail::min_max_recur<size<P>::value>::min_(p); }
 
 template <typename P>
 BOOST_FORCEINLINE
-typename element_reference_type<P>::type       static_min(      P& p) { return detail::min_max_recur<size<P>::value>::min_(p); }
+auto static_min(P& p) -> typename element_reference_type<P>::type { return detail::min_max_recur<size<P>::value>::min_(p); }
 /// \}
 
 /// \defgroup ColorBaseAlgorithmEqual static_equal
@@ -518,7 +546,7 @@ typename element_reference_type<P>::type       static_min(      P& p) { return d
 
 template <typename P1,typename P2>
 BOOST_FORCEINLINE
-bool static_equal(const P1& p1, const P2& p2) { return detail::element_recursion<size<P1>::value>::static_equal(p1,p2); }
+bool static_equal(P1 const& p1, const P2& p2) { return detail::element_recursion<size<P1>::value>::static_equal(p1,p2); }
 
 /// \}
 
@@ -539,7 +567,10 @@ bool static_equal(const P1& p1, const P2& p2) { return detail::element_recursion
 
 template <typename Src,typename Dst>
 BOOST_FORCEINLINE
-void static_copy(const Src& src, Dst& dst) {  detail::element_recursion<size<Dst>::value>::static_copy(src,dst); }
+void static_copy(const Src& src, Dst& dst)
+{
+    detail::element_recursion<size<Dst>::value>::static_copy(src, dst);
+}
 
 /// \}
 
@@ -557,7 +588,11 @@ void static_copy(const Src& src, Dst& dst) {  detail::element_recursion<size<Dst
 
 template <typename P,typename V>
 BOOST_FORCEINLINE
-void static_fill(P& p, const V& v) {  detail::element_recursion<size<P>::value>::static_fill(p,v); }
+void static_fill(P& p, const V& v)
+{
+    detail::element_recursion<size<P>::value>::static_fill(p,v);
+}
+
 /// \}
 
 /// \defgroup ColorBaseAlgorithmGenerate static_generate
@@ -704,6 +739,6 @@ BOOST_FORCEINLINE
 Op static_for_each(const P1& p1,const P2& p2,const P3& p3,Op op) { return detail::element_recursion<size<P1>::value>::static_for_each(p1,p2,p3,op); }
 ///\}
 
-} }  // namespace boost::gil
+}}  // namespace boost::gil
 
 #endif

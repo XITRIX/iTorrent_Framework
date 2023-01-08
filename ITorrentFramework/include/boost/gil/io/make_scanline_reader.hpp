@@ -8,9 +8,8 @@
 #ifndef BOOST_GIL_IO_MAKE_SCANLINE_READER_HPP
 #define BOOST_GIL_IO_MAKE_SCANLINE_READER_HPP
 
+#include <boost/gil/detail/mp11.hpp>
 #include <boost/gil/io/get_reader.hpp>
-
-#include <boost/mpl/and.hpp>
 
 #include <type_traits>
 
@@ -21,7 +20,7 @@ inline
 auto make_scanline_reader(String const& file_name, FormatTag const&,
     typename std::enable_if
     <
-        mpl::and_
+        mp11::mp_and
         <
             detail::is_supported_path_spec<String>,
             is_format_tag<FormatTag>
@@ -38,14 +37,10 @@ auto make_scanline_reader(String const& file_name, FormatTag const&,
         device, image_read_settings<FormatTag>());
 }
 
-template< typename FormatTag >
+template <typename FormatTag>
 inline
-typename get_scanline_reader< std::wstring
-                            , FormatTag
-                            >::type
-make_scanline_reader( const std::wstring& file_name
-                    , FormatTag const&
-                    )
+auto make_scanline_reader(std::wstring const& file_name, FormatTag const&)
+    -> typename get_scanline_reader<std::wstring, FormatTag>::type
 {
     const char* str = detail::convert_to_native_string( file_name );
 
@@ -64,28 +59,20 @@ make_scanline_reader( const std::wstring& file_name
                                               );
 }
 
-#ifdef BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
-template< typename FormatTag >
+template <typename FormatTag>
 inline
-typename get_scanline_reader< std::wstring
-                            , FormatTag
-                            >::type
-make_scanline_reader( const filesystem::path& path
-                    , FormatTag const&
-                    )
+auto make_scanline_reader(detail::filesystem::path const& path, FormatTag const&)
+    -> typename get_scanline_reader<std::wstring, FormatTag>::type
 {
-    return make_scanline_reader( path.wstring()
-                               , image_read_settings< FormatTag >()
-                               );
+    return make_scanline_reader(path.wstring(), image_read_settings<FormatTag>());
 }
-#endif // BOOST_GIL_IO_ADD_FS_PATH_SUPPORT
 
 template <typename Device, typename FormatTag>
 inline
 auto make_scanline_reader(Device& io_dev, FormatTag const&,
     typename std::enable_if
     <
-        mpl::and_
+        mp11::mp_and
         <
             detail::is_adaptable_input_device<FormatTag, Device>,
             is_format_tag<FormatTag>

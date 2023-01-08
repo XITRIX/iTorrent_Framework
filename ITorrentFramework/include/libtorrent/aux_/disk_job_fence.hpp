@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2016-2020, 2022, Arvid Norberg
+Copyright (c) 2020, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,19 +42,20 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent {
 
-struct disk_io_job;
 struct counters;
 
 namespace aux {
 
-	// implements the disk I/O job fence used by the storage_interface
+	struct mmap_disk_job;
+
+	// implements the disk I/O job fence used by the default_storage
 	// to provide to the disk thread. Whenever a disk job needs
 	// exclusive access to the storage for that torrent, it raises
 	// the fence, blocking all new jobs, until there are no longer
 	// any outstanding jobs on the torrent, then the fence is lowered
 	// and it can be performed, along with the backlog of jobs that
 	// accrued while the fence was up
-	struct TORRENT_EXPORT disk_job_fence
+	struct TORRENT_EXTRA_EXPORT disk_job_fence
 	{
 		disk_job_fence() = default;
 
@@ -67,26 +69,22 @@ namespace aux {
 
 		// returns one of the fence_* enums.
 		// if there are no outstanding jobs on the
-		// storage, fence_post_fence is returned, the flush job is expected
-		// to be discarded by the caller.
-		// fence_post_flush is returned if the fence job was blocked and queued,
-		// but the flush job should be posted (i.e. put on the job queue)
-		// fence_post_none if both the fence and the flush jobs were queued.
-		enum { fence_post_fence = 0, fence_post_flush = 1, fence_post_none = 2 };
-		int raise_fence(disk_io_job* fence_job, disk_io_job* flush_job
-			, counters& cnt);
+		// storage, fence_post_fence is returned.
+		// fence_post_none if the fence job was queued.
+		enum { fence_post_fence = 0, fence_post_none = 1 };
+		int raise_fence(mmap_disk_job*, counters&);
 		bool has_fence() const;
 
 		// called whenever a job completes and is posted back to the
 		// main network thread. the tailqueue of jobs will have the
 		// backed-up jobs prepended to it in case this resulted in the
 		// fence being lowered.
-		int job_complete(disk_io_job* j, tailqueue<disk_io_job>& job_queue);
+		int job_complete(mmap_disk_job*, tailqueue<mmap_disk_job>&);
 		int num_outstanding_jobs() const { return m_outstanding_jobs; }
 
 		// if there is a fence up, returns true and adds the job
 		// to the queue of blocked jobs
-		bool is_blocked(disk_io_job* j);
+		bool is_blocked(mmap_disk_job*);
 
 		// the number of blocked jobs
 		int num_blocked() const;
@@ -100,9 +98,9 @@ namespace aux {
 
 		// when there's a fence up, jobs are queued up in here
 		// until the fence is lowered
-		tailqueue<disk_io_job> m_blocked_jobs;
+		tailqueue<mmap_disk_job> m_blocked_jobs;
 
-		// the number of disk_io_job objects there are, belonging
+		// the number of mmap_disk_job objects there are, belonging
 		// to this torrent, currently pending, hanging off of
 		// cached_piece_entry objects. This is used to determine
 		// when the fence can be lowered

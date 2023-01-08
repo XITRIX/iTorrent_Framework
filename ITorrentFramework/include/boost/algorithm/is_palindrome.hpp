@@ -19,6 +19,7 @@
 #include <functional>
 #include <cstring>
 
+#include <boost/config.hpp>
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 
@@ -112,7 +113,7 @@ bool is_palindrome(const R& range, Predicate p)
 /// \note This function will return true for empty sequences and for palindromes.
 ///     For other sequences function will return false.
 ///     Complexity: O(N).
-bool is_palindrome(const char* str)
+inline bool is_palindrome(const char* str)
 {
     if(!str)
 	    return true;

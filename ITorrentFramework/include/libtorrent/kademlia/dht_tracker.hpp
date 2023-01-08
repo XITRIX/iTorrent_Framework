@@ -1,6 +1,10 @@
 /*
 
-Copyright (c) 2006-2018, Arvid Norberg
+Copyright (c) 2006-2008, 2010, 2014-2021, Arvid Norberg
+Copyright (c) 2014-2015, 2017, Steven Siloti
+Copyright (c) 2015-2017, Alden Torres
+Copyright (c) 2015, Thomas Yuan
+Copyright (c) 2020, Fonic
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -43,7 +47,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include <libtorrent/socket.hpp>
 #include <libtorrent/deadline_timer.hpp>
 #include <libtorrent/span.hpp>
-#include <libtorrent/io_service.hpp>
+#include <libtorrent/io_context.hpp>
 #include <libtorrent/udp_socket.hpp>
 #include <libtorrent/entry.hpp>
 
@@ -53,10 +57,13 @@ namespace libtorrent {
 #if TORRENT_ABI_VERSION == 1
 	struct session_status;
 #endif
+namespace aux {
+	struct session_settings;
+}
 }
 
-namespace libtorrent { namespace dht {
-	struct settings;
+namespace libtorrent {
+namespace dht {
 
 	struct TORRENT_EXTRA_EXPORT dht_tracker final
 		: socket_manager
@@ -67,18 +74,18 @@ namespace libtorrent { namespace dht {
 			, span<char const>, error_code&, udp_send_flags_t)>;
 
 		dht_tracker(dht_observer* observer
-			, io_service& ios
-			, send_fun_t const& send_fun
-			, dht::settings const& settings
+			, io_context& ios
+			, send_fun_t send_fun
+			, aux::session_settings const& settings
 			, counters& cnt
 			, dht_storage_interface& storage
 			, dht_state&& state);
 
 		// the dht_state must be moved in!
 		dht_tracker(dht_observer* observer
-			, io_service& ios
+			, io_context& ios
 			, send_fun_t const& send_fun
-			, dht::settings const& settings
+			, aux::session_settings const& settings
 			, counters& cnt
 			, dht_storage_interface& storage
 			, dht_state const& state) = delete;
@@ -111,7 +118,8 @@ namespace libtorrent { namespace dht {
 			, std::function<void(std::vector<tcp::endpoint> const&)> f);
 
 		void sample_infohashes(udp::endpoint const& ep, sha1_hash const& target
-			, std::function<void(time_duration
+			, std::function<void(node_id
+				, time_duration
 				, int, std::vector<sha1_hash>
 				, std::vector<std::pair<sha1_hash, udp::endpoint>>)> f);
 
@@ -142,10 +150,11 @@ namespace libtorrent { namespace dht {
 			, std::function<void(msg const&)> f);
 
 #if TORRENT_ABI_VERSION == 1
+#include "libtorrent/aux_/disable_deprecation_warnings_push.hpp"
 		void dht_status(session_status& s);
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 #endif
-		void dht_status(std::vector<dht_routing_bucket>& table
-			, std::vector<dht_lookup>& requests);
+		std::vector<lt::dht::dht_status> dht_status() const;
 		void update_stats_counters(counters& c) const;
 
 		void incoming_error(error_code const& ec, udp::endpoint const& ep);
@@ -157,9 +166,9 @@ namespace libtorrent { namespace dht {
 	private:
 		struct tracker_node
 		{
-			tracker_node(io_service& ios
+			tracker_node(io_context& ios
 				, aux::listen_socket_handle const& s, socket_manager* sock
-				, dht::settings const& settings
+				, aux::session_settings const& settings
 				, node_id const& nid
 				, dht_observer* observer, counters& cnt
 				, get_foreign_node_t get_foreign_node
@@ -202,7 +211,7 @@ namespace libtorrent { namespace dht {
 
 		deadline_timer m_key_refresh_timer;
 		deadline_timer m_refresh_timer;
-		dht::settings const& m_settings;
+		aux::session_settings const& m_settings;
 
 		bool m_running;
 
@@ -212,7 +221,10 @@ namespace libtorrent { namespace dht {
 		// state for the send rate limit
 		int m_send_quota;
 		time_point m_last_tick;
+
+		io_context& m_ioc;
 	};
-}}
+} // namespace dht
+} // namespace libtorrent
 
 #endif

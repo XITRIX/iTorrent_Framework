@@ -12,6 +12,7 @@
 
 #include <boost/beast/core/detail/config.hpp>
 #include <boost/beast/core/error.hpp>
+#include <boost/beast/core/stream_traits.hpp>
 #include <boost/beast/http/basic_parser.hpp>
 #include <boost/beast/http/message.hpp>
 #include <boost/asio/async_result.hpp>
@@ -199,18 +200,35 @@ read_some(
     @note The completion handler will receive as a parameter the total number
     of bytes transferred from the stream. This may be zero for the case where
     there is sufficient pre-existing message data in the dynamic buffer.
+
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
 */
 template<
     class AsyncReadStream,
     class DynamicBuffer,
     bool isRequest,
-    class ReadHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 async_read_some(
     AsyncReadStream& stream,
     DynamicBuffer& buffer,
     basic_parser<isRequest>& parser,
-    ReadHandler&& handler);
+    ReadHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>{});
 
 //------------------------------------------------------------------------------
 
@@ -392,18 +410,35 @@ read_header(
     there is sufficient pre-existing message data in the dynamic buffer. The
     implementation will call @ref basic_parser::eager with the value `false`
     on the parser passed in.
+
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
 */
 template<
     class AsyncReadStream,
     class DynamicBuffer,
     bool isRequest,
-    class ReadHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 async_read_header(
     AsyncReadStream& stream,
     DynamicBuffer& buffer,
     basic_parser<isRequest>& parser,
-    ReadHandler&& handler);
+    ReadHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>{});
 
 //------------------------------------------------------------------------------
 
@@ -585,18 +620,35 @@ read(
     there is sufficient pre-existing message data in the dynamic buffer. The
     implementation will call @ref basic_parser::eager with the value `true`
     on the parser passed in.
+
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
 */
 template<
     class AsyncReadStream,
     class DynamicBuffer,
     bool isRequest,
-    class ReadHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 async_read(
     AsyncReadStream& stream,
     DynamicBuffer& buffer,
     basic_parser<isRequest>& parser,
-    ReadHandler&& handler);
+    ReadHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>{});
 
 //------------------------------------------------------------------------------
 
@@ -787,18 +839,35 @@ read(
     there is sufficient pre-existing message data in the dynamic buffer. The
     implementation will call @ref basic_parser::eager with the value `true`
     on the parser passed in.
+
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
 */
 template<
     class AsyncReadStream,
     class DynamicBuffer,
     bool isRequest, class Body, class Allocator,
-    class ReadHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 ReadHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>>
 BOOST_BEAST_ASYNC_RESULT2(ReadHandler)
 async_read(
     AsyncReadStream& stream,
     DynamicBuffer& buffer,
     message<isRequest, Body, basic_fields<Allocator>>& msg,
-    ReadHandler&& handler);
+    ReadHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncReadStream>>{});
 
 } // http
 } // beast

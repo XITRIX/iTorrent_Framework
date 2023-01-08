@@ -13,17 +13,18 @@
 #include <boost/gil/extension/io/raw/detail/is_allowed.hpp>
 #include <boost/gil/extension/io/raw/detail/reader_backend.hpp>
 
+#include <boost/gil/io/detail/dynamic.hpp>
 #include <boost/gil/io/base.hpp>
 #include <boost/gil/io/bit_operations.hpp>
 #include <boost/gil/io/conversion_policies.hpp>
 #include <boost/gil/io/device.hpp>
-#include <boost/gil/io/dynamic_io_new.hpp>
 #include <boost/gil/io/reader_base.hpp>
 #include <boost/gil/io/row_buffer_helper.hpp>
 #include <boost/gil/io/typedefs.hpp>
 
 #include <cstdio>
 #include <sstream>
+#include <type_traits>
 #include <vector>
 
 namespace boost { namespace gil {
@@ -100,7 +101,7 @@ public:
             io_error( "Image header was not read." );
         }
 
-        using is_read_and_convert_t = typename is_same
+        using is_read_and_convert_t = typename std::is_same
             <
                 ConversionPolicy,
                 detail::read_and_no_convert
@@ -165,10 +166,7 @@ struct raw_type_format_checker
     bool apply()
     {
         using view_t = typename Image::view_t;
-
-        return is_allowed< view_t >( _info
-                                   , mpl::true_()
-                                   );
+        return is_allowed<view_t>(_info, std::true_type{});
     }
 
 private:
@@ -202,12 +200,12 @@ public:
               )
     {}
 
-    template< typename Images >
-    void apply( any_image< Images >& images )
+    template< typename ...Images >
+    void apply( any_image< Images... >& images )
     {
         detail::raw_type_format_checker format_checker( this->_info );
 
-        if( !construct_matched( images
+        if( !detail::construct_matched( images
                                , format_checker
                                ))
         {
@@ -226,8 +224,8 @@ public:
                                     , parent_t
                                     > op( this );
 
-            apply_operation( view( images )
-                            , op
+            variant2::visit( op
+                            , view( images )
                             );
         }
     }

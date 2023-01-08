@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2016, Arvid Norberg
+Copyright (c) 2016-2017, 2019-2020, Arvid Norberg
+Copyright (c) 2016, Pavel Pimenov
+Copyright (c) 2020, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -37,7 +39,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent {
 
-	struct TORRENT_EXTRA_EXPORT piece_block
+	struct TORRENT_EXPORT piece_block
 	{
 		static const piece_block invalid;
 

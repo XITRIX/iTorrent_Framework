@@ -8,15 +8,30 @@
 #ifndef BOOST_GIL_UTILITIES_HPP
 #define BOOST_GIL_UTILITIES_HPP
 
-#include <boost/mpl/begin.hpp>
-#include <boost/mpl/contains.hpp>
-#include <boost/mpl/distance.hpp>
-#include <boost/mpl/find.hpp>
-#include <boost/mpl/range_c.hpp>
-#include <boost/mpl/size.hpp>
+#include <boost/gil/detail/mp11.hpp>
+
+#include <boost/config.hpp>
+
+#if defined(BOOST_CLANG)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wconversion"
+#endif
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40900)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wconversion"
+#endif
+
 #include <boost/iterator/iterator_adaptor.hpp>
 #include <boost/iterator/iterator_facade.hpp>
-#include <boost/type_traits.hpp>
+
+#if defined(BOOST_CLANG)
+#pragma clang diagnostic pop
+#endif
+
+#if defined(BOOST_GCC) && (BOOST_GCC >= 40900)
+#pragma GCC diagnostic pop
+#endif
 
 #include <algorithm>
 #include <cmath>
@@ -24,6 +39,7 @@
 #include <functional>
 #include <iterator>
 #include <utility>
+#include <type_traits>
 
 namespace boost { namespace gil {
 
@@ -104,13 +120,13 @@ struct deref_base
 template <typename D1, typename D2>
 class deref_compose : public deref_base
 <
-      deref_compose<typename D1::const_t, typename D2::const_t>,
-      typename D1::value_type,
-      typename D1::reference,
-      typename D1::const_reference,
-      typename D2::argument_type,
-      typename D1::result_type,
-      D1::is_mutable && D2::is_mutable
+    deref_compose<typename D1::const_t, typename D2::const_t>,
+    typename D1::value_type,
+    typename D1::reference,
+    typename D1::const_reference,
+    typename D2::argument_type,
+    typename D1::result_type,
+    D1::is_mutable && D2::is_mutable
 >
 {
 public:
@@ -136,15 +152,16 @@ public:
 // reinterpret_cast is implementation-defined. Static cast is not.
 template <typename OutPtr, typename In>
 BOOST_FORCEINLINE
-OutPtr gil_reinterpret_cast(In* p)
+auto gil_reinterpret_cast(In* p) -> OutPtr
 {
     return static_cast<OutPtr>(static_cast<void*>(p));
 }
 
-template <typename OutPtr, typename In> BOOST_FORCEINLINE
-const OutPtr gil_reinterpret_cast_c(const In* p)
+template <typename OutPtr, typename In>
+BOOST_FORCEINLINE
+auto gil_reinterpret_cast_c(In const* p) -> OutPtr const
 {
-    return static_cast<const OutPtr>(static_cast<const void*>(p));
+    return static_cast<OutPtr const>(static_cast<void const*>(p));
 }
 
 namespace detail {
@@ -154,8 +171,8 @@ namespace detail {
 ////////////////////////////////////////////////////////////////////////////////
 
 template <class InputIter, class Size, class OutputIter>
-std::pair<InputIter, OutputIter> _copy_n(InputIter first, Size count,
-    OutputIter result, std::input_iterator_tag)
+auto _copy_n(InputIter first, Size count, OutputIter result, std::input_iterator_tag)
+    -> std::pair<InputIter, OutputIter>
 {
    for ( ; count > 0; --count)
    {
@@ -167,23 +184,23 @@ std::pair<InputIter, OutputIter> _copy_n(InputIter first, Size count,
 }
 
 template <class RAIter, class Size, class OutputIter>
-inline std::pair<RAIter, OutputIter>
-_copy_n(RAIter first, Size count, OutputIter result, std::random_access_iterator_tag)
+inline auto _copy_n(RAIter first, Size count, OutputIter result, std::random_access_iterator_tag)
+    -> std::pair<RAIter, OutputIter>
 {
    RAIter last = first + count;
    return std::pair<RAIter, OutputIter>(last, std::copy(first, last, result));
 }
 
 template <class InputIter, class Size, class OutputIter>
-inline std::pair<InputIter, OutputIter>
-_copy_n(InputIter first, Size count, OutputIter result)
+inline auto _copy_n(InputIter first, Size count, OutputIter result)
+    -> std::pair<InputIter, OutputIter>
 {
    return _copy_n(first, count, result, typename std::iterator_traits<InputIter>::iterator_category());
 }
 
 template <class InputIter, class Size, class OutputIter>
-inline std::pair<InputIter, OutputIter>
-copy_n(InputIter first, Size count, OutputIter result)
+inline auto copy_n(InputIter first, Size count, OutputIter result)
+    -> std::pair<InputIter, OutputIter>
 {
     return detail::_copy_n(first, count, result);
 }
@@ -228,30 +245,37 @@ struct dec
 };
 
 /// \brief Returns the index corresponding to the first occurrance of a given given type in
-//         a given MPL RandomAccessSequence (or size if the type is not present)
+//         a given Boost.MP11-compatible list (or size if the type is not present)
 template <typename Types, typename T>
-struct type_to_index
-    : public mpl::distance
-        <
-            typename mpl::begin<Types>::type,
-            typename mpl::find<Types,T>::type
-        >::type
-    {
-        static_assert(mpl::contains<Types, T>::value, "T should be element of Types");
-    };
+struct type_to_index : mp11::mp_find<Types, T>
+{
+    static_assert(mp11::mp_contains<Types, T>::value, "T should be element of Types");
+};
+
 } // namespace detail
 
 /// \ingroup ColorSpaceAndLayoutModel
 /// \brief Represents a color space and ordering of channels in memory
-template <typename ColorSpace, typename ChannelMapping = mpl::range_c<int,0,mpl::size<ColorSpace>::value>>
+template
+<
+    typename ColorSpace,
+    typename ChannelMapping = mp11::mp_iota
+    <
+        std::integral_constant<int, mp11::mp_size<ColorSpace>::value>
+    >
+>
 struct layout
 {
     using color_space_t = ColorSpace;
     using channel_mapping_t = ChannelMapping;
+
+    static_assert(mp11::mp_size<ColorSpace>::value > 0,
+        "color space should not be empty sequence");
 };
 
 /// \brief A version of swap that also works with reference proxy objects
-template <typename Value, typename T1, typename T2> // where value_type<T1>  == value_type<T2> == Value
+/// Where value_type<T1>  == value_type<T2> == Value
+template <typename Value, typename T1, typename T2>
 void swap_proxy(T1& left, T2& right)
 {
     Value tmp = left;

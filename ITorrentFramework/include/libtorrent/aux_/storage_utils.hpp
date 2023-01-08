@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2003-2016, Arvid Norberg
+Copyright (c) 2017-2020, 2022, Arvid Norberg
+Copyright (c) 2018, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,6 +36,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include <cstdint>
 #include <string>
+#include <functional>
 
 #include "libtorrent/config.hpp"
 #include "libtorrent/fwd.hpp"
@@ -43,10 +45,10 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/units.hpp"
 #include "libtorrent/storage_defs.hpp" // for status_t
 #include "libtorrent/session_types.hpp"
+#include "libtorrent/error_code.hpp"
 
 namespace libtorrent {
 
-	struct part_file;
 	struct stat_cache;
 
 	// TODO: 3 remove this typedef, and use span<char const> for disk write
@@ -55,20 +57,15 @@ namespace libtorrent {
 
 namespace aux {
 
-	TORRENT_EXTRA_EXPORT int copy_bufs(span<iovec_t const> bufs
-		, int bytes, span<iovec_t> target);
-	TORRENT_EXTRA_EXPORT span<iovec_t> advance_bufs(span<iovec_t> bufs, int bytes);
-	TORRENT_EXTRA_EXPORT void clear_bufs(span<iovec_t const> bufs);
-
-	// this is a read or write operation so that readwritev() knows
+	// this is a read or write operation so that readwrite() knows
 	// what to do when it's actually touching the file
-	using fileop = std::function<int(file_index_t, std::int64_t, span<iovec_t const>, storage_error&)>;
+	using fileop = std::function<int(file_index_t, std::int64_t, span<char>, storage_error&)>;
 
 	// this function is responsible for turning read and write operations in the
 	// torrent space (pieces) into read and write operations in the filesystem
 	// space (files on disk).
-	TORRENT_EXTRA_EXPORT int readwritev(file_storage const& files
-		, span<iovec_t const> bufs, piece_index_t piece, int offset
+	TORRENT_EXTRA_EXPORT int readwrite(file_storage const& files
+		, span<char> buf, piece_index_t piece, int offset
 		, storage_error& ec, fileop op);
 
 	// moves the files in file_storage f from ``save_path`` to
@@ -76,9 +73,9 @@ namespace aux {
 	// returns the status code and the new save_path.
 	TORRENT_EXTRA_EXPORT std::pair<status_t, std::string>
 	move_storage(file_storage const& f
-		, std::string const& save_path
+		, std::string save_path
 		, std::string const& destination_save_path
-		, part_file* pf
+		, std::function<void(std::string const&, lt::error_code&)> const& move_partfile
 		, move_flags_t flags, storage_error& ec);
 
 	// deletes the files on fs from save_path according to options. Options may
@@ -101,8 +98,33 @@ namespace aux {
 	TORRENT_EXTRA_EXPORT bool has_any_file(
 		file_storage const& fs
 		, std::string const& save_path
-		, stat_cache& stat
+		, stat_cache& cache
 		, storage_error& ec);
+
+	TORRENT_EXTRA_EXPORT int read_zeroes(span<char> bufs);
+
+	TORRENT_EXTRA_EXPORT int hash_zeroes(hasher& ph, std::int64_t size);
+
+	TORRENT_EXTRA_EXPORT void initialize_storage(
+		file_storage const& fs
+		, std::string const& save_path
+		, stat_cache& sc
+		, aux::vector<download_priority_t, file_index_t> const& file_priority
+		, std::function<void(file_index_t, storage_error&)> create_file
+		, std::function<void(std::string const&, std::string const&, storage_error&)> create_link
+		, std::function<void(file_index_t, std::int64_t)> oversized_file
+		, storage_error& ec);
+
+	TORRENT_EXTRA_EXPORT void create_symlink(
+		std::string const& target
+		, std::string const& link
+		, storage_error& ec);
+
+	TORRENT_EXTRA_EXPORT void move_file(std::string const& f
+		, std::string const& newf, storage_error& se);
+
+	TORRENT_EXTRA_EXPORT void copy_file(std::string const& f
+		, std::string const& newf, storage_error& ec);
 }}
 
 #endif

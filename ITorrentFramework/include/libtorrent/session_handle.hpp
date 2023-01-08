@@ -1,6 +1,9 @@
 /*
 
-Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2014-2018, Steven Siloti
+Copyright (c) 2015-2018, Alden Torres
+Copyright (c) 2015-2022, Arvid Norberg
+Copyright (c) 2020, AllSeeingEyeTolledEweSew
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,32 +36,39 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef TORRENT_SESSION_HANDLE_HPP_INCLUDED
 #define TORRENT_SESSION_HANDLE_HPP_INCLUDED
 
+#include <memory> // for shared_ptr
+
 #include "libtorrent/config.hpp"
 #include "libtorrent/fwd.hpp"
 #include "libtorrent/entry.hpp"
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/add_torrent_params.hpp"
-#include "libtorrent/disk_io_thread.hpp" // for cached_piece_info
 #include "libtorrent/alert.hpp" // alert_category::error
 #include "libtorrent/peer_class.hpp"
 #include "libtorrent/peer_class_type_filter.hpp"
 #include "libtorrent/peer_id.hpp"
-#include "libtorrent/io_service.hpp"
+#include "libtorrent/io_context.hpp"
 #include "libtorrent/session_types.hpp"
 #include "libtorrent/portmap.hpp" // for portmap_protocol
 
 #include "libtorrent/kademlia/dht_storage.hpp"
-#include "libtorrent/kademlia/dht_settings.hpp"
 #include "libtorrent/kademlia/announce_flags.hpp"
+
+#if TORRENT_ABI_VERSION <= 2
+#include "libtorrent/kademlia/dht_settings.hpp"
+#endif
 
 #if TORRENT_ABI_VERSION == 1
 #include "libtorrent/session_settings.hpp"
 #include <deque>
 #endif
 
+#include "libtorrent/extensions.hpp"
+#include "libtorrent/session_types.hpp" // for session_flags_t
+
 namespace libtorrent {
 
-	class torrent;
+	struct torrent;
 
 #if TORRENT_ABI_VERSION == 1
 	struct session_status;
@@ -73,15 +83,15 @@ namespace libtorrent {
 	// invalid_session_handle.
 	struct TORRENT_EXPORT session_handle
 	{
-		friend class session;
+		friend struct session;
 		friend struct aux::session_impl;
 
 		// hidden
 		session_handle() = default;
 		session_handle(session_handle const& t) = default;
 		session_handle(session_handle&& t) noexcept = default;
-		session_handle& operator=(session_handle const&) = default;
-		session_handle& operator=(session_handle&&) noexcept = default;
+		session_handle& operator=(session_handle const&) & = default;
+		session_handle& operator=(session_handle&&) & noexcept = default;
 
 #if TORRENT_ABI_VERSION == 1
 		using save_state_flags_t = libtorrent::save_state_flags_t;
@@ -96,8 +106,11 @@ namespace libtorrent {
 		// saves settings (i.e. the settings_pack)
 		static constexpr save_state_flags_t save_settings = 0_bit;
 
-		// saves dht_settings
-		static constexpr save_state_flags_t save_dht_settings = 1_bit;
+#if TORRENT_ABI_VERSION <= 2
+		// saves dht_settings. All DHT settings are now part of the main
+		// settings_pack, and saved by setting the save_settings flag
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_dht_settings = 1_bit;
+#endif
 
 		// saves dht state such as nodes and node-id, possibly accelerating
 		// joining the DHT if provided at next session startup.
@@ -105,15 +118,26 @@ namespace libtorrent {
 
 #if TORRENT_ABI_VERSION == 1
 		// save pe_settings
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_encryption_settings = 3_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_as_map = 4_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_proxy = 5_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_i2p_proxy = 6_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_dht_proxy = 7_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_peer_proxy = 8_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_web_proxy = 9_bit;
-		static constexpr save_state_flags_t TORRENT_DEPRECATED_MEMBER save_tracker_proxy = 10_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_encryption_settings = 3_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_as_map = 4_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_proxy = 5_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_i2p_proxy = 6_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_dht_proxy = 7_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_peer_proxy = 8_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_web_proxy = 9_bit;
+		TORRENT_DEPRECATED static constexpr save_state_flags_t save_tracker_proxy = 10_bit;
 #endif
+
+		// load or save state from plugins
+		static constexpr save_state_flags_t save_extension_state = 11_bit;
+
+		// load or save the IP filter set on the session
+		static constexpr save_state_flags_t save_ip_filter = 12_bit;
+
+#if TORRENT_ABI_VERSION <= 2
+		// deprecated in 2.0
+		// instead of these functions, use session_state() below, and restore
+		// state using the session_params on session construction.
 
 		// loads and saves all session settings, including dht_settings,
 		// encryption settings and proxy settings. ``save_state`` writes all keys
@@ -131,8 +155,20 @@ namespace libtorrent {
 		// ``peer_fingerprint`` and ``user_agent``. Those are left as configured
 		// by the ``session_settings`` passed to the session constructor or
 		// subsequently set via apply_settings().
+		TORRENT_DEPRECATED
 		void save_state(entry& e, save_state_flags_t flags = save_state_flags_t::all()) const;
+		TORRENT_DEPRECATED
 		void load_state(bdecode_node const& e, save_state_flags_t flags = save_state_flags_t::all());
+#endif
+
+		// returns the current session state. This can be passed to
+		// write_session_params() to save the state to disk and restored using
+		// read_session_params() when constructing a new session. The kind of
+		// state that's included is all settings, the DHT routing table, possibly
+		// plugin-specific state.
+		// the flags parameter can be used to only save certain parts of the
+		// session state
+		session_params session_state(save_state_flags_t flags = save_state_flags_t::all()) const;
 
 		// .. note::
 		// 	these calls are potentially expensive and won't scale well with
@@ -199,7 +235,13 @@ namespace libtorrent {
 		void post_dht_stats();
 
 		// internal
-		io_service& get_io_service();
+		io_context& get_context();
+
+		// set the DHT state for the session. This will be taken into account the
+		// next time the DHT is started, as if it had been passed in via the
+		// session_params on startup.
+		void set_dht_state(dht::dht_state const& st);
+		void set_dht_state(dht::dht_state&& st);
 
 		// ``find_torrent()`` looks for a torrent with the given info-hash. In
 		// case there is such a torrent in the session, a torrent_handle to that
@@ -240,6 +282,10 @@ namespace libtorrent {
 		// torrent_flags::auto_managed. In order to add a magnet link that will
 		// just download the metadata, but no payload, set the
 		// torrent_flags::upload_mode flag.
+		//
+		// Special consideration has to be taken when adding hybrid torrents
+		// (i.e. torrents that are BitTorrent v2 torrents that are backwards
+		// compatible with v1). For more details, see BitTorrent-v2-torrents_.
 #ifndef BOOST_NO_EXCEPTIONS
 		torrent_handle add_torrent(add_torrent_params&& params);
 		torrent_handle add_torrent(add_torrent_params const& params);
@@ -258,8 +304,7 @@ namespace libtorrent {
 			, std::string const& save_path
 			, entry const& resume_data = entry()
 			, storage_mode_t storage_mode = storage_mode_sparse
-			, bool paused = false
-			, storage_constructor_type sc = default_storage_constructor);
+			, bool paused = false);
 
 		// deprecated in 0.14
 		TORRENT_DEPRECATED
@@ -271,8 +316,7 @@ namespace libtorrent {
 			, entry const& resume_data = entry()
 			, storage_mode_t storage_mode = storage_mode_sparse
 			, bool paused = false
-			, storage_constructor_type sc = default_storage_constructor
-			, void* userdata = nullptr);
+			, client_data_t userdata = {});
 #endif // TORRENT_ABI_VERSION
 #endif
 
@@ -323,34 +367,12 @@ namespace libtorrent {
 
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 
-		// deprecated in libtorrent 1.1
-		// fills out the supplied vector with information for each piece that is
-		// currently in the disk cache for the torrent with the specified
-		// info-hash (``ih``).
-		TORRENT_DEPRECATED
-		void get_cache_info(sha1_hash const& ih
-			, std::vector<cached_piece_info>& ret) const;
-
-		// Returns status of the disk cache for this session.
-		// For more information, see the cache_status type.
-		TORRENT_DEPRECATED
-		cache_status get_cache_status() const;
-
 		// deprecated in 1.2
 		TORRENT_DEPRECATED
 		void get_torrent_status(std::vector<torrent_status>* ret
 			, std::function<bool(torrent_status const&)> const& pred
 			, status_flags_t flags = {}) const;
-#endif // TORRENT_ABI_VERSION
 
-		enum { disk_cache_no_pieces = 1 };
-
-		// Fills in the cache_status struct with information about the given torrent.
-		// If ``flags`` is ``session::disk_cache_no_pieces`` the ``cache_status::pieces`` field
-		// will not be set. This may significantly reduce the cost of this call.
-		void get_cache_info(cache_status* ret, torrent_handle h = torrent_handle(), int flags = 0) const;
-
-#if TORRENT_ABI_VERSION == 1
 		// ``start_dht`` starts the dht node and makes the trackerless service
 		// available to torrents.
 		//
@@ -362,17 +384,23 @@ namespace libtorrent {
 		void stop_dht();
 #endif
 
+#if TORRENT_ABI_VERSION <= 2
+
+#include "libtorrent/aux_/disable_deprecation_warnings_push.hpp"
 		// ``set_dht_settings`` sets some parameters available to the dht node.
 		// See dht_settings for more information.
 		//
-		// ``is_dht_running()`` returns true if the DHT support has been started
-		// and false
-		// otherwise.
-		//
 		// ``get_dht_settings()`` returns the current settings
 		void set_dht_settings(dht::dht_settings const& settings);
-		bool is_dht_running() const;
 		dht::dht_settings get_dht_settings() const;
+
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
+
+#endif
+
+		// ``is_dht_running()`` returns true if the DHT support has been started
+		// and false otherwise.
+		bool is_dht_running() const;
 
 		// ``set_dht_storage`` set a dht custom storage constructor function
 		// to be used internally when the dht is created.
@@ -509,7 +537,7 @@ namespace libtorrent {
 		// with the response (if any) and the userdata pointer passed in here.
 		// Since this alert is a response to an explicit call, it will always be
 		// posted, regardless of the alert mask.
-		void dht_direct_request(udp::endpoint const& ep, entry const& e, void* userdata = nullptr);
+		void dht_direct_request(udp::endpoint const& ep, entry const& e, client_data_t userdata = {});
 
 #if TORRENT_ABI_VERSION == 1
 		// deprecated in 0.15
@@ -556,40 +584,12 @@ namespace libtorrent {
 		// 	ses.add_extension(&lt::create_smart_ban_plugin);
 		//
 		//
-		// .. _`libtorrent plugins`: libtorrent_plugins.html
+		// .. _`libtorrent plugins`: reference-Plugins.html
 		void add_extension(std::function<std::shared_ptr<torrent_plugin>(
-			torrent_handle const&, void*)> ext);
+			torrent_handle const&, client_data_t)> ext);
 		void add_extension(std::shared_ptr<plugin> ext);
 
 #if TORRENT_ABI_VERSION == 1
-		// GeoIP support has been removed from libtorrent internals. If you
-		// still need to resolve peers, please do so on the client side, using
-		// libgeoip directly. This was removed in libtorrent 1.1
-
-		// These functions expects a path to the `MaxMind ASN database`_ and
-		// `MaxMind GeoIP database`_ respectively. This will be used to look up
-		// which AS and country peers belong to.
-		//
-		// ``as_for_ip`` returns the AS number for the IP address specified. If
-		// the IP is not in the database or the ASN database is not loaded, 0 is
-		// returned.
-		//
-		// .. _`MaxMind ASN database`: http://www.maxmind.com/app/asnum
-		// .. _`MaxMind GeoIP database`: http://www.maxmind.com/app/geolitecountry
-		TORRENT_DEPRECATED
-		void load_asnum_db(char const* file);
-		TORRENT_DEPRECATED
-		void load_country_db(char const* file);
-		TORRENT_DEPRECATED
-		int as_for_ip(address const& addr);
-		// all wstring APIs are deprecated since 0.16.11
-		// instead, use the wchar -> utf8 conversion functions
-		// and pass in utf8 strings
-		TORRENT_DEPRECATED
-		void load_country_db(wchar_t const* file);
-		TORRENT_DEPRECATED
-		void load_asnum_db(wchar_t const* file);
-
 		// deprecated in 0.15
 		// use load_state and save_state instead
 		TORRENT_DEPRECATED
@@ -597,10 +597,6 @@ namespace libtorrent {
 			, save_state_flags_t flags = save_state_flags_t::all());
 		TORRENT_DEPRECATED
 		entry state() const;
-		// deprecated in 1.1
-		TORRENT_DEPRECATED
-		void load_state(lazy_entry const& ses_state
-			, save_state_flags_t flags = save_state_flags_t::all());
 #endif // TORRENT_ABI_VERSION
 
 		// Sets a filter that will be used to reject and accept incoming as well
@@ -611,7 +607,7 @@ namespace libtorrent {
 		// Each time a peer is blocked because of the IP filter, a
 		// peer_blocked_alert is generated. ``get_ip_filter()`` Returns the
 		// ip_filter currently in the session. See ip_filter.
-		void set_ip_filter(ip_filter const& f);
+		void set_ip_filter(ip_filter f);
 		ip_filter get_ip_filter() const;
 
 		// apply port_filter ``f`` to incoming and outgoing peers. a port filter
@@ -796,27 +792,48 @@ namespace libtorrent {
 		// delete just the part-file associated with this torrent
 		static constexpr remove_flags_t delete_partfile = 1_bit;
 
+#if TORRENT_ABI_VERSION <= 2
 		// this will add common extensions like ut_pex, ut_metadata, lt_tex
 		// smart_ban and possibly others.
-		static constexpr session_flags_t add_default_plugins = 0_bit;
+		TORRENT_DEPRECATED static constexpr session_flags_t add_default_plugins = 0_bit;
+#endif
 
 #if TORRENT_ABI_VERSION == 1
 		// this will start features like DHT, local service discovery, UPnP
 		// and NAT-PMP.
-		static constexpr session_flags_t TORRENT_DEPRECATED_MEMBER start_default_features = 1_bit;
+		TORRENT_DEPRECATED static constexpr session_flags_t start_default_features = 1_bit;
 #endif
+
+		// when set, the session will start paused. Call
+		// session_handle::resume() to start
+		static constexpr session_flags_t paused = 2_bit;
 
 		// ``remove_torrent()`` will close all peer connections associated with
 		// the torrent and tell the tracker that we've stopped participating in
 		// the swarm. This operation cannot fail. When it completes, you will
 		// receive a torrent_removed_alert.
 		//
+		// remove_torrent() is non-blocking, but will remove the torrent from the
+		// session synchronously. Calling session_handle::add_torrent() immediately
+		// afterward with the same torrent will succeed. Note that this creates a
+		// new handle which is not equal to the removed one.
+		//
 		// The optional second argument ``options`` can be used to delete all the
 		// files downloaded by this torrent. To do so, pass in the value
-		// ``session_handle::delete_files``. The removal of the torrent is asynchronous,
-		// there is no guarantee that adding the same torrent immediately after
-		// it was removed will not throw a system_error exception. Once
-		// the torrent is deleted, a torrent_deleted_alert is posted.
+		// ``session_handle::delete_files``. Once the torrent is deleted, a
+		// torrent_deleted_alert is posted.
+		//
+		// The torrent_handle remains valid for some time after remove_torrent() is
+		// called. It will become invalid only after all libtorrent tasks (such as
+		// I/O tasks) release their references to the torrent. Until this happens,
+		// torrent_handle::is_valid() will return true, and other calls such
+		// as torrent_handle::status() will succeed. Because of this, and because
+		// remove_torrent() is non-blocking, the following sequence usually
+		// succeeds (does not throw system_error):
+		// .. code:: c++
+		//
+		//	session.remove_handle(handle);
+		//	handle.save_resume_data();
 		//
 		// Note that when a queued or downloading torrent is removed, its position
 		// in the download queue is vacated and every subsequent torrent in the
@@ -824,39 +841,26 @@ namespace libtorrent {
 		// large state_update to be posted. When removing all torrents, it is
 		// advised to remove them from the back of the queue, to minimize the
 		// shifting.
-		void remove_torrent(const torrent_handle& h, remove_flags_t options = {});
+		void remove_torrent(const torrent_handle&, remove_flags_t = {});
 
 		// Applies the settings specified by the settings_pack ``s``. This is an
 		// asynchronous operation that will return immediately and actually apply
 		// the settings to the main thread of libtorrent some time later.
-		void apply_settings(settings_pack const& s);
-		void apply_settings(settings_pack&& s);
+		void apply_settings(settings_pack const&);
+		void apply_settings(settings_pack&&);
 		settings_pack get_settings() const;
 
 #if TORRENT_ABI_VERSION == 1
 
-#ifdef _MSC_VER
-#pragma warning(push, 1)
-// warning C4996: X: was declared deprecated
-#pragma warning( disable : 4996 )
-#endif
-#if defined __GNUC__
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#endif
+#include "libtorrent/aux_/disable_deprecation_warnings_push.hpp"
 
 		// deprecated in libtorrent 1.1. use settings_pack instead
 		TORRENT_DEPRECATED
-		void set_pe_settings(pe_settings const& settings);
+		void set_pe_settings(pe_settings const&);
 		TORRENT_DEPRECATED
 		pe_settings get_pe_settings() const;
 
-#if defined __GNUC__
-#pragma GCC diagnostic pop
-#endif
-#ifdef _MSC_VER
-#pragma warning(pop)
-#endif
+#include "libtorrent/aux_/disable_warnings_pop.hpp"
 
 		// ``set_i2p_proxy`` sets the i2p_ proxy, and tries to open a persistent
 		// connection to it. The only used fields in the proxy settings structs
@@ -867,7 +871,7 @@ namespace libtorrent {
 		// .. _i2p: http://www.i2p2.de
 
 		TORRENT_DEPRECATED
-		void set_i2p_proxy(proxy_settings const& s);
+		void set_i2p_proxy(proxy_settings const&);
 		TORRENT_DEPRECATED
 		proxy_settings i2p_proxy() const;
 
@@ -1016,13 +1020,6 @@ namespace libtorrent {
 		void set_alert_notify(std::function<void()> const& fun);
 
 #if TORRENT_ABI_VERSION == 1
-#include "libtorrent/aux_/disable_warnings_push.hpp"
-
-		TORRENT_DEPRECATED
-		void set_severity_level(alert::severity_t s);
-
-#include "libtorrent/aux_/disable_warnings_pop.hpp"
-
 		// use the setting instead
 		TORRENT_DEPRECATED
 		size_t set_alert_queue_size_limit(size_t queue_size_limit_);

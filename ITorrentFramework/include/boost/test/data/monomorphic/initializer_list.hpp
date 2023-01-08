@@ -41,7 +41,7 @@ namespace monomorphic {
 template<typename T>
 class init_list {
 public:
-    enum { arity = 1 };
+    static const int arity = 1;
 
     typedef typename std::vector<T>::const_iterator iterator;
 
@@ -75,9 +75,7 @@ class init_list<bool> {
 public:
     typedef bool sample;
 
-    enum { arity = 1 };
-
-    typedef std::vector<bool>::const_iterator iterator;
+    static const int arity = 1;
 
     //! Constructor copies content of initializer_list
     init_list( std::initializer_list<bool>&& il )
@@ -91,6 +89,24 @@ public:
     init_list( Args&& ... args ) : m_data{ args... }
     { }
 #endif
+
+    struct non_proxy_iterator {
+        std::vector<bool>::const_iterator iterator;
+        non_proxy_iterator(std::vector<bool>::const_iterator &&it)
+        : iterator(std::forward<std::vector<bool>::const_iterator>(it))
+        {}
+
+        bool operator*() const {
+            return *iterator;
+        }
+
+        non_proxy_iterator& operator++() {
+            ++iterator;
+            return *this;
+        }
+    };
+
+    typedef non_proxy_iterator iterator;
 
     //! dataset interface
     data::size_t    size() const    { return m_data.size(); }

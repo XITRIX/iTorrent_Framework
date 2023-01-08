@@ -13,6 +13,26 @@
 #include <vector>
 #include <algorithm>
 #include <iterator>
+#include <stdexcept>
+#include <limits>
+
+namespace std_workaround {
+
+#if defined(__cpp_lib_nonmember_container_access) || (defined(_MSC_VER) && (_MSC_VER >= 1900))
+   using std::size;
+#else
+   template <class C>
+   inline constexpr std::size_t size(const C& c)
+   {
+      return c.size();
+   }
+   template <class T, std::size_t N>
+   inline constexpr std::size_t size(const T(&array)[N]) noexcept
+   {
+      return N;
+   }
+#endif
+}
 
 namespace boost{ namespace math{
 
@@ -22,7 +42,7 @@ namespace boost{ namespace math{
         typename Point::value_type alpha_distance(Point const & p1, Point const & p2, typename Point::value_type alpha)
         {
             using std::pow;
-            using std::size;
+            using std_workaround::size;
             typename Point::value_type dsq = 0;
             for (size_t i = 0; i < size(p1); ++i)
             {
@@ -33,44 +53,45 @@ namespace boost{ namespace math{
         }
     }
 
-template <class Point>
+template <class Point, class RandomAccessContainer = std::vector<Point> >
 class catmull_rom
 {
+   typedef typename Point::value_type value_type;
 public:
 
-    catmull_rom(std::vector<Point>&& points, bool closed = false, typename Point::value_type alpha = (typename Point::value_type) 1/ (typename Point::value_type) 2);
+    catmull_rom(RandomAccessContainer&& points, bool closed = false, value_type alpha = (value_type) 1/ (value_type) 2);
 
-    catmull_rom(std::initializer_list<Point> l, bool closed = false, typename Point::value_type alpha = (typename Point::value_type) 1/ (typename Point::value_type) 2) : catmull_rom(std::vector<Point>(l), closed, alpha) {}
+    catmull_rom(std::initializer_list<Point> l, bool closed = false, value_type alpha = (value_type) 1/ (value_type) 2) : catmull_rom<Point, RandomAccessContainer>(RandomAccessContainer(l), closed, alpha) {}
 
-    typename Point::value_type max_parameter() const
+    value_type max_parameter() const
     {
         return m_max_s;
     }
 
-    typename Point::value_type parameter_at_point(size_t i) const
+    value_type parameter_at_point(size_t i) const
     {
         return m_s[i+1];
     }
 
-    Point operator()(const typename Point::value_type s) const;
+    Point operator()(const value_type s) const;
 
-    Point prime(const typename Point::value_type s) const;
+    Point prime(const value_type s) const;
 
-    std::vector<Point>&& get_points()
+    RandomAccessContainer&& get_points()
     {
         return std::move(m_pnts);
     }
 
 private:
-    std::vector<Point> m_pnts;
-    std::vector<typename Point::value_type> m_s;
-    typename Point::value_type m_max_s;
+    RandomAccessContainer m_pnts;
+    std::vector<value_type> m_s;
+    value_type m_max_s;
 };
 
-template<class Point>
-catmull_rom<Point>::catmull_rom(std::vector<Point>&& points, bool closed, typename Point::value_type alpha) : m_pnts(std::move(points))
+template<class Point, class RandomAccessContainer >
+catmull_rom<Point, RandomAccessContainer>::catmull_rom(RandomAccessContainer&& points, bool closed, typename Point::value_type alpha) : m_pnts(std::move(points))
 {
-    size_t num_pnts = m_pnts.size();
+    std::size_t num_pnts = m_pnts.size();
     //std::cout << "Number of points = " << num_pnts << "\n";
     if (num_pnts < 4)
     {
@@ -90,9 +111,9 @@ catmull_rom<Point>::catmull_rom(std::vector<Point>&& points, bool closed, typena
     m_pnts[num_pnts+2] = m_pnts[1];
 
     auto tmp = m_pnts[num_pnts-1];
-    for (int64_t i = num_pnts-1; i >= 0; --i)
+    for (auto i = num_pnts; i > 0; --i)
     {
-        m_pnts[i+1] = m_pnts[i];
+        m_pnts[i] = m_pnts[i - 1];
     }
     m_pnts[0] = tmp;
 
@@ -122,10 +143,10 @@ catmull_rom<Point>::catmull_rom(std::vector<Point>&& points, bool closed, typena
 }
 
 
-template<class Point>
-Point catmull_rom<Point>::operator()(const typename Point::value_type s) const
+template<class Point, class RandomAccessContainer >
+Point catmull_rom<Point, RandomAccessContainer>::operator()(const typename Point::value_type s) const
 {
-    using std::size;
+    using std_workaround::size;
     if (s < 0 || s > m_max_s)
     {
         throw std::domain_error("Parameter outside bounds.");
@@ -139,7 +160,12 @@ Point catmull_rom<Point>::operator()(const typename Point::value_type s) const
     typename Point::value_type s0s = m_s[i-1] - s;
     typename Point::value_type s1s = m_s[i] - s;
     typename Point::value_type s2s = m_s[i+1] - s;
-    typename Point::value_type s3s = m_s[i+2] - s;
+    size_t ip2 = i + 2;
+    // When the curve is closed and we evaluate at the end, the endpoint is in fact the startpoint.
+    if (ip2 == m_s.size()) {
+        ip2 = 0;
+    }
+    typename Point::value_type s3s = m_s[ip2] - s;
 
     Point A1_or_A3;
     typename Point::value_type denom = 1/(m_s[i] - m_s[i-1]);
@@ -161,14 +187,14 @@ Point catmull_rom<Point>::operator()(const typename Point::value_type s) const
         B1_or_C[j] = denom*(s2s*A1_or_A3[j] - s0s*A2_or_B2[j]);
     }
 
-    denom = 1/(m_s[i+2] - m_s[i+1]);
+    denom = 1/(m_s[ip2] - m_s[i+1]);
     for(size_t j = 0; j < size(m_pnts[0]); ++j)
     {
-        A1_or_A3[j] = denom*(s3s*m_pnts[i+1][j] - s2s*m_pnts[i+2][j]);
+        A1_or_A3[j] = denom*(s3s*m_pnts[i+1][j] - s2s*m_pnts[ip2][j]);
     }
 
     Point B2;
-    denom = 1/(m_s[i+2] - m_s[i]);
+    denom = 1/(m_s[ip2] - m_s[i]);
     for(size_t j = 0; j < size(m_pnts[0]); ++j)
     {
         B2[j] = denom*(s3s*A2_or_B2[j] - s1s*A1_or_A3[j]);
@@ -182,10 +208,10 @@ Point catmull_rom<Point>::operator()(const typename Point::value_type s) const
     return B1_or_C;
 }
 
-template<class Point>
-Point catmull_rom<Point>::prime(const typename Point::value_type s) const
+template<class Point, class RandomAccessContainer >
+Point catmull_rom<Point, RandomAccessContainer>::prime(const typename Point::value_type s) const
 {
-    using std::size;
+    using std_workaround::size;
     // https://math.stackexchange.com/questions/843595/how-can-i-calculate-the-derivative-of-a-catmull-rom-spline-with-nonuniform-param
     // http://denkovacs.com/2016/02/catmull-rom-spline-derivatives/
     if (s < 0 || s > m_max_s)

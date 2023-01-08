@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2007-2018, Arvid Norberg
+Copyright (c) 2007-2008, 2010, 2014-2021, Arvid Norberg
+Copyright (c) 2016-2018, Alden Torres
+Copyright (c) 2017, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,7 +47,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "libtorrent/aux_/disable_warnings_pop.hpp"
 
-#include "libtorrent/io_service_fwd.hpp"
+#include "libtorrent/io_context.hpp"
 #include "libtorrent/address.hpp"
 #include "libtorrent/error_code.hpp"
 #include "libtorrent/socket.hpp"
@@ -57,10 +59,12 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent {
 
+	// internal
 using interface_flags = flags::bitfield_flag<std::uint32_t, struct interface_flags_tag>;
 
 namespace if_flags {
 
+	// internal
 	constexpr interface_flags up = 0_bit;
 	constexpr interface_flags broadcast = 1_bit;
 	constexpr interface_flags loopback = 2_bit;
@@ -77,6 +81,7 @@ namespace if_flags {
 	constexpr interface_flags dormant = 13_bit;
 }
 
+// internal
 enum class if_state : std::uint8_t {
 
 	up,
@@ -88,6 +93,7 @@ enum class if_state : std::uint8_t {
 	unknown
 };
 
+// internal
 	struct ip_interface
 	{
 		address interface_address;
@@ -103,6 +109,7 @@ enum class if_state : std::uint8_t {
 		if_state state = if_state::unknown;
 	};
 
+// internal
 	struct ip_route
 	{
 		address destination;
@@ -115,10 +122,10 @@ enum class if_state : std::uint8_t {
 
 	// returns a list of the configured IP interfaces
 	// on the machine
-	TORRENT_EXTRA_EXPORT std::vector<ip_interface> enum_net_interfaces(io_service& ios
+	TORRENT_EXTRA_EXPORT std::vector<ip_interface> enum_net_interfaces(io_context& ios
 		, error_code& ec);
 
-	TORRENT_EXTRA_EXPORT std::vector<ip_route> enum_routes(io_service& ios
+	TORRENT_EXTRA_EXPORT std::vector<ip_route> enum_routes(io_context& ios
 		, error_code& ec);
 
 	// returns AF_INET or AF_INET6, depending on the address' family
@@ -143,6 +150,11 @@ enum class if_state : std::uint8_t {
 	TORRENT_EXTRA_EXPORT bool has_internet_route(string_view device, int family
 		, span<ip_route const> routes);
 
+	// returns whether there are *any* routes to the internet in the routing
+	// table. This can be used to determine if the routing table is fully
+	// populated or not.
+	TORRENT_EXTRA_EXPORT bool has_any_internet_route(span<ip_route const> routes);
+
 	// attempt to bind socket to the device with the specified name. For systems
 	// that don't support SO_BINDTODEVICE the socket will be bound to one of the
 	// IP addresses of the specified device. In this case it is necessary to
@@ -151,7 +163,7 @@ enum class if_state : std::uint8_t {
 	// in case SO_BINDTODEVICE succeeded and we don't need to verify it).
 	// TODO: 3 use string_view for device_name
 	template <class Socket>
-	address bind_socket_to_device(io_service& ios, Socket& sock
+	address bind_socket_to_device(io_context& ios, Socket& sock
 		, tcp const& protocol
 		, char const* device_name, int port, error_code& ec)
 	{
@@ -215,7 +227,7 @@ enum class if_state : std::uint8_t {
 	// returns the device name whose local address is ``addr``. If
 	// no such device is found, an empty string is returned.
 	TORRENT_EXTRA_EXPORT std::string device_for_address(address addr
-		, io_service& ios, error_code& ec);
+		, io_context& ios, error_code& ec);
 
 }
 

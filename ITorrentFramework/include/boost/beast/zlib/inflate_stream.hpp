@@ -8,7 +8,7 @@
 //
 // This is a derivative work based on Zlib, copyright below:
 /*
-    Copyright (C) 1995-2013 Jean-loup Gailly and Mark Adler
+    Copyright (C) 1995-2022 Jean-loup Gailly and Mark Adler
 
     This software is provided 'as-is', without any express or implied
     warranty.  In no event will the authors be held liable for any damages
@@ -182,7 +182,7 @@ public:
         the effects of the flush parameter in this implementation are on the return value
         of `write` as noted below, when `write` returns early when `Flush::block` or
         `Flush::trees` is used, and when `write` avoids the allocation of memory for a
-        sliding window when `Flush::finsih` is used.
+        sliding window when `Flush::finish` is used.
 
         If a preset dictionary is needed after this call,
         `write` sets `zs.adler` to the Adler-32 checksum of the dictionary chosen by

@@ -39,16 +39,21 @@ struct stream_base
         std::chrono::steady_clock::time_point;
     using tick_type = std::uint64_t;
 
-    struct op_state
+    template<typename Executor>
+    struct basic_op_state
     {
-        net::steady_timer timer;    // for timing out
+        net::basic_waitable_timer<
+                std::chrono::steady_clock,
+                net::wait_traits<
+                        std::chrono::steady_clock>,
+                Executor> timer;    // for timing out
         tick_type tick = 0;         // counts waits
         bool pending = false;       // if op is pending
         bool timeout = false;       // if timed out
 
         template<class... Args>
         explicit
-        op_state(Args&&... args)
+        basic_op_state(Args&&... args)
             : timer(std::forward<Args>(args)...)
         {
         }
@@ -56,22 +61,35 @@ struct stream_base
 
     class pending_guard
     {
-        bool& b_;
+        bool* b_ = nullptr;
         bool clear_ = true;
 
     public:
         ~pending_guard()
         {
-            if(clear_)
-                b_ = false;
+            if(clear_ && b_)
+                *b_ = false;
+        }
+
+        pending_guard()
+        : b_(nullptr)
+        , clear_(true)
+        {
         }
 
         explicit
         pending_guard(bool& b)
-            : b_(b)
+        : b_(&b)
         {
-            BOOST_ASSERT(! b_);
-            b_ = true;
+            // If this assert goes off, it means you are attempting
+            // to issue two of the same asynchronous I/O operation
+            // at the same time, without waiting for the first one
+            // to complete. For example, attempting two simultaneous
+            // calls to async_read_some. Only one pending call of
+            // each I/O type (read and write) is permitted.
+            //
+            BOOST_ASSERT(! *b_);
+            *b_ = true;
         }
 
         pending_guard(
@@ -82,11 +100,29 @@ struct stream_base
         {
         }
 
+        void assign(bool& b)
+        {
+            BOOST_ASSERT(!b_);
+            BOOST_ASSERT(clear_);
+            b_ = &b;
+
+            // If this assert goes off, it means you are attempting
+            // to issue two of the same asynchronous I/O operation
+            // at the same time, without waiting for the first one
+            // to complete. For example, attempting two simultaneous
+            // calls to async_read_some. Only one pending call of
+            // each I/O type (read and write) is permitted.
+            //
+            BOOST_ASSERT(! *b_);
+            *b_ = true;
+        }
+
         void
         reset()
         {
             BOOST_ASSERT(clear_);
-            b_ = false;
+            if (b_)
+                *b_ = false;
             clear_ = false;
         }
     };

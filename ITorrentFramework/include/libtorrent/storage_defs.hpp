@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2006-2007, 2009, 2013-2014, 2016-2020, 2022, Arvid Norberg
+Copyright (c) 2016, 2021, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,16 +45,14 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent {
 
-	struct TORRENT_EXPORT storage_interface;
-
 	using storage_index_t = aux::strong_typedef<std::uint32_t, struct storage_index_tag_t>;
 
 	// types of storage allocation used for add_torrent_params::storage_mode.
 	enum storage_mode_t
 	{
 		// All pieces will be written to their final position, all files will be
-		// allocated in full when the torrent is first started. This is done with
-		// ``fallocate()`` and similar calls. This mode minimizes fragmentation.
+		// allocated in full when the torrent is first started. This mode minimizes
+		// fragmentation but could be a costly operation.
 		storage_mode_allocate,
 
 		// All pieces will be written to the place where they belong and sparse files
@@ -67,8 +66,31 @@ namespace libtorrent {
 		no_error,
 		fatal_disk_error,
 		need_full_check,
-		file_exist
+		file_exist,
+
+		// hidden
+		mask = 0xf,
+
+		// this is not an enum value, but a flag that can be set in the return
+		// from async_check_files, in case an existing file was found larger than
+		// specified in the torrent. i.e. it has garbage at the end
+		// the status_t field is used for this to preserve ABI.
+		oversized_file = 0x10,
 	};
+
+	// internal
+	inline status_t operator|(status_t lhs, status_t rhs)
+	{
+		return status_t(static_cast<std::uint8_t>(lhs) | static_cast<std::uint8_t>(rhs));
+	}
+	inline status_t operator&(status_t lhs, status_t rhs)
+	{
+		return status_t(static_cast<std::uint8_t>(lhs) & static_cast<std::uint8_t>(rhs));
+	}
+	inline status_t operator~(status_t lhs)
+	{
+		return status_t(~static_cast<std::uint8_t>(lhs));
+	}
 
 	// flags for async_move_storage
 	enum class move_flags_t : std::uint8_t
@@ -101,6 +123,8 @@ namespace libtorrent {
 	};
 #endif
 
+	// a parameter pack used to construct the storage for a torrent, used in
+	// disk_interface
 	struct TORRENT_EXPORT storage_params
 	{
 		storage_params(file_storage const& f, file_storage const* mf
@@ -119,24 +143,8 @@ namespace libtorrent {
 		std::string const& path;
 		storage_mode_t mode{storage_mode_sparse};
 		aux::vector<download_priority_t, file_index_t> const& priorities;
-		sha1_hash const& info_hash;
+		sha1_hash info_hash;
 	};
-
-	using storage_constructor_type = std::function<storage_interface*(storage_params const& params, file_pool&)>;
-
-	// the constructor function for the regular file storage. This is the
-	// default value for add_torrent_params::storage.
-	TORRENT_EXPORT storage_interface* default_storage_constructor(storage_params const&
-		, file_pool& p);
-
-	// the constructor function for the disabled storage. This can be used for
-	// testing and benchmarking. It will throw away any data written to
-	// it and return garbage for anything read from it.
-	TORRENT_EXPORT storage_interface* disabled_storage_constructor(storage_params const&, file_pool&);
-
-	// the constructor function for the "zero" storage. This will always read
-	// zeros and ignore all writes.
-	TORRENT_EXPORT storage_interface* zero_storage_constructor(storage_params const&, file_pool&);
 }
 
 #endif

@@ -16,7 +16,6 @@
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/core/buffers_range.hpp>
 #include <boost/beast/core/detail/clamp.hpp>
-#include <boost/beast/core/detail/type_traits.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/optional.hpp>
 #include <cstdint>
@@ -97,7 +96,7 @@ public:
             {
                 if(*length > body_.max_size())
                 {
-                    ec = error::buffer_overflow;
+                    BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
                     return;
                 }
                 body_.reserve(beast::detail::clamp(*length));
@@ -114,7 +113,7 @@ public:
             auto const size = body_.size();
             if (extra > body_.max_size() - size)
             {
-                ec = error::buffer_overflow;
+                BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
                 return 0;
             }
 

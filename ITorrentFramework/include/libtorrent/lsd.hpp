@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2007-2018, Arvid Norberg
+Copyright (c) 2007, 2009, 2012, 2014-2015, 2017, 2019-2020, Arvid Norberg
+Copyright (c) 2016, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,16 +36,18 @@ POSSIBILITY OF SUCH DAMAGE.
 
 #include "libtorrent/socket.hpp"
 #include "libtorrent/sha1_hash.hpp"
-#include "libtorrent/broadcast_socket.hpp"
 #include "libtorrent/deadline_timer.hpp"
 #include "libtorrent/aux_/lsd.hpp"
+#include "libtorrent/error_code.hpp"
+#include "libtorrent/io_context.hpp"
+#include "libtorrent/address.hpp"
 
 namespace libtorrent {
 
 struct lsd : std::enable_shared_from_this<lsd>
 {
-	lsd(io_service& ios, aux::lsd_callback& cb
-		, address const& listen_address, address const& netmask);
+	lsd(io_context& ios, aux::lsd_callback& cb
+		, address listen_address, address netmask);
 	~lsd();
 
 	void start(error_code& ec);
@@ -57,9 +60,9 @@ private:
 	std::shared_ptr<lsd> self() { return shared_from_this(); }
 
 	void announce_impl(sha1_hash const& ih, int listen_port, int retry_count);
-	void resend_announce(error_code const& e, sha1_hash const& ih
+	void resend_announce(error_code const& e, sha1_hash const& info_hash
 		, int listen_port, int retry_count);
-	void on_announce(error_code const& ec);
+	void on_announce(error_code const& ec, std::size_t len);
 
 	aux::lsd_callback& m_callback;
 
@@ -67,6 +70,8 @@ private:
 	address m_netmask;
 
 	udp::socket m_socket;
+	std::array<char, 1500> m_buffer;
+	udp::endpoint m_remote;
 
 #ifndef TORRENT_DISABLE_LOGGING
 	bool should_log() const;

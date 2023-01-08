@@ -130,6 +130,10 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
         typedef iterator<Functor> iterator_type;
 
     private:
+#ifdef _MSC_VER
+#  pragma warning(push)
+#  pragma warning(disable: 4512) // assignment operator could not be generated.
+#endif
         // this type is purely used for the iterator_type construction below
         struct iterator_data_type 
         {
@@ -150,11 +154,10 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             get_state_name_type get_state_name_;
             std::size_t num_states_;
             bool bol_;
-
-        private:
-            // silence MSVC warning C4512: assignment operator could not be generated
-            iterator_data_type& operator= (iterator_data_type const&);
         };
+#ifdef _MSC_VER
+#  pragma warning(pop)
+#endif
 
         typedef LexerTables tables_type;
 
@@ -230,7 +233,7 @@ namespace boost { namespace spirit { namespace lex { namespace lexertl
             actions_.add_action(unique_id, state, wrapper_type::call(act));
         }
 
-        bool init_dfa(bool minimize = false) const { return true; }
+        bool init_dfa(bool /*minimize*/ = false) const { return true; }
 
     private:
         typename Functor::semantic_actions_type actions_;

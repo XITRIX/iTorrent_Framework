@@ -26,7 +26,7 @@ namespace boost { namespace process {
 #if defined(BOOST_PROCESS_DOXYGEN)
 
 
-/** Class implementing and asnychronous I/O-Object for use with boost.asio.
+/** Class implementing an asnychronous I/O-Object for use with boost.asio.
  *  It is based on the corresponding I/O Object, that is either boost::asio::windows::stream_handle or
  *  boost::asio::posix::stream_descriptor.
  *
@@ -46,6 +46,8 @@ public:
      *
      */
     typedef platform_specific handle_type;
+
+    typedef typename handle_type::executor_type executor_type;
 
     /** Construct a new async_pipe, does automatically open the pipe.
      * Initializes source and sink with the same io_context.

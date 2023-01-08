@@ -15,7 +15,6 @@
 #include <boost/beast/http/error.hpp>
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/core/detail/clamp.hpp>
-#include <boost/beast/core/detail/type_traits.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/optional.hpp>
 #include <cstdint>
@@ -39,8 +38,7 @@ template<class T, class Allocator = std::allocator<T>>
 struct vector_body
 {
 private:
-    static_assert(sizeof(T) == 1 &&
-        std::is_integral<T>::value,
+    static_assert(sizeof(T) == 1,
         "T requirements not met");
 
 public:
@@ -91,7 +89,7 @@ public:
             {
                 if(*length > body_.max_size())
                 {
-                    ec = error::buffer_overflow;
+                    BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
                     return;
                 }
                 body_.reserve(beast::detail::clamp(*length));
@@ -108,7 +106,7 @@ public:
             auto const len = body_.size();
             if (n > body_.max_size() - len)
             {
-                ec = error::buffer_overflow;
+                BOOST_BEAST_ASSIGN_EC(ec, error::buffer_overflow);
                 return 0;
             }
 

@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2007-2018, Arvid Norberg
+Copyright (c) 2007, 2010, 2012, 2015, 2017, 2019-2020, Arvid Norberg
+Copyright (c) 2018, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,7 +35,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_INSTANTIATE_CONNECTION
 
 #include "libtorrent/aux_/export.hpp"
-#include "libtorrent/io_service.hpp"
+#include "libtorrent/io_context.hpp"
 #include "libtorrent/aux_/proxy_settings.hpp"
 #include "libtorrent/aux_/socket_type.hpp"
 
@@ -45,8 +46,9 @@ namespace libtorrent {
 namespace aux {
 
 	// instantiate a socket_type (s) according to the specified criteria
-	TORRENT_EXTRA_EXPORT bool instantiate_connection(io_service& ios
-		, aux::proxy_settings const& ps, aux::socket_type& s
+	TORRENT_EXTRA_EXPORT
+	aux::socket_type instantiate_connection(io_context&
+		, aux::proxy_settings const& ps
 		, void* ssl_context
 		, utp_socket_manager* sm
 		, bool peer_connection

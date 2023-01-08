@@ -15,10 +15,12 @@
 #include <boost/gil/premultiply.hpp>
 #include <boost/gil/io/base.hpp>
 #include <boost/gil/io/device.hpp>
-#include <boost/gil/io/dynamic_io_new.hpp>
+#include <boost/gil/io/detail/dynamic.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 extern "C" {
@@ -39,7 +41,8 @@ template <typename PixelReference>
 struct my_interleaved_pixel_iterator_type_from_pixel_reference
 {
 private:
-    using pixel_t = typename remove_reference<PixelReference>::type::value_type;
+    using pixel_t = typename std::remove_reference<PixelReference>::type::value_type;
+
 public:
     using type = typename iterator_type_from_pixel
         <
@@ -162,7 +165,7 @@ private:
 	template<typename View>
 	void write_bit_aligned_view_to_dev( const View&       view
                                       , const std::size_t row_size_in_bytes
-                                      , const mpl::true_&    // has_alpha
+                                      , const std::true_type&    // has_alpha
                                       )
     {
         byte_vector_t row( row_size_in_bytes );
@@ -181,7 +184,7 @@ private:
 
 
             this->_io_dev.write_scaline( row
-                                       , (uint32) y
+                                       , static_cast<std::uint32_t>( y )
                                        , 0
                                        );
 
@@ -192,7 +195,7 @@ private:
 	template<typename View>
 	void write_bit_aligned_view_to_dev( const View&       view
                                       , const std::size_t row_size_in_bytes
-                                      , const mpl::false_&    // has_alpha
+                                      , const std::false_type&    // has_alpha
                                       )
     {
         byte_vector_t row( row_size_in_bytes );
@@ -209,7 +212,7 @@ private:
 
 
             this->_io_dev.write_scaline( row
-                                       , (uint32) y
+                                       , static_cast<std::uint32_t>( y )
                                        , 0
                                        );
 
@@ -222,11 +225,11 @@ private:
     template< typename View >
     void write_data( const View&   view
                    , std::size_t   row_size_in_bytes
-                   , const mpl::true_&    // bit_aligned
+                   , const std::true_type&    // bit_aligned
                    )
     {
         using colour_space_t = typename color_space_type<typename View::value_type>::type;
-        using has_alpha_t = mpl::bool_<mpl::contains<colour_space_t, alpha_t>::value>;
+        using has_alpha_t = mp11::mp_contains<colour_space_t, alpha_t>;
 
         write_bit_aligned_view_to_dev(view, row_size_in_bytes, has_alpha_t());
     }
@@ -235,7 +238,7 @@ private:
     void write_tiled_data( const View&            view
                          , tiff_tile_width::type  tw
                          , tiff_tile_length::type th
-                         , const mpl::true_&    // bit_aligned
+                         , const std::true_type&    // bit_aligned
                          )
     {
         byte_vector_t row( this->_io_dev.get_tile_size() );
@@ -249,7 +252,7 @@ private:
     template< typename View >
     void write_data( const View&   view
                    , std::size_t
-                   , const mpl::false_&    // bit_aligned
+                   , const std::false_type&    // bit_aligned
                    )
     {
         std::vector< pixel< typename channel_type< View >::type
@@ -271,7 +274,7 @@ private:
 						);
 
             this->_io_dev.write_scaline( row_addr
-                                       , (uint32) y
+                                       , static_cast<std::uint32_t>( y )
                                        , 0
                                        );
 
@@ -283,7 +286,7 @@ private:
     void write_tiled_data( const View&            view
                          , tiff_tile_width::type  tw
                          , tiff_tile_length::type th
-                         , const mpl::false_&    // bit_aligned
+                         , const std::false_type&    // bit_aligned
                          )
     {
         byte_vector_t row( this->_io_dev.get_tile_size() );
@@ -302,7 +305,7 @@ private:
             >
 	void write_tiled_view_to_dev( const View&  view
                                 , IteratorType it
-                                , const mpl::true_& // has_alpha
+                                , const std::true_type& // has_alpha
                                 )
     {
         auto pm_view = premultiply_view <typename View:: value_type>( view );
@@ -319,7 +322,7 @@ private:
             >
 	void write_tiled_view_to_dev( const View&  view
                                 , IteratorType it
-                                , const mpl::false_& // has_alpha
+                                , const std::false_type& // has_alpha
                                 )
     {
         std::copy( view.begin()
@@ -359,7 +362,7 @@ private:
                                                       );
 
                     using colour_space_t = typename color_space_type<typename View::value_type>::type;
-                    using has_alpha_t = mpl::bool_<mpl::contains<colour_space_t, alpha_t>::value>;
+                    using has_alpha_t = mp11::mp_contains<colour_space_t, alpha_t>;
 
                     write_tiled_view_to_dev(tile_subimage_view, it, has_alpha_t());
                 }
@@ -391,8 +394,8 @@ private:
                 }
 
                 this->_io_dev.write_tile( row
-                                        , static_cast< uint32 >( j )
-                                        , static_cast< uint32 >( i )
+                                        , static_cast< std::uint32_t >( j )
+                                        , static_cast< std::uint32_t >( i )
                                         , 0
                                         , 0
                                         );
@@ -428,14 +431,14 @@ public:
               )
     {}
 
-    template< typename Views >
-    void apply( const any_image_view< Views >& views )
+    template< typename ...Views >
+    void apply( const any_image_view< Views... >& views )
     {
         detail::dynamic_io_fnobj< detail::tiff_write_is_supported
                                 , parent_t
                                 > op( this );
 
-        apply_operation( views, op );
+        variant2::visit( op, views );
     }
 };
 

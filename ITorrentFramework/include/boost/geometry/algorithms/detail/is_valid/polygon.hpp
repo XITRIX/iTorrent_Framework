@@ -2,8 +2,9 @@
 
 // Copyright (c) 2017 Adam Wulkiewicz, Lodz, Poland.
 
-// Copyright (c) 2014-2018, Oracle and/or its affiliates.
+// Copyright (c) 2014-2021, Oracle and/or its affiliates.
 
+// Contributed and/or modified by Vissarion Fysikopoulos, on behalf of Oracle
 // Contributed and/or modified by Menelaos Karavelas, on behalf of Oracle
 // Contributed and/or modified by Adam Wulkiewicz, on behalf of Oracle
 
@@ -25,7 +26,8 @@
 #include <vector>
 
 #include <boost/core/ignore_unused.hpp>
-#include <boost/range.hpp>
+#include <boost/range/begin.hpp>
+#include <boost/range/end.hpp>
 
 #include <boost/geometry/core/assert.hpp>
 #include <boost/geometry/core/exterior_ring.hpp>
@@ -35,6 +37,7 @@
 
 #include <boost/geometry/util/condition.hpp>
 #include <boost/geometry/util/range.hpp>
+#include <boost/geometry/util/sequence.hpp>
 
 #include <boost/geometry/geometries/box.hpp>
 
@@ -48,7 +51,6 @@
 #include <boost/geometry/algorithms/detail/point_on_border.hpp>
 #include <boost/geometry/algorithms/within.hpp>
 
-#include <boost/geometry/algorithms/detail/check_iterator_range.hpp>
 #include <boost/geometry/algorithms/detail/partition.hpp>
 
 #include <boost/geometry/algorithms/detail/is_valid/complement_graph.hpp>
@@ -61,6 +63,12 @@
 #include <boost/geometry/algorithms/detail/is_valid/debug_complement_graph.hpp>
 
 #include <boost/geometry/algorithms/dispatch/is_valid.hpp>
+
+
+// TEMP
+#include <boost/geometry/strategies/envelope/cartesian.hpp>
+#include <boost/geometry/strategies/envelope/geographic.hpp>
+#include <boost/geometry/strategies/envelope/spherical.hpp>
 
 
 namespace boost { namespace geometry
@@ -76,20 +84,19 @@ template <typename Polygon, bool CheckRingValidityOnly = false>
 class is_valid_polygon
 {
 protected:
-    typedef debug_validity_phase<Polygon> debug_phase;
 
     template <typename VisitPolicy, typename Strategy>
-    struct per_ring
+    struct is_invalid_ring
     {
-        per_ring(VisitPolicy& policy, Strategy const& strategy)
+        is_invalid_ring(VisitPolicy& policy, Strategy const& strategy)
             : m_policy(policy)
             , m_strategy(strategy)
         {}
 
         template <typename Ring>
-        inline bool apply(Ring const& ring) const
+        inline bool operator()(Ring const& ring) const
         {
-            return detail::is_valid::is_valid_ring
+            return ! detail::is_valid::is_valid_ring
                 <
                     Ring, false, true
                 >::apply(ring, m_policy, m_strategy);
@@ -104,14 +111,9 @@ protected:
                                          VisitPolicy& visitor,
                                          Strategy const& strategy)
     {
-        return
-            detail::check_iterator_range
-                <
-                    per_ring<VisitPolicy, Strategy>,
-                    true // allow for empty interior ring range
-                >::apply(boost::begin(interior_rings),
-                         boost::end(interior_rings),
-                         per_ring<VisitPolicy, Strategy>(visitor, strategy));
+        return std::none_of(boost::begin(interior_rings), 
+                            boost::end(interior_rings),
+                            is_invalid_ring<VisitPolicy, Strategy>(visitor, strategy));
     }
 
     struct has_valid_rings
@@ -121,6 +123,7 @@ protected:
                                  VisitPolicy& visitor,
                                  Strategy const& strategy)
         {
+            typedef debug_validity_phase<Polygon> debug_phase;
             typedef typename ring_type<Polygon>::type ring_type;
 
             // check validity of exterior ring
@@ -177,42 +180,50 @@ protected:
     };
 
     // structs for partition -- start
-    template <typename EnvelopeStrategy>
+    template <typename Strategy>
     struct expand_box
     {
-        explicit expand_box(EnvelopeStrategy const& strategy) : m_strategy(strategy) {}
+        explicit expand_box(Strategy const& strategy)
+            : m_strategy(strategy)
+        {}
 
         template <typename Box, typename Iterator>
         inline void apply(Box& total, partition_item<Iterator, Box> const& item) const
         {
-            geometry::expand(total, item.get_envelope(m_strategy));
+            geometry::expand(total,
+                             item.get_envelope(m_strategy),
+                             m_strategy);
         }
 
-        EnvelopeStrategy const& m_strategy;
+        Strategy const& m_strategy;
     };
 
-    template <typename EnvelopeStrategy>
+    template <typename Strategy>
     struct overlaps_box
     {
-        explicit overlaps_box(EnvelopeStrategy const& strategy) : m_strategy(strategy) {}
+        explicit overlaps_box(Strategy const& strategy)
+            : m_strategy(strategy)
+        {}
 
         template <typename Box, typename Iterator>
         inline bool apply(Box const& box, partition_item<Iterator, Box> const& item) const
         {
-            return ! geometry::disjoint(item.get_envelope(m_strategy), box);
+            return ! geometry::disjoint(item.get_envelope(m_strategy),
+                                        box,
+                                        m_strategy);
         }
 
-        EnvelopeStrategy const& m_strategy;
+        Strategy const& m_strategy;
     };
 
 
-    template <typename WithinStrategy>
+    template <typename Strategy>
     struct item_visitor_type
     {
         bool items_overlap;
-        WithinStrategy const& m_strategy;
+        Strategy const& m_strategy;
 
-        explicit item_visitor_type(WithinStrategy const& strategy)
+        explicit item_visitor_type(Strategy const& strategy)
             : items_overlap(false)
             , m_strategy(strategy)
         {}
@@ -221,7 +232,7 @@ protected:
         inline bool apply(partition_item<Iterator, Box> const& item1,
                           partition_item<Iterator, Box> const& item2)
         {
-            typedef boost::mpl::vector
+            typedef util::type_sequence
                 <
                     geometry::de9im::static_mask<'T'>,
                     geometry::de9im::static_mask<'*', 'T'>,
@@ -275,14 +286,6 @@ protected:
             }
         }
 
-        // prepare strategy
-        typedef typename std::iterator_traits<RingIterator>::value_type inter_ring_type;
-        typename Strategy::template point_in_geometry_strategy
-            <
-                inter_ring_type, ExteriorRing
-            >::type const in_exterior_strategy
-            = strategy.template get_point_in_geometry_strategy<inter_ring_type, ExteriorRing>();
-
         signed_size_type ring_index = 0;
         for (RingIterator it = rings_first; it != rings_beyond;
              ++it, ++ring_index)
@@ -290,7 +293,7 @@ protected:
             // do not examine interior rings that have turns with the
             // exterior ring
             if (ring_indices.find(ring_index) == ring_indices.end()
-                && ! geometry::covered_by(range::front(*it), exterior_ring, in_exterior_strategy))
+                && ! geometry::covered_by(range::front(*it), exterior_ring, strategy))
             {
                 return visitor.template apply<failure_interior_rings_outside>();
             }
@@ -318,11 +321,6 @@ protected:
             }
         }
 
-        // prepare strategies
-        typedef typename Strategy::envelope_strategy_type envelope_strategy_type;
-        envelope_strategy_type const envelope_strategy
-            = strategy.get_envelope_strategy();
-
         // call partition to check if interior rings are disjoint from
         // each other
         item_visitor_type<Strategy> item_visitor(strategy);
@@ -331,8 +329,8 @@ protected:
             <
                 box_type
             >::apply(ring_iterators, item_visitor,
-                     expand_box<envelope_strategy_type>(envelope_strategy),
-                     overlaps_box<envelope_strategy_type>(envelope_strategy));
+                     expand_box<Strategy>(strategy),
+                     overlaps_box<Strategy>(strategy));
 
         if (item_visitor.items_overlap)
         {
@@ -404,7 +402,11 @@ protected:
                 <
                     TurnIterator
                 >::value_type turn_type;
-            typedef complement_graph<typename turn_type::point_type> graph;
+            typedef complement_graph
+                <
+                    typename turn_type::point_type,
+                    typename Strategy::cs_tag
+                > graph;
 
             graph g(geometry::num_interior_rings(polygon) + 1);
             for (TurnIterator tit = first; tit != beyond; ++tit)
@@ -451,9 +453,10 @@ public:
         }
 
         // compute turns and check if all are acceptable
+        typedef debug_validity_phase<Polygon> debug_phase;
         debug_phase::apply(3);
 
-        typedef has_valid_self_turns<Polygon> has_valid_turns;
+        typedef has_valid_self_turns<Polygon, typename Strategy::cs_tag> has_valid_turns;
 
         std::deque<typename has_valid_turns::turn_type> turns;
         bool has_invalid_turns

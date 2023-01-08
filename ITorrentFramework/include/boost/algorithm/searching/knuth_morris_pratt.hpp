@@ -13,13 +13,14 @@
 #include <vector>
 #include <iterator>     // for std::iterator_traits
 
+#include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 
 #include <boost/range/begin.hpp>
 #include <boost/range/end.hpp>
 
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/type_traits/is_same.hpp>
 
 #include <boost/algorithm/searching/detail/debugging.hpp>

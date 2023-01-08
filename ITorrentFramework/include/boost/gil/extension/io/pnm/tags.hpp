@@ -12,7 +12,7 @@
 
 #include <boost/gil/io/base.hpp>
 
-#include <boost/mpl/integral_c.hpp>
+#include <type_traits>
 
 namespace boost { namespace gil {
 
@@ -24,13 +24,13 @@ struct pnm_tag : format_tag {};
 /// Defines type for image type property.
 struct pnm_image_type : property_base< uint32_t >
 {
-    using mono_asc_t = boost::mpl::integral_c<type, 1>;
-    using gray_asc_t = boost::mpl::integral_c<type, 2>;
-    using color_asc_t = boost::mpl::integral_c<type, 3>;
+    using mono_asc_t = std::integral_constant<type, 1>;
+    using gray_asc_t = std::integral_constant<type, 2>;
+    using color_asc_t = std::integral_constant<type, 3>;
 
-    using mono_bin_t = boost::mpl::integral_c<type, 4>;
-    using gray_bin_t = boost::mpl::integral_c<type, 5>;
-    using color_bin_t = boost::mpl::integral_c<type, 6>;
+    using mono_bin_t = std::integral_constant<type, 4>;
+    using gray_bin_t = std::integral_constant<type, 5>;
+    using color_bin_t = std::integral_constant<type, 6>;
 };
 
 /// Defines type for image width property.
@@ -65,15 +65,15 @@ template<>
 struct image_read_settings< pnm_tag > : public image_read_settings_base
 {
     /// Default constructor
-    image_read_settings< pnm_tag >()
+    image_read_settings()
     : image_read_settings_base()
     {}
 
     /// Constructor
     /// \param top_left   Top left coordinate for reading partial image.
     /// \param dim        Dimensions for reading partial image.
-    image_read_settings( const point_t& top_left
-                       , const point_t& dim
+    image_read_settings( point_t const& top_left
+                       , point_t const& dim
                        )
     : image_read_settings_base( top_left
                               , dim

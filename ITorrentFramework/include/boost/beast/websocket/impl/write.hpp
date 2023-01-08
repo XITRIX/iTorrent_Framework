@@ -41,7 +41,7 @@ template<class Handler, class Buffers>
 class stream<NextLayer, deflateSupported>::write_some_op
     : public beast::async_base<
         Handler, beast::executor_type<stream>>
-    , public net::coroutine
+    , public asio::coroutine
 {
     enum
     {
@@ -86,7 +86,7 @@ public:
         // Set up the outgoing frame header
         if(! impl.wr_cont)
         {
-            impl.begin_msg();
+            impl.begin_msg(beast::buffer_bytes(bs));
             fh_.rsv1 = impl.wr_compress;
         }
         else
@@ -114,7 +114,7 @@ public:
             else
             {
                 BOOST_ASSERT(impl.wr_buf_size != 0);
-                remain_ = buffer_bytes(cb_);
+                remain_ = beast::buffer_bytes(cb_);
                 if(remain_ > impl.wr_buf_size)
                     how_ = do_nomask_frag;
                 else
@@ -130,7 +130,7 @@ public:
             else
             {
                 BOOST_ASSERT(impl.wr_buf_size != 0);
-                remain_ = buffer_bytes(cb_);
+                remain_ = beast::buffer_bytes(cb_);
                 if(remain_ > impl.wr_buf_size)
                     how_ = do_mask_frag;
                 else
@@ -147,10 +147,10 @@ public:
 };
 
 template<class NextLayer, bool deflateSupported>
-template<class Buffers, class Handler>
+template<class Handler, class Buffers>
 void
 stream<NextLayer, deflateSupported>::
-write_some_op<Buffers, Handler>::
+write_some_op<Handler, Buffers>::
 operator()(
     error_code ec,
     std::size_t bytes_transferred,
@@ -162,7 +162,7 @@ operator()(
     auto sp = wp_.lock();
     if(! sp)
     {
-        ec = net::error::operation_aborted;
+        BOOST_BEAST_ASSIGN_EC(ec, net::error::operation_aborted);
         bytes_transferred_ = 0;
         return this->complete(cont, ec, bytes_transferred_);
     }
@@ -174,10 +174,33 @@ operator()(
         {
         do_suspend:
             BOOST_ASIO_CORO_YIELD
-            impl.op_wr.emplace(std::move(*this));
+            {
+                BOOST_ASIO_HANDLER_LOCATION((
+                    __FILE__, __LINE__,
+                    fin_ ?
+                        "websocket::async_write" :
+                        "websocket::async_write_some"
+                    ));
+                this->set_allowed_cancellation(net::cancellation_type::all);
+                impl.op_wr.emplace(std::move(*this),
+                                   net::cancellation_type::all);
+            }
+            if (ec)
+                return this->complete(cont, ec, bytes_transferred_);
+
+            this->set_allowed_cancellation(net::cancellation_type::terminal);
             impl.wr_block.lock(this);
             BOOST_ASIO_CORO_YIELD
-            net::post(std::move(*this));
+            {
+                BOOST_ASIO_HANDLER_LOCATION((
+                    __FILE__, __LINE__,
+                    fin_ ?
+                        "websocket::async_write" :
+                        "websocket::async_write_some"
+                    ));
+
+                net::post(std::move(*this));
+            }
             BOOST_ASSERT(impl.wr_block.is_locked(this));
         }
         if(impl.check_stop_now(ec))
@@ -189,15 +212,29 @@ operator()(
         {
             // send a single frame
             fh_.fin = fin_;
-            fh_.len = buffer_bytes(cb_);
+            fh_.len = beast::buffer_bytes(cb_);
             impl.wr_fb.clear();
             detail::write<flat_static_buffer_base>(
                 impl.wr_fb, fh_);
             impl.wr_cont = ! fin_;
             BOOST_ASIO_CORO_YIELD
-            net::async_write(impl.stream(),
-                buffers_cat(impl.wr_fb.data(), cb_),
-                    beast::detail::bind_continuation(std::move(*this)));
+            {
+                BOOST_ASIO_HANDLER_LOCATION((
+                    __FILE__, __LINE__,
+                    fin_ ?
+                        "websocket::async_write" :
+                        "websocket::async_write_some"
+                    ));
+
+                net::async_write(impl.stream(),
+                    buffers_cat(
+                        net::const_buffer(impl.wr_fb.data()),
+                        net::const_buffer(0, 0),
+                        cb_,
+                        buffers_prefix(0, cb_)
+                        ),
+                        beast::detail::bind_continuation(std::move(*this)));
+            }
             bytes_transferred_ += clamp(fh_.len);
             if(impl.check_stop_now(ec))
                 goto upcall;
@@ -221,10 +258,26 @@ operator()(
                 impl.wr_cont = ! fin_;
                 // Send frame
                 BOOST_ASIO_CORO_YIELD
-                net::async_write(impl.stream(), buffers_cat(
-                    impl.wr_fb.data(),
-                    buffers_prefix(clamp(fh_.len), cb_)),
-                        beast::detail::bind_continuation(std::move(*this)));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        fin_ ?
+                            "websocket::async_write" :
+                            "websocket::async_write_some"
+                        ));
+
+                    buffers_suffix<Buffers> empty_cb(cb_);
+                    empty_cb.consume(~std::size_t(0));
+
+                    net::async_write(impl.stream(),
+                        buffers_cat(
+                            net::const_buffer(impl.wr_fb.data()),
+                            net::const_buffer(0, 0),
+                            empty_cb,
+                            buffers_prefix(clamp(fh_.len), cb_)
+                            ),
+                            beast::detail::bind_continuation(std::move(*this)));
+                }
                 n = clamp(fh_.len); // restore `n` on yield
                 bytes_transferred_ += n;
                 if(impl.check_stop_now(ec))
@@ -272,10 +325,26 @@ operator()(
             impl.wr_cont = ! fin_;
             // write frame header and some payload
             BOOST_ASIO_CORO_YIELD
-            net::async_write(impl.stream(), buffers_cat(
-                impl.wr_fb.data(),
-                net::buffer(impl.wr_buf.get(), n)),
-                    beast::detail::bind_continuation(std::move(*this)));
+            {
+                BOOST_ASIO_HANDLER_LOCATION((
+                    __FILE__, __LINE__,
+                    fin_ ?
+                        "websocket::async_write" :
+                        "websocket::async_write_some"
+                    ));
+
+                buffers_suffix<Buffers> empty_cb(cb_);
+                empty_cb.consume(~std::size_t(0));
+
+                net::async_write(impl.stream(),
+                    buffers_cat(
+                        net::const_buffer(impl.wr_fb.data()),
+                        net::const_buffer(net::buffer(impl.wr_buf.get(), n)),
+                        empty_cb,
+                        buffers_prefix(0, empty_cb)
+                        ),
+                        beast::detail::bind_continuation(std::move(*this)));
+            }
             // VFALCO What about consuming the buffer on error?
             bytes_transferred_ +=
                 bytes_transferred - impl.wr_fb.size();
@@ -292,9 +361,26 @@ operator()(
                 remain_ -= n;
                 // write more payload
                 BOOST_ASIO_CORO_YIELD
-                net::async_write(impl.stream(),
-                    net::buffer(impl.wr_buf.get(), n),
-                        beast::detail::bind_continuation(std::move(*this)));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        fin_ ?
+                            "websocket::async_write" :
+                            "websocket::async_write_some"
+                        ));
+
+                    buffers_suffix<Buffers> empty_cb(cb_);
+                    empty_cb.consume(~std::size_t(0));
+
+                    net::async_write(impl.stream(),
+                        buffers_cat(
+                            net::const_buffer(0, 0),
+                            net::const_buffer(net::buffer(impl.wr_buf.get(), n)),
+                            empty_cb,
+                            buffers_prefix(0, empty_cb)
+                            ),
+                            beast::detail::bind_continuation(std::move(*this)));
+                }
                 bytes_transferred_ += bytes_transferred;
                 if(impl.check_stop_now(ec))
                     goto upcall;
@@ -325,10 +411,26 @@ operator()(
                 impl.wr_cont = ! fin_;
                 // Send frame
                 BOOST_ASIO_CORO_YIELD
-                net::async_write(impl.stream(), buffers_cat(
-                    impl.wr_fb.data(),
-                    net::buffer(impl.wr_buf.get(), n)),
-                        beast::detail::bind_continuation(std::move(*this)));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        fin_ ?
+                            "websocket::async_write" :
+                            "websocket::async_write_some"
+                        ));
+
+                    buffers_suffix<Buffers> empty_cb(cb_);
+                    empty_cb.consume(~std::size_t(0));
+
+                    net::async_write(impl.stream(),
+                        buffers_cat(
+                            net::const_buffer(impl.wr_fb.data()),
+                            net::const_buffer(net::buffer(impl.wr_buf.get(), n)),
+                            empty_cb,
+                            buffers_prefix(0, empty_cb)
+                            ),
+                            beast::detail::bind_continuation(std::move(*this)));
+                }
                 n = bytes_transferred - impl.wr_fb.size();
                 bytes_transferred_ += n;
                 if(impl.check_stop_now(ec))
@@ -365,13 +467,13 @@ operator()(
                 more_ = impl.deflate(b, cb_, fin_, in_, ec);
                 if(impl.check_stop_now(ec))
                     goto upcall;
-                n = buffer_bytes(b);
+                n = beast::buffer_bytes(b);
                 if(n == 0)
                 {
                     // The input was consumed, but there is
                     // no output due to compression latency.
                     BOOST_ASSERT(! fin_);
-                    BOOST_ASSERT(buffer_bytes(cb_) == 0);
+                    BOOST_ASSERT(beast::buffer_bytes(cb_) == 0);
                     goto upcall;
                 }
                 if(fh_.mask)
@@ -389,9 +491,26 @@ operator()(
                 impl.wr_cont = ! fin_;
                 // Send frame
                 BOOST_ASIO_CORO_YIELD
-                net::async_write(impl.stream(), buffers_cat(
-                    impl.wr_fb.data(), b),
-                        beast::detail::bind_continuation(std::move(*this)));
+                {
+                    BOOST_ASIO_HANDLER_LOCATION((
+                        __FILE__, __LINE__,
+                        fin_ ?
+                            "websocket::async_write" :
+                            "websocket::async_write_some"
+                        ));
+
+                    buffers_suffix<Buffers> empty_cb(cb_);
+                    empty_cb.consume(~std::size_t(0));
+
+                    net::async_write(impl.stream(),
+                        buffers_cat(
+                            net::const_buffer(impl.wr_fb.data()),
+                            net::const_buffer(b),
+                            empty_cb,
+                            buffers_prefix(0, empty_cb)
+                            ),
+                            beast::detail::bind_continuation(std::move(*this)));
+                }
                 bytes_transferred_ += in_;
                 if(impl.check_stop_now(ec))
                     goto upcall;
@@ -508,7 +627,7 @@ write_some(bool fin,
     detail::frame_header fh;
     if(! impl.wr_cont)
     {
-        impl.begin_msg();
+        impl.begin_msg(beast::buffer_bytes(buffers));
         fh.rsv1 = impl.wr_compress;
     }
     else
@@ -520,7 +639,7 @@ write_some(bool fin,
     fh.op = impl.wr_cont ?
         detail::opcode::cont : impl.wr_opcode;
     fh.mask = impl.role == role_type::client;
-    auto remain = buffer_bytes(buffers);
+    auto remain = beast::buffer_bytes(buffers);
     if(impl.wr_compress)
     {
 
@@ -534,14 +653,14 @@ write_some(bool fin,
                 b, cb, fin, bytes_transferred, ec);
             if(impl.check_stop_now(ec))
                 return bytes_transferred;
-            auto const n = buffer_bytes(b);
+            auto const n = beast::buffer_bytes(b);
             if(n == 0)
             {
                 // The input was consumed, but there
                 // is no output due to compression
                 // latency.
                 BOOST_ASSERT(! fin);
-                BOOST_ASSERT(buffer_bytes(cb) == 0);
+                BOOST_ASSERT(beast::buffer_bytes(cb) == 0);
                 fh.fin = false;
                 break;
             }
@@ -700,7 +819,7 @@ write_some(bool fin,
 }
 
 template<class NextLayer, bool deflateSupported>
-template<class ConstBufferSequence, class WriteHandler>
+template<class ConstBufferSequence, BOOST_BEAST_ASYNC_TPARAM2 WriteHandler>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
 stream<NextLayer, deflateSupported>::
 async_write_some(bool fin,
@@ -756,7 +875,7 @@ write(ConstBufferSequence const& buffers, error_code& ec)
 }
 
 template<class NextLayer, bool deflateSupported>
-template<class ConstBufferSequence, class WriteHandler>
+template<class ConstBufferSequence, BOOST_BEAST_ASYNC_TPARAM2 WriteHandler>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
 stream<NextLayer, deflateSupported>::
 async_write(

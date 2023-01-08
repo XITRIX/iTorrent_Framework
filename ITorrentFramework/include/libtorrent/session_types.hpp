@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2017, Arvid Norberg
+Copyright (c) 2017, Alden Torres
+Copyright (c) 2017-2020, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -44,7 +45,7 @@ namespace libtorrent {
 	// hidden
 	using session_flags_t = flags::bitfield_flag<std::uint8_t, struct session_flags_tag>;
 
-	// hidden
+	// The flags type used to specify options to removing files of torrents
 	using remove_flags_t = flags::bitfield_flag<std::uint8_t, struct remove_flags_tag>;
 
 	// hidden

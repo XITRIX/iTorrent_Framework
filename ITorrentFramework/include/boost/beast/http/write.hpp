@@ -11,15 +11,12 @@
 #define BOOST_BEAST_HTTP_WRITE_HPP
 
 #include <boost/beast/core/detail/config.hpp>
-#include <boost/beast/core/buffers_cat.hpp>
-#include <boost/beast/core/buffers_suffix.hpp>
-#include <boost/beast/core/multi_buffer.hpp>
 #include <boost/beast/http/message.hpp>
 #include <boost/beast/http/serializer.hpp>
 #include <boost/beast/http/type_traits.hpp>
 #include <boost/beast/http/detail/chunk_encode.hpp>
 #include <boost/beast/core/error.hpp>
-#include <boost/beast/core/string.hpp>
+#include <boost/beast/core/stream_traits.hpp>
 #include <boost/asio/async_result.hpp>
 #include <iosfwd>
 #include <limits>
@@ -164,17 +161,33 @@ write_some(
     this function. Invocation of the handler will be performed in a
     manner equivalent to using `net::post`.
 
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
     @see serializer
 */
 template<
     class AsyncWriteStream,
     bool isRequest, class Body, class Fields,
-    class WriteHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
 async_write_some(
     AsyncWriteStream& stream,
     serializer<isRequest, Body, Fields>& sr,
-    WriteHandler&& handler);
+    WriteHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>{});
 
 //------------------------------------------------------------------------------
 
@@ -290,17 +303,33 @@ write_header(
     @note The implementation will call @ref serializer::split with
     the value `true` on the serializer passed in.
 
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
     @see serializer
 */
 template<
     class AsyncWriteStream,
     bool isRequest, class Body, class Fields,
-    class WriteHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
 async_write_header(
     AsyncWriteStream& stream,
     serializer<isRequest, Body, Fields>& sr,
-    WriteHandler&& handler);
+    WriteHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>{});
 
 //------------------------------------------------------------------------------
 
@@ -407,17 +436,33 @@ write(
     this function. Invocation of the handler will be performed in a
     manner equivalent to using `net::post`.
 
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
     @see serializer
 */
 template<
     class AsyncWriteStream,
     bool isRequest, class Body, class Fields,
-    class WriteHandler>
+    BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
 async_write(
     AsyncWriteStream& stream,
     serializer<isRequest, Body, Fields>& sr,
-    WriteHandler&& handler);
+    WriteHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>{});
 
 //------------------------------------------------------------------------------
 
@@ -628,23 +673,38 @@ write(
     this function. Invocation of the handler will be performed in a
     manner equivalent to using `net::post`.
 
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
     @see message
 */
 template<
     class AsyncWriteStream,
     bool isRequest, class Body, class Fields,
-    class WriteHandler>
-#if BOOST_BEAST_DOXYGEN
+    BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
-#else
-typename std::enable_if<
-    is_mutable_body_writer<Body>::value,
-    BOOST_BEAST_ASYNC_RESULT2(WriteHandler)>::type
-#endif
 async_write(
     AsyncWriteStream& stream,
     message<isRequest, Body, Fields>& msg,
-    WriteHandler&& handler);
+    WriteHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>{}
+#ifndef BOOST_BEAST_DOXYGEN
+    , typename std::enable_if<
+        is_mutable_body_writer<Body>::value>::type* = 0
+#endif
+    );
 
 /** Write a complete message to a stream asynchronously.
 
@@ -687,23 +747,39 @@ async_write(
     this function. Invocation of the handler will be performed in a
     manner equivalent to using `net::post`.
 
+    @par Per-Operation Cancellation
+
+    This asynchronous operation supports cancellation for the following
+    net::cancellation_type values:
+
+    @li @c net::cancellation_type::terminal
+
+    if the `stream` also supports terminal cancellation.
+
+    `terminal` cancellation leaves the stream in an undefined state,
+    so that only closing it is guaranteed to succeed.
+
     @see message
 */
 template<
     class AsyncWriteStream,
     bool isRequest, class Body, class Fields,
-    class WriteHandler>
-#if BOOST_BEAST_DOXYGEN
+    BOOST_BEAST_ASYNC_TPARAM2 WriteHandler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>>
 BOOST_BEAST_ASYNC_RESULT2(WriteHandler)
-#else
-typename std::enable_if<
-    ! is_mutable_body_writer<Body>::value,
-    BOOST_BEAST_ASYNC_RESULT2(WriteHandler)>::type
-#endif
 async_write(
     AsyncWriteStream& stream,
     message<isRequest, Body, Fields> const& msg,
-    WriteHandler&& handler);
+    WriteHandler&& handler =
+        net::default_completion_token_t<
+            executor_type<AsyncWriteStream>>{}
+#ifndef BOOST_BEAST_DOXYGEN
+    , typename std::enable_if<
+        ! is_mutable_body_writer<Body>::value>::type* = 0
+#endif
+    );
+
 
 //------------------------------------------------------------------------------
 

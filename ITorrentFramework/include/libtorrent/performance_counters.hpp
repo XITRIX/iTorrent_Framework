@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2013-2018, Arvid Norberg
+Copyright (c) 2014-2020, Arvid Norberg
+Copyright (c) 2016-2017, Alden Torres
+Copyright (c) 2019, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -42,9 +44,9 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent {
 
-	struct TORRENT_EXTRA_EXPORT counters
+	struct TORRENT_EXPORT counters
 	{
-		// TODO: move this out of counters
+		// internal
 		enum stats_counter_t
 		{
 			// the number of peers that were disconnected this
@@ -143,12 +145,7 @@ namespace libtorrent {
 			on_disk_queue_counter,
 			on_disk_counter,
 
-#if TORRENT_ABI_VERSION == 1
-			torrent_evicted_counter,
-#endif
-
 			// bittorrent message counters
-			// TODO: should keepalives be in here too?
 			// how about dont-have, share-mode, upload-only
 			num_incoming_choke,
 			num_incoming_unchoke,
@@ -189,6 +186,9 @@ namespace libtorrent {
 			num_outgoing_pex,
 			num_outgoing_metadata,
 			num_outgoing_extended,
+			num_outgoing_hash_request,
+			num_outgoing_hashes,
+			num_outgoing_hash_reject,
 
 			num_piece_passed,
 			num_piece_failed,
@@ -199,7 +199,6 @@ namespace libtorrent {
 			num_blocks_written,
 			num_blocks_read,
 			num_blocks_hashed,
-			num_blocks_cache_hits,
 			num_write_ops,
 			num_read_ops,
 			num_read_back,
@@ -332,6 +331,8 @@ namespace libtorrent {
 
 		// it is important that all gauges have a higher index than counters.
 		// This assumption is relied upon in other parts of the code
+
+		// internal
 		enum stats_gauge_t
 		{
 			num_checking_torrents = num_stats_counters,
@@ -376,7 +377,7 @@ namespace libtorrent {
 			// of peers unchoked via the optimistic unchoke
 			// (``up_unchoked_optimistic``) and peers unchoked via the
 			// reciprocation (regular) unchoke mechanism (``up_unchoked``).
-			// and the number of peers that have unchoked us (``down_unchoked).
+			// and the number of peers that have unchoked us (``down_unchoked``).
 			num_peers_up_unchoked_all,
 			num_peers_up_unchoked_optimistic,
 			num_peers_up_unchoked,
@@ -393,15 +394,12 @@ namespace libtorrent {
 			num_peers_down_disk,
 
 			// the number of peers in end-game mode. End game mode is where there
-			// are no blocks that we have not sent any requests to download. In ths
+			// are no blocks that we have not sent any requests to download. In this
 			// mode, blocks are allowed to be requested from more than one peer at
 			// at time.
 			num_peers_end_game,
-
-			write_cache_blocks,
-			read_cache_blocks,
 			request_latency,
-			pinned_blocks,
+
 			disk_blocks_in_use,
 			queued_disk_jobs,
 			num_running_disk_jobs,
@@ -427,18 +425,10 @@ namespace libtorrent {
 			num_fenced_flush_piece,
 			num_fenced_flush_hashed,
 			num_fenced_flush_storage,
-			num_fenced_trim_cache,
 			num_fenced_file_priority,
 			num_fenced_load_torrent,
 			num_fenced_clear_piece,
 			num_fenced_tick_storage,
-
-			arc_mru_size,
-			arc_mru_ghost_size,
-			arc_mfu_size,
-			arc_mfu_ghost_size,
-			arc_write_size,
-			arc_volatile_size,
 
 			dht_nodes,
 			dht_node_cache,
@@ -481,7 +471,7 @@ namespace libtorrent {
 		counters() TORRENT_COUNTER_NOEXCEPT;
 
 		counters(counters const&) TORRENT_COUNTER_NOEXCEPT;
-		counters& operator=(counters const&) TORRENT_COUNTER_NOEXCEPT;
+		counters& operator=(counters const&) & TORRENT_COUNTER_NOEXCEPT;
 
 		// returns the new value
 		std::int64_t inc_stats_counter(int c, std::int64_t value = 1) TORRENT_COUNTER_NOEXCEPT;
@@ -499,7 +489,7 @@ namespace libtorrent {
 #ifdef ATOMIC_LLONG_LOCK_FREE
 		aux::array<std::atomic<std::int64_t>, num_counters> m_stats_counter;
 #else
-		// if the atomic type is't lock-free, use a single lock instead, for
+		// if the atomic type isn't lock-free, use a single lock instead, for
 		// the whole array
 		mutable std::mutex m_mutex;
 		aux::array<std::int64_t, num_counters> m_stats_counter;

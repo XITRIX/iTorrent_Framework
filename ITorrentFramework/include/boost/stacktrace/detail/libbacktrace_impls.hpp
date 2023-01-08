@@ -1,4 +1,4 @@
-// Copyright Antony Polukhin, 2016-2019.
+// Copyright Antony Polukhin, 2016-2022.
 //
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
@@ -82,10 +82,11 @@ BOOST_SYMBOL_VISIBLE inline ::backtrace_state* construct_state(const program_loc
     //
     //
     // Unfortunately, that solution segfaults when `construct_state()` function is in .so file
-    // and multiple threads concurrently work with state.
+    // and multiple threads concurrently work with state. I failed to localize the root cause:
+    // https://gcc.gnu.org/bugzilla//show_bug.cgi?id=87653
 
 
-#ifndef BOOST_HAS_THREADS
+#if !defined(BOOST_HAS_THREADS) || defined(BOOST_STACKTRACE_BACKTRACE_FORCE_STATIC)
     static
 #else
 
@@ -94,7 +95,7 @@ BOOST_SYMBOL_VISIBLE inline ::backtrace_state* construct_state(const program_loc
 
 #   ifndef BOOST_NO_CXX11_THREAD_LOCAL
     thread_local
-#   elif defined(__GNUC__)
+#   elif defined(__GNUC__) && !defined(__clang__)
     static __thread
 #   else
     /* just a local variable */
@@ -195,6 +196,10 @@ inline std::string name_impl(const void* addr) {
 std::string frame::source_file() const {
     std::string res;
 
+    if (!addr_) {
+        return res;
+    }
+
     boost::stacktrace::detail::program_location prog_location;
     ::backtrace_state* state = boost::stacktrace::detail::construct_state(prog_location);
 
@@ -213,6 +218,10 @@ std::string frame::source_file() const {
 }
 
 std::size_t frame::source_line() const {
+    if (!addr_) {
+        return 0;
+    }
+
     boost::stacktrace::detail::program_location prog_location;
     ::backtrace_state* state = boost::stacktrace::detail::construct_state(prog_location);
 

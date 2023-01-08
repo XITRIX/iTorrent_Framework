@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2008-2016, Arvid Norberg
+Copyright (c) 2009-2010, 2012, 2017-2020, Arvid Norberg
+Copyright (c) 2017, Alden Torres
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -103,10 +104,10 @@ struct alloca_destructor
 #define TORRENT_ALLOCA(v, t, n) ::libtorrent::span<t> v; { \
 	auto TORRENT_ALLOCA_size = ::libtorrent::aux::numeric_cast<std::ptrdiff_t>(n); \
 	if (TORRENT_ALLOCA_size > ::libtorrent::aux::alloca_destructor<t>::cutoff) {\
-		v = ::libtorrent::span<t>(new t[TORRENT_ALLOCA_size], TORRENT_ALLOCA_size); \
+		v = ::libtorrent::span<t>(new t[::libtorrent::aux::numeric_cast<std::size_t>(n)], TORRENT_ALLOCA_size); \
 	} \
 	else { \
-		auto* TORRENT_ALLOCA_tmp = static_cast<t*>(TORRENT_ALLOCA_FUN(sizeof(t) * static_cast<std::size_t>(TORRENT_ALLOCA_size))); \
+		auto* TORRENT_ALLOCA_tmp = static_cast<t*>(TORRENT_ALLOCA_FUN(sizeof(t) * static_cast<std::size_t>(n))); \
 		v = ::libtorrent::span<t>(TORRENT_ALLOCA_tmp, TORRENT_ALLOCA_size); \
 		::libtorrent::aux::uninitialized_default_construct(v.begin(), v.end()); \
 	} \

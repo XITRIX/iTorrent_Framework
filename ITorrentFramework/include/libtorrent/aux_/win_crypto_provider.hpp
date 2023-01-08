@@ -1,6 +1,8 @@
 /*
 
-Copyright (c) 2016, Arvid Norberg
+Copyright (c) 2017, Alden Torres
+Copyright (c) 2017, 2019, Andrei Kurushin
+Copyright (c) 2017-2020, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,6 +36,8 @@ POSSIBILITY OF SUCH DAMAGE.
 #define TORRENT_WIN_CRYPTO_PROVIDER_HPP
 
 #include "libtorrent/config.hpp"
+
+#if TORRENT_USE_CRYPTOAPI
 #include "libtorrent/error_code.hpp"
 #include "libtorrent/aux_/throw.hpp"
 #include "libtorrent/aux_/windows.hpp"
@@ -139,4 +143,6 @@ namespace libtorrent { namespace aux {
 } // namespace aux
 } // namespace libtorrent
 
-#endif
+#endif // TORRENT_USE_CRYPTOAPI
+
+#endif // TORRENT_WIN_CRYPTO_PROVIDER_HPP

@@ -2,8 +2,8 @@
 @file
 Defines `boost::hana::tuple`.
 
-@copyright Louis Dionne 2013-2017
-@copyright Jason Rice 2017
+Copyright Louis Dionne 2013-2022
+Copyright Jason Rice 2017
 Distributed under the Boost Software License, Version 1.0.
 (See accompanying file LICENSE.md or copy at http://boost.org/LICENSE_1_0.txt)
  */
@@ -40,7 +40,7 @@ Distributed under the Boost Software License, Version 1.0.
 #include <utility>
 
 
-BOOST_HANA_NAMESPACE_BEGIN
+namespace boost { namespace hana {
     namespace detail {
         template <typename Xs, typename Ys, std::size_t ...n>
         constexpr void assign(Xs& xs, Ys&& ys, std::index_sequence<n...>) {
@@ -75,7 +75,11 @@ BOOST_HANA_NAMESPACE_BEGIN
     // tuple
     //////////////////////////////////////////////////////////////////////////
     template <>
+#ifdef BOOST_HANA_WORKAROUND_MSVC_EMPTYBASE
+    struct __declspec(empty_bases) tuple<> final
+#else
     struct tuple<> final
+#endif
         : detail::operators::adl<tuple<>>
         , detail::iterable_operators<tuple<>>
     {
@@ -84,7 +88,11 @@ BOOST_HANA_NAMESPACE_BEGIN
     };
 
     template <typename ...Xn>
+#ifdef BOOST_HANA_WORKAROUND_MSVC_EMPTYBASE
+    struct __declspec(empty_bases) tuple final
+#else
     struct tuple final
+#endif
         : detail::operators::adl<tuple<Xn...>>
         , detail::iterable_operators<tuple<Xn...>>
     {
@@ -256,7 +264,7 @@ BOOST_HANA_NAMESPACE_BEGIN
         static constexpr auto apply(Xs&& xs, N const&) {
             constexpr std::size_t len = decltype(hana::length(xs))::value;
             return helper<N::value>(static_cast<Xs&&>(xs), std::make_index_sequence<
-                N::value < len ? len - N::value : 0
+                (N::value < len) ? len - N::value : 0
             >{});
         }
     };
@@ -307,6 +315,6 @@ BOOST_HANA_NAMESPACE_BEGIN
         tuple<typename detail::decay<Xs>::type...> apply(Xs&& ...xs)
         { return {static_cast<Xs&&>(xs)...}; }
     };
-BOOST_HANA_NAMESPACE_END
+}} // end namespace boost::hana
 
 #endif // !BOOST_HANA_TUPLE_HPP

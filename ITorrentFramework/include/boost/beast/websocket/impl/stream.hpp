@@ -25,11 +25,8 @@
 #include <boost/beast/core/buffers_suffix.hpp>
 #include <boost/beast/core/flat_static_buffer.hpp>
 #include <boost/beast/core/detail/clamp.hpp>
-#include <boost/beast/core/detail/type_traits.hpp>
-#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/assert.hpp>
-#include <boost/endian/buffers.hpp>
 #include <boost/make_shared.hpp>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -62,9 +59,18 @@ stream(Args&&... args)
 }
 
 template<class NextLayer, bool deflateSupported>
+template<class Other>
+stream<NextLayer, deflateSupported>::
+stream(stream<Other> && other)
+    : impl_(boost::make_shared<impl_type>(std::move(other.next_layer())))
+{
+}
+
+
+template<class NextLayer, bool deflateSupported>
 auto
 stream<NextLayer, deflateSupported>::
-get_executor() const noexcept ->
+get_executor() noexcept ->
     executor_type
 {
     return impl_->stream().get_executor();
@@ -140,12 +146,7 @@ read_size_hint(DynamicBuffer& buffer) const
     static_assert(
         net::is_dynamic_buffer<DynamicBuffer>::value,
         "DynamicBuffer type requirements not met");
-    auto const initial_size = (std::min)(
-        +tcp_frame_size,
-        buffer.max_size() - buffer.size());
-    if(initial_size == 0)
-        return 1; // buffer is full
-    return read_size_hint(initial_size);
+    return impl_->read_size_hint_db(buffer);
 }
 
 //------------------------------------------------------------------------------
@@ -312,6 +313,22 @@ text() const
     return impl_->wr_opcode == detail::opcode::text;
 }
 
+template<class NextLayer, bool deflateSupported>
+void
+stream<NextLayer, deflateSupported>::
+compress(bool value)
+{
+    impl_->wr_compress_opt = value;
+}
+
+template<class NextLayer, bool deflateSupported>
+bool
+stream<NextLayer, deflateSupported>::
+compress() const
+{
+    return impl_->wr_compress_opt;
+}
+
 //------------------------------------------------------------------------------
 
 // _Fail the WebSocket Connection_
@@ -344,7 +361,9 @@ do_fail(
         ec = {};
     }
     if(! ec)
-        ec = ev;
+    {
+        BOOST_BEAST_ASSIGN_EC(ec, ev);
+    }
     if(ec && ec != error::closed)
         impl_->change_status(status::failed);
     else

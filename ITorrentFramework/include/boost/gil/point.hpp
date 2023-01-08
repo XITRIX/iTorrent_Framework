@@ -9,6 +9,7 @@
 #define BOOST_GIL_POINT_HPP
 
 #include <boost/gil/utilities.hpp>
+#include <boost/gil/detail/std_common_type.hpp>
 
 #include <boost/config.hpp>
 
@@ -165,14 +166,19 @@ point<T> operator-(const point<T>& p1, const point<T>& p2)
 /// \ingroup PointModel
 template <typename T, typename D>
 BOOST_FORCEINLINE
-auto operator/(point<T> const& p, D d) -> point<typename std::common_type<T, D>::type>
+auto operator/(point<T> const& p, D d)
+    -> typename std::enable_if
+    <
+        std::is_arithmetic<D>::value,
+        point<typename detail::std_common_type<T, D>::type>
+    >::type
 {
     static_assert(std::is_arithmetic<D>::value, "denominator is not arithmetic type");
-    using result_type = typename std::common_type<T, D>::type;
+    using result_type = typename detail::std_common_type<T, D>::type;
     if (d < 0 || 0 < d)
     {
-        double const x = p.x / static_cast<double>(d);
-        double const y = p.y / static_cast<double>(d);
+        double const x = static_cast<double>(p.x) / static_cast<double>(d);
+        double const y = static_cast<double>(p.y) / static_cast<double>(d);
         return point<result_type>{
             static_cast<result_type>(iround(x)),
             static_cast<result_type>(iround(y))};
@@ -186,20 +192,30 @@ auto operator/(point<T> const& p, D d) -> point<typename std::common_type<T, D>:
 /// \ingroup PointModel
 template <typename T, typename M>
 BOOST_FORCEINLINE
-auto operator*(point<T> const& p, M m) -> point<typename std::common_type<T, M>::type>
+auto operator*(point<T> const& p, M m)
+    -> typename std::enable_if
+    <
+        std::is_arithmetic<M>::value,
+        point<typename detail::std_common_type<T, M>::type>
+    >::type
 {
     static_assert(std::is_arithmetic<M>::value, "multiplier is not arithmetic type");
-    using result_type = typename std::common_type<T, M>::type;
+    using result_type = typename detail::std_common_type<T, M>::type;
     return point<result_type>{p.x * m, p.y * m};
 }
 
 /// \ingroup PointModel
 template <typename T, typename M>
 BOOST_FORCEINLINE
-auto operator*(M m, point<T> const& p) -> point<typename std::common_type<T, M>::type>
+auto operator*(M m, point<T> const& p)
+    -> typename std::enable_if
+    <
+        std::is_arithmetic<M>::value,
+        point<typename detail::std_common_type<T, M>::type>
+    >::type
 {
     static_assert(std::is_arithmetic<M>::value, "multiplier is not arithmetic type");
-    using result_type = typename std::common_type<T, M>::type;
+    using result_type = typename detail::std_common_type<T, M>::type;
     return point<result_type>{p.x * m, p.y * m};
 }
 
@@ -230,44 +246,44 @@ T& axis_value(point<T>& p)
 
 /// \ingroup PointAlgorithm
 template <typename T>
-inline point<std::ptrdiff_t> iround(point<T> const& p)
+inline auto iround(point<T> const& p) -> point<std::ptrdiff_t>
 {
     static_assert(std::is_integral<T>::value, "T is not integer");
     return { static_cast<std::ptrdiff_t>(p.x), static_cast<std::ptrdiff_t>(p.y) };
 }
 
 /// \ingroup PointAlgorithm
-inline point<std::ptrdiff_t> iround(point<float> const& p)
+inline auto iround(point<float> const& p) -> point<std::ptrdiff_t>
 {
     return { iround(p.x), iround(p.y) };
 }
 
 /// \ingroup PointAlgorithm
-inline point<std::ptrdiff_t> iround(point<double> const& p)
+inline auto iround(point<double> const& p) -> point<std::ptrdiff_t>
 {
     return { iround(p.x), iround(p.y) };
 }
 
 /// \ingroup PointAlgorithm
-inline point<std::ptrdiff_t> ifloor(point<float> const& p)
+inline auto ifloor(point<float> const& p) -> point<std::ptrdiff_t>
 {
     return { ifloor(p.x), ifloor(p.y) };
 }
 
 /// \ingroup PointAlgorithm
-inline point<std::ptrdiff_t> ifloor(point<double> const& p)
+inline auto ifloor(point<double> const& p) -> point<std::ptrdiff_t>
 {
     return { ifloor(p.x), ifloor(p.y) };
 }
 
 /// \ingroup PointAlgorithm
-inline point<std::ptrdiff_t> iceil(point<float> const& p)
+inline auto iceil(point<float> const& p) -> point<std::ptrdiff_t>
 {
     return { iceil(p.x), iceil(p.y) };
 }
 
 /// \ingroup PointAlgorithm
-inline point<std::ptrdiff_t> iceil(point<double> const& p)
+inline auto iceil(point<double> const& p) -> point<std::ptrdiff_t>
 {
     return { iceil(p.x), iceil(p.y) };
 }

@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2016, Arvid Norberg
+Copyright (c) 2016-2017, 2019-2020, Arvid Norberg
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,7 +45,7 @@ namespace libtorrent { namespace aux {
 
 		// movable
 		scope_end_impl(scope_end_impl&&) noexcept = default;
-		scope_end_impl& operator=(scope_end_impl&&) noexcept = default;
+		scope_end_impl& operator=(scope_end_impl&&) & noexcept = default;
 
 		// non-copyable
 		scope_end_impl(scope_end_impl const&) = delete;

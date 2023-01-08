@@ -11,17 +11,17 @@
 #define BOOST_BEAST_HTTP_IMPL_RFC7230_IPP
 
 #include <boost/beast/http/rfc7230.hpp>
+#include <algorithm>
 
 namespace boost {
 namespace beast {
 namespace http {
 
 
-std::string
-param_list::const_iterator::
-unquote(string_view sr)
+void param_list::const_iterator::
+unquote(string_view sr, std::string &s)
 {
-    std::string s;
+    s.clear();
     s.reserve(sr.size());
     auto it = sr.begin() + 1;
     auto end = sr.end() - 1;
@@ -32,7 +32,6 @@ unquote(string_view sr)
         s.push_back(*it);
         ++it;
     }
-    return s;
 }
 
 void
@@ -49,7 +48,7 @@ increment()
     else if(! pi_.v.second.empty() &&
         pi_.v.second.front() == '"')
     {
-        s_ = unquote(pi_.v.second);
+        unquote(pi_.v.second, s_);
         pi_.v.second = string_view{
             s_.data(), s_.size()};
     }
@@ -123,6 +122,24 @@ increment()
     }
 }
 
+auto
+ext_list::
+find(string_view const& s) -> const_iterator
+{
+    return std::find_if(begin(), end(),
+        [&s](value_type const& v)
+        {
+            return beast::iequals(s, v.first);
+        });
+}
+
+bool
+ext_list::
+exists(string_view const& s)
+{
+    return find(s) != end();
+}
+
 void
 token_list::const_iterator::
 increment()
@@ -167,6 +184,18 @@ increment()
         need_comma = false;
         ++it_;
     }
+}
+
+bool
+token_list::
+exists(string_view const& s)
+{
+    return std::find_if(begin(), end(),
+        [&s](value_type const& v)
+        {
+            return beast::iequals(s, v);
+        }
+    ) != end();
 }
 
 } // http

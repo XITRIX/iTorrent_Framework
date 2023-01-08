@@ -13,11 +13,11 @@
 #include <boost/gil/extension/io/pnm/detail/is_allowed.hpp>
 
 #include <boost/gil.hpp> // FIXME: Include what you use!
+#include <boost/gil/io/detail/dynamic.hpp>
 #include <boost/gil/io/base.hpp>
 #include <boost/gil/io/bit_operations.hpp>
 #include <boost/gil/io/conversion_policies.hpp>
 #include <boost/gil/io/device.hpp>
-#include <boost/gil/io/dynamic_io_new.hpp>
 #include <boost/gil/io/reader_base.hpp>
 #include <boost/gil/io/row_buffer_helper.hpp>
 #include <boost/gil/io/typedefs.hpp>
@@ -85,7 +85,7 @@ public:
     template<typename View>
     void apply( const View& view )
     {
-        using is_read_and_convert_t = typename is_same
+        using is_read_and_convert_t = typename std::is_same
             <
                 ConversionPolicy,
                 detail::read_and_no_convert
@@ -237,7 +237,7 @@ private:
                      , View_Src >( dst
                                  , src
                                  , y
-                                 , typename is_same< View_Dst
+                                 , typename std::is_same< View_Dst
                                                    , gray1_image_t::view_t
                                                    >::type()
                                  );
@@ -250,7 +250,7 @@ private:
     void copy_data( const View_Dst&              dst
                   , const View_Src&              src
                   , typename View_Dst::y_coord_t y
-                  , mpl::true_ // is gray1_view
+                  , std::true_type // is gray1_view
                   )
     {
         if(  this->_info._max_value == 1 )
@@ -267,11 +267,7 @@ private:
         }
         else
         {
-            copy_data( dst
-                     , src
-                     , y
-                     , mpl::false_()
-                     );
+            copy_data(dst, src, y, std::false_type{});
         }
     }
 
@@ -281,7 +277,7 @@ private:
     void copy_data( const View_Dst&              view
                   , const View_Src&              src
                   , typename View_Dst::y_coord_t y
-                  , mpl::false_ // is gray1_view
+                  , std::false_type // is gray1_view
                   )
     {
         typename View_Src::x_iterator beg = src.row_begin( 0 ) + this->_settings._top_left.x;
@@ -420,12 +416,12 @@ public:
               )
     {}
 
-    template< typename Images >
-    void apply( any_image< Images >& images )
+    template< typename ...Images >
+    void apply( any_image< Images... >& images )
     {
         detail::pnm_type_format_checker format_checker( this->_info._type );
 
-        if( !construct_matched( images
+        if( !detail::construct_matched( images
                               , format_checker
                               ))
         {
@@ -441,8 +437,8 @@ public:
                                     , parent_t
                                     > op( this );
 
-            apply_operation( view( images )
-                           , op
+            variant2::visit( op
+                           ,view( images )
                            );
         }
     }

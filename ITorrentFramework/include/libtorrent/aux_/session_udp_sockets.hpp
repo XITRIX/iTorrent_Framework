@@ -1,6 +1,7 @@
 /*
 
-Copyright (c) 2017, Arvid Norberg, Steven Siloti
+Copyright (c) 2017, 2019-2020, Arvid Norberg
+Copyright (c) 2017, Steven Siloti
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -33,16 +34,16 @@ POSSIBILITY OF SUCH DAMAGE.
 #ifndef TORRENT_SESSION_UDP_SOCKETS_HPP_INCLUDED
 #define TORRENT_SESSION_UDP_SOCKETS_HPP_INCLUDED
 
-#include "libtorrent/utp_socket_manager.hpp"
+#include "libtorrent/aux_/utp_socket_manager.hpp"
 #include "libtorrent/config.hpp"
 #include "libtorrent/aux_/allocating_handler.hpp"
 #include "libtorrent/aux_/listen_socket_handle.hpp"
-#include <boost/asio/io_service.hpp>
+#include <boost/asio/io_context.hpp>
 #include <vector>
 
 namespace libtorrent {
 
-	class alert_manager;
+	struct alert_manager;
 
 namespace aux {
 
@@ -54,7 +55,7 @@ namespace aux {
 
 	struct session_udp_socket
 	{
-		explicit session_udp_socket(io_service& ios, listen_socket_handle ls)
+		explicit session_udp_socket(io_context& ios, listen_socket_handle ls)
 			: sock(ios, std::move(ls)) {}
 
 		udp::endpoint local_endpoint() { return sock.local_endpoint(); }
@@ -63,7 +64,7 @@ namespace aux {
 
 		// since udp packets are expected to be dispatched frequently, this saves
 		// time on handler allocation every time we read again.
-		aux::handler_storage<TORRENT_READ_HANDLER_MAX_SIZE> udp_handler_storage;
+		aux::handler_storage<aux::utp_handler_max_size, utp_handler> udp_handler_storage;
 
 		// this is true when the udp socket send() has failed with EAGAIN or
 		// EWOULDBLOCK. i.e. we're currently waiting for the socket to become

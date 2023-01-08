@@ -1,6 +1,9 @@
 /*
 
-Copyright (c) 2003-2018, Arvid Norberg
+Copyright (c) 2003-2011, 2013-2021, Arvid Norberg
+Copyright (c) 2004, Magnus Jonsson
+Copyright (c) 2016, Alden Torres
+Copyright (c) 2019, Amir Abrams
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,6 +44,7 @@ POSSIBILITY OF SUCH DAMAGE.
 #include "libtorrent/time.hpp"
 #include "libtorrent/units.hpp"
 #include "libtorrent/flags.hpp"
+#include "libtorrent/aux_/deprecated.hpp"
 
 namespace libtorrent {
 
@@ -58,6 +62,8 @@ namespace libtorrent {
 	// direction
 	using bandwidth_state_flags_t = flags::bitfield_flag<std::uint8_t, struct bandwidth_state_flags_tag>;
 
+	using connection_type_t = flags::bitfield_flag<std::uint8_t, struct connection_type_tag>;
+
 TORRENT_VERSION_NAMESPACE_2
 
 	// holds information and statistics about one peer
@@ -71,11 +77,12 @@ TORRENT_VERSION_NAMESPACE_2
 		peer_info(peer_info&&);
 		peer_info& operator=(peer_info const&);
 
-		// a string describing the software at the other end of the connection.
-		// In some cases this information is not available, then it will contain
-		// a string that may give away something about which software is running
-		// in the other end. In the case of a web seed, the server type and
-		// version will be a part of this string.
+		// A human readable string describing the software at the other end of
+		// the connection. In some cases this information is not available, then
+		// it will contain a string that may give away something about which
+		// software is running in the other end. In the case of a web seed, the
+		// server type and version will be a part of this string. This is UTF-8
+		// encoded.
 		std::string client;
 
 		// a bitfield, with one bit per piece in the torrent. Each bit tells you
@@ -125,6 +132,9 @@ TORRENT_VERSION_NAMESPACE_2
 		// address of this peer. If this flag is not set, this
 		// peer connection was opened by this peer connecting to
 		// us.
+		static constexpr peer_flags_t outgoing_connection = 5_bit;
+
+		// deprecated synonym for outgoing_connection
 		static constexpr peer_flags_t local_connection = 5_bit;
 
 		// The connection is opened, and waiting for the
@@ -140,7 +150,7 @@ TORRENT_VERSION_NAMESPACE_2
 		// The connection is currently queued for a connection
 		// attempt. This may happen if there is a limit set on
 		// the number of half-open TCP connections.
-		TORRENT_DEPRECATED_MEMBER static constexpr peer_flags_t queued = 8_bit;
+		TORRENT_DEPRECATED static constexpr peer_flags_t queued = 8_bit;
 #endif
 
 		// The peer has participated in a piece that failed the
@@ -313,26 +323,25 @@ TORRENT_VERSION_NAMESPACE_2
 		int downloading_progress;
 		int downloading_total;
 
-		// the kind of connection this is. Used for the connection_type field.
-		enum connection_type_t
-		{
-			// Regular bittorrent connection
-			standard_bittorrent = 0,
+#if TORRENT_ABI_VERSION <= 2
+		using connection_type_t = libtorrent::connection_type_t;
+#endif
+		// Regular bittorrent connection
+		static constexpr connection_type_t standard_bittorrent = 0_bit;
 
 			// HTTP connection using the `BEP 19`_ protocol
-			web_seed = 1,
+		static constexpr connection_type_t web_seed = 1_bit;
 
 			// HTTP connection using the `BEP 17`_ protocol
-			http_seed = 2
-		};
+		static constexpr connection_type_t http_seed = 2_bit;
 
 		// the kind of connection this peer uses. See connection_type_t.
-		int connection_type;
+		connection_type_t connection_type;
 
 #if TORRENT_ABI_VERSION == 1
 		// an estimate of the rate this peer is downloading at, in
 		// bytes per second.
-		TORRENT_DEPRECATED_MEMBER int remote_dl_rate;
+		TORRENT_DEPRECATED int remote_dl_rate;
 #endif
 
 		// the number of bytes this peer has pending in the disk-io thread.
@@ -376,9 +385,7 @@ TORRENT_VERSION_NAMESPACE_2
 		// unchoke us. This is a coarse estimation based on the rate at which
 		// we sent right before we were choked. This is primarily used for the
 		// bittyrant choking algorithm.
-		TORRENT_DEPRECATED_MEMBER int estimated_reciprocation_rate;
-#else
-		int deprecated_estimated_reciprocation_rate;
+		TORRENT_DEPRECATED int estimated_reciprocation_rate;
 #endif
 
 		// the IP-address to this peer. The type is an asio endpoint. For
@@ -417,21 +424,21 @@ TORRENT_VERSION_NAMESPACE_2
 		bandwidth_state_flags_t write_state;
 
 #if TORRENT_ABI_VERSION == 1
-		TORRENT_DEPRECATED_MEMBER static constexpr bandwidth_state_flags_t bw_torrent = bw_limit;
-		TORRENT_DEPRECATED_MEMBER static constexpr bandwidth_state_flags_t bw_global = bw_limit;
+		TORRENT_DEPRECATED static constexpr bandwidth_state_flags_t bw_torrent = bw_limit;
+		TORRENT_DEPRECATED static constexpr bandwidth_state_flags_t bw_global = bw_limit;
 
 		// the number of bytes per second we are allowed to send to or receive
 		// from this peer. It may be -1 if there's no local limit on the peer.
 		// The global limit and the torrent limit may also be enforced.
-		TORRENT_DEPRECATED_MEMBER int upload_limit;
-		TORRENT_DEPRECATED_MEMBER int download_limit;
+		TORRENT_DEPRECATED int upload_limit;
+		TORRENT_DEPRECATED int download_limit;
 
 		// a measurement of the balancing of free download (that we get) and free
 		// upload that we give. Every peer gets a certain amount of free upload,
 		// but this member says how much *extra* free upload this peer has got.
 		// If it is a negative number it means that this was a peer from which we
 		// have got this amount of free download.
-		TORRENT_DEPRECATED_MEMBER std::int64_t load_balancing;
+		TORRENT_DEPRECATED std::int64_t load_balancing;
 #endif
 	};
 

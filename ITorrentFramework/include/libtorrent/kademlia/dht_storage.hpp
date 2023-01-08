@@ -1,6 +1,9 @@
 /*
 
-Copyright (c) 2012-2018, Arvid Norberg, Alden Torres
+Copyright (c) 2015-2017, Alden Torres
+Copyright (c) 2015-2019, Arvid Norberg
+Copyright (c) 2016, Steven Siloti
+Copyright (c) 2019, Mike Tzou
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,10 +48,11 @@ POSSIBILITY OF SUCH DAMAGE.
 
 namespace libtorrent {
 	class entry;
+	struct settings_interface;
 }
 
-namespace libtorrent { namespace dht {
-	struct dht_settings;
+namespace libtorrent {
+namespace dht {
 
 	// This structure hold the relevant counters for the storage
 	struct TORRENT_EXPORT dht_storage_counters
@@ -115,7 +119,7 @@ namespace libtorrent { namespace dht {
 		// If the scrape parameter is false, you should fill the
 		// key peers["values"] with a list containing a subset of
 		// peers tracked by the given info_hash. Such a list should
-		// consider the value of dht_settings::max_peers_reply.
+		// consider the value of settings_pack::dht_max_peers_reply.
 		// If noseed is true only peers marked as no seed should be included.
 		//
 		// returns true if the maximum number of peers are stored
@@ -153,7 +157,8 @@ namespace libtorrent { namespace dht {
 		// For implementers:
 		// This data can be stored only if the target is not already
 		// present. The implementation should consider the value of
-		// dht_settings::max_dht_items.
+		// settings_pack::dht_max_dht_items.
+		//
 		virtual void put_immutable_item(sha1_hash const& target
 			, span<char const> buf
 			, address const& addr) = 0;
@@ -187,7 +192,8 @@ namespace libtorrent { namespace dht {
 		// For implementers:
 		// The sequence number should be checked if the item is already
 		// present. The implementation should consider the value of
-		// dht_settings::max_dht_items.
+		// settings_pack::dht_max_dht_items.
+		//
 		virtual void put_mutable_item(sha1_hash const& target
 			, span<char const> buf
 			, signature const& sig
@@ -225,14 +231,15 @@ namespace libtorrent { namespace dht {
 	};
 
 	using dht_storage_constructor_type
-		= std::function<std::unique_ptr<dht_storage_interface>(dht_settings const& settings)>;
+		= std::function<std::unique_ptr<dht_storage_interface>(settings_interface const& settings)>;
 
 	// constructor for the default DHT storage. The DHT storage is responsible
 	// for maintaining peers and mutable and immutable items announced and
 	// stored/put to the DHT node.
 	TORRENT_EXPORT std::unique_ptr<dht_storage_interface> dht_default_storage_constructor(
-		dht_settings const& settings);
+		settings_interface const& settings);
 
-} } // namespace libtorrent::dht
+} // namespace dht
+} // namespace libtorrent
 
 #endif //TORRENT_DHT_STORAGE_HPP
