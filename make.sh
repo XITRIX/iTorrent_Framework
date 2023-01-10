@@ -1,24 +1,26 @@
 #!/bin/sh
 
-#  make.sh
-#  ITorrentFramework
-#
-#  Created by Даниил Виноградов on 20.11.2022.
-#  Copyright © 2022 NoNameDude. All rights reserved.
+mkdir build
+
+rm -r ./build/ITorrentFramework-iphonesimulator.xcarchive
+rm -r ./build/ITorrentFramework-iphoneos.xcarchive
 
 xcodebuild archive \
- -scheme ITorrentFramework-iOS \
- -archivePath ./ITorrentFramework-iphonesimulator.xcarchive \
+ -scheme ITorrentFramework \
+ -archivePath ./build/ITorrentFramework-iphonesimulator.xcarchive \
  -sdk iphonesimulator \
  SKIP_INSTALL=NO
 
 xcodebuild archive \
- -scheme ITorrentFramework-iOS \
- -archivePath ./ITorrentFramework-iphoneos.xcarchive \
+ -scheme ITorrentFramework \
+ -archivePath ./build/ITorrentFramework-iphoneos.xcarchive \
  -sdk iphoneos \
  SKIP_INSTALL=NO
 
 xcodebuild -create-xcframework \
- -framework ./ITorrentFramework-iphonesimulator.xcarchive/Products/Library/Frameworks/ITorrentFramework.framework \
- -framework ./ITorrentFramework-iphoneos.xcarchive/Products/Library/Frameworks/ITorrentFramework.framework \
- -output ./ITorrentFramework.xcframework
+ -framework ./build/ITorrentFramework-iphonesimulator.xcarchive/Products/Library/Frameworks/ITorrentFramework.framework \
+ -framework ./build/ITorrentFramework-iphoneos.xcarchive/Products/Library/Frameworks/ITorrentFramework.framework \
+ -output ./build/ITorrentFramework.xcframework
+
+ rm -r ./build/ITorrentFramework-iphonesimulator.xcarchive
+ rm -r ./build/ITorrentFramework-iphoneos.xcarchive
