@@ -4,6 +4,7 @@ mkdir build
 
 rm -r ./build/ITorrentFramework-iphonesimulator.xcarchive
 rm -r ./build/ITorrentFramework-iphoneos.xcarchive
+rm -r ./build/ITorrentFramework.xcframework
 
 xcodebuild archive \
  -scheme ITorrentFramework \
