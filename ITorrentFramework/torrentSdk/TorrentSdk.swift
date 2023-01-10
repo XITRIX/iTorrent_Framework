@@ -21,6 +21,14 @@ public class TorrentSdk {
         init_engine(appName, downloadFolder, configFolder, settingsPackRaw)
         free_settings_pack(settingsPackRaw)
     }
+
+    /**
+     Get LibTorrent version.
+     - Returns: `String` with library version.
+     */
+    public static var version: String {
+        String(validatingUTF8: libtorrent_version()) ?? "ERROR"
+    }
     
     /**
      Apply settings pack to Torrent engine.

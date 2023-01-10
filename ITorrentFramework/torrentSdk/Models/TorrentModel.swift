@@ -8,11 +8,24 @@
 
 import Foundation
 
+public extension TorrentModel {
+    struct Hashes: Equatable, Hashable {
+        public var v1: String?
+        public var v2: String?
+
+        public var hasV1: Bool { v1 != nil }
+        public var hasV2: Bool { v2 != nil }
+
+        public var isHybrid: Bool { hasV1 && hasV2 }
+    }
+}
+
 public class TorrentModel: Hashable {
     public var title: String = ""
     public var state: TorrentState = .null
     public var displayState: TorrentState = .null
     public var hash: String = ""
+    public var hashes: Hashes = .init()
     public var creator: String = ""
     public var comment: String = ""
     public var progress: Float = 0
@@ -48,6 +61,12 @@ public class TorrentModel: Hashable {
         state = TorrentState(rawValue: String(validatingUTF8: torrentInfo.state) ?? "") ?? .null
         title = String(validatingUTF8: torrentInfo.name) ?? (state == .metadata ? NSLocalizedString("Obtaining Metadata", comment: "") : "ERROR")
         hash = String(validatingUTF8: torrentInfo.hash) ?? "ERROR"
+        if let hashv1 = torrentInfo.hashv1 {
+            hashes.v1 = String(validatingUTF8: hashv1) ?? "ERROR"
+        }
+        if let hashv2 = torrentInfo.hashv2 {
+            hashes.v2 = String(validatingUTF8: hashv2) ?? "ERROR"
+        }
         creator = String(validatingUTF8: torrentInfo.creator) ?? "ERROR"
         comment = String(validatingUTF8: torrentInfo.comment) ?? "ERROR"
         progress = torrentInfo.progress
@@ -73,14 +92,14 @@ public class TorrentModel: Hashable {
 
         sequentialDownload = torrentInfo.sequential_download == 1
         numPieces = Int(torrentInfo.num_pieces)
-        pieces = Array(UnsafeBufferPointer(start: torrentInfo.pieces, count: numPieces)).map({Int($0)})
+        pieces = Array(UnsafeBufferPointer(start: torrentInfo.pieces, count: numPieces)).map { Int($0) }
 
         displayState = getDisplayState()
     }
-    
+
     public func update(with model: TorrentModel) {
-        let oldState = self.displayState
-        
+        let oldState = displayState
+
         state = model.state
         title = model.title
         creator = model.creator
@@ -111,7 +130,7 @@ public class TorrentModel: Hashable {
         pieces = model.pieces
 
         displayState = getDisplayState()
-        
+
         if oldState != displayState {
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .torrentsStateChanged,
@@ -123,7 +142,8 @@ public class TorrentModel: Hashable {
 
     private func getDisplayState() -> TorrentState {
         if state == .finished || state == .downloading,
-            isFinished, !isPaused, seedMode {
+           isFinished, !isPaused, seedMode
+        {
             return .seeding
         }
         if state == .seeding, isPaused || !seedMode {
@@ -140,40 +160,42 @@ public class TorrentModel: Hashable {
 
     public func stateCorrector() {
         if displayState == .finished,
-            !isPaused {
+           !isPaused
+        {
             TorrentSdk.stopTorrent(hash: hash)
         } else if displayState == .seeding,
-            totalUpload >= seedLimit,
-            seedLimit != 0 {
+                  totalUpload >= seedLimit,
+                  seedLimit != 0
+        {
             seedMode = false
             TorrentSdk.stopTorrent(hash: hash)
         } else if state == .hashing, isPaused {
             TorrentSdk.startTorrent(hash: hash)
         }
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(hash)
     }
-    
+
     public static func == (lhs: TorrentModel, rhs: TorrentModel) -> Bool {
         lhs.state == rhs.state &&
-        lhs.hash == rhs.hash &&
-        lhs.progress == rhs.progress &&
-        lhs.totalWanted == rhs.totalWanted &&
-        lhs.totalWantedDone == rhs.totalWantedDone &&
-        lhs.downloadRate == rhs.downloadRate &&
-        lhs.uploadRate == rhs.uploadRate &&
-        lhs.totalDownloadSession == rhs.totalDownloadSession &&
-        lhs.totalUploadSession == rhs.totalUploadSession &&
-        lhs.numSeeds == rhs.numSeeds &&
-        lhs.numPeers == rhs.numPeers &&
-        lhs.totalDone == rhs.totalDone &&
-        lhs.isPaused == rhs.isPaused &&
-        lhs.isFinished == rhs.isFinished &&
-        lhs.isSeed == rhs.isSeed &&
-        lhs.hasMetadata == rhs.hasMetadata &&
-        lhs.sequentialDownload == rhs.sequentialDownload &&
-        lhs.pieces == rhs.pieces
+            lhs.hashes == rhs.hashes &&
+            lhs.progress == rhs.progress &&
+            lhs.totalWanted == rhs.totalWanted &&
+            lhs.totalWantedDone == rhs.totalWantedDone &&
+            lhs.downloadRate == rhs.downloadRate &&
+            lhs.uploadRate == rhs.uploadRate &&
+            lhs.totalDownloadSession == rhs.totalDownloadSession &&
+            lhs.totalUploadSession == rhs.totalUploadSession &&
+            lhs.numSeeds == rhs.numSeeds &&
+            lhs.numPeers == rhs.numPeers &&
+            lhs.totalDone == rhs.totalDone &&
+            lhs.isPaused == rhs.isPaused &&
+            lhs.isFinished == rhs.isFinished &&
+            lhs.isSeed == rhs.isSeed &&
+            lhs.hasMetadata == rhs.hasMetadata &&
+            lhs.sequentialDownload == rhs.sequentialDownload &&
+            lhs.pieces == rhs.pieces
     }
 }

@@ -80,8 +80,8 @@ public:
     char* addTorrentByName(char* torrent) {
         try {
             auto handle = addTorrent(torrent);
-            char* res = new char[hash_to_string(handle.status().info_hash).length() + 1];
-            strcpy(res, hash_to_string(handle.status().info_hash).c_str());
+            char* res = new char[hash_to_string(handle.status().info_hashes.get_best()).length() + 1];
+            strcpy(res, hash_to_string(handle.status().info_hashes.get_best()).c_str());
             return res;
         } catch (boost::system::system_error const & e) {
             // send error
@@ -163,7 +163,7 @@ public:
         handle.unset_flags(lt::torrent_flags::stop_when_ready);
         handlers = s->get_torrents();
         
-        hash = hash_to_string(handle.status().info_hash);
+        hash = hash_to_string(handle.status().info_hashes.get_best());
         char* res = new char[hash.length() + 1];
         strcpy(res, hash.c_str());
         return res;
@@ -171,7 +171,7 @@ public:
     
     torrent_handle* getHandleByHash(char* torrent_hash) {
         for (int i = 0; i < handlers.size(); i++) {
-			std::string s = hash_to_string(handlers[i].status().info_hash);
+			std::string s = hash_to_string(handlers[i].status().info_hashes.get_best());
             if (strcmp(s.c_str(), torrent_hash) == 0) {
                 return &(handlers[i]);
             }
@@ -193,6 +193,10 @@ Engine *Engine::standart = NULL;
 extern "C" int init_engine(char* client_name, char* download_path, char* config_path, settings_pack_struct settings_pack) {
     new Engine(client_name, download_path, config_path, settings_pack);
     return 0;
+}
+
+extern "C" const char* libtorrent_version() {
+    return version();
 }
 
 extern "C" void apply_settings_pack(settings_pack_struct settings_pack) {
@@ -271,7 +275,7 @@ extern "C" char* get_magnet_hash(char* magnet_link) {
     if (ec.value() != 0) {
         s = "-1";
     } else {
-        s = hash_to_string(params.info_hash);
+        s = hash_to_string(params.info_hashes.get_best());
     }
     
 	char* res = new char[s.length() + 1];
@@ -634,9 +638,25 @@ extern "C" TorrentResult get_torrent_info() {
         res.torrents[i].state = new char[state_str[stat.state].length() + 1];
         strcpy((char*)res.torrents[i].state, state_str[stat.state].c_str());
         
-        std::string hash = hash_to_string(stat.info_hash);
+        std::string hash = hash_to_string(stat.info_hashes.get_best());
         res.torrents[i].hash = new char[hash.length() + 1];
         strcpy(res.torrents[i].hash, hash.c_str());
+
+        if (stat.info_hashes.has_v1()) {
+            std::string hashv1 = hash_to_string(stat.info_hashes.v1);
+            res.torrents[i].hashv1 = new char[hashv1.length() + 1];
+            strcpy(res.torrents[i].hashv1, hashv1.c_str());
+        } else {
+            res.torrents[i].hashv1 = nullptr;
+        }
+
+        if (stat.info_hashes.has_v2()) {
+            std::string hashv2 = hash_to_string(stat.info_hashes.v2);
+            res.torrents[i].hashv2 = new char[hashv2.length() + 1];
+            strcpy(res.torrents[i].hashv2, hashv2.c_str());
+        } else {
+            res.torrents[i].hashv2 = nullptr;
+        }
         
         if (info != NULL) {
             res.torrents[i].creator = new char[info->creator().length() + 1];

@@ -31,6 +31,12 @@ std::string hash_to_string(libtorrent::sha1_hash hash) {
 	return ss.str();
 }
 
+std::string hash_to_string(libtorrent::sha256_hash hash) {
+    std::stringstream ss;
+    ss << hash;
+    return ss.str();
+}
+
 bool exists (const std::string& name) {
 	return ( access( name.c_str(), F_OK ) != -1 );
 }

@@ -25,6 +25,7 @@ namespace TorrentHandle {
 }
 
 std::string hash_to_string(libtorrent::sha1_hash hash);
+std::string hash_to_string(libtorrent::sha256_hash hash);
 
 bool exists (const std::string& name);
 

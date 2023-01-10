@@ -4,3 +4,4 @@ submodules/LibTorrent.xcframework/ios-arm64_x86_64-simulator/LibTorrent.framewor
 project-config.jam
 iTorrentFramework.xcodeproj/xcuserdata
 .DS_Store
+iTorrentFramework.xcodeproj/project.xcworkspace/xcuserdata
