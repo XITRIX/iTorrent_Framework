@@ -19,7 +19,7 @@ public struct PeerModel: Hashable {
     public var progress: Int
     public var progressPpm: Int
     public var address: String
-    
+
     public init(_ model: Peer) {
         port = Int(model.port)
         client = String(validatingUTF8: model.client) ?? "ERROR"
@@ -32,8 +32,12 @@ public struct PeerModel: Hashable {
         progressPpm = Int(model.progress_ppm)
         address = String(validatingUTF8: model.address) ?? "ERROR"
     }
-    
+
     public func hash(into hasher: inout Hasher) {
         hasher.combine(address)
+    }
+
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.address == rhs.address
     }
 }
