@@ -9,6 +9,12 @@
 import Foundation
 import ITorrentFramework.Private
 
+public enum EncryptionPolicy: Int8, CaseIterable, Codable {
+    case enabled
+    case forced
+    case disabled
+}
+
 public enum ProxyType: Int, CaseIterable, Codable {
     case none
     case socks4
@@ -35,6 +41,8 @@ public enum ProxyType: Int, CaseIterable, Codable {
 public struct SettingsPack {
     public var downloadLimit: Int
     public var uploadLimit: Int
+
+    public var encryptionPolicy: EncryptionPolicy
 
     public var enableDht: Bool
     public var enableLsd: Bool
@@ -67,6 +75,7 @@ public struct SettingsPack {
                              max_active_torrents_limit: Int32(maxActiveTorrents),
                              max_upload_torrents_limit: Int32(maxUplodingTorrents),
                              max_download_torrents_limit: Int32(maxDownloadingTorrents),
+                             encryption_policy: encryption_policy_t(rawValue: UInt32(encryptionPolicy.rawValue)),
                              enable_dht: enableDht,
                              enable_lsd: enableLsd,
                              enable_utp: enableUtp,
@@ -112,6 +121,7 @@ public extension SettingsPack {
     init(_ native: settings_pack_struct) {
         downloadLimit = Int(native.download_limit)
         uploadLimit = Int(native.upload_limit)
+        encryptionPolicy = .init(rawValue: Int8(native.encryption_policy.rawValue))!
         enableDht = native.enable_dht
         enableLsd = native.enable_lsd
         enableUtp = native.enable_utp
@@ -145,6 +155,7 @@ public extension SettingsPack {
          maxUplodingTorrents: Int,
          maxDownloadingTorrents: Int,
          interfaceType: InterfaceType,
+         encryptionPolicy: EncryptionPolicy,
 //         outgoingInterfaces: String,
 //         listenInterfaces: String,
          portRangeFirst: Int,
@@ -167,6 +178,7 @@ public extension SettingsPack {
         self.maxUplodingTorrents = maxUplodingTorrents
         self.maxDownloadingTorrents = maxDownloadingTorrents
         self.interfaceType = interfaceType
+        self.encryptionPolicy = encryptionPolicy
 //        self.outgoingInterfaces = outgoingInterfaces
 //        self.listenInterfaces = listenInterfaces
         self.portRangeFirst = portRangeFirst

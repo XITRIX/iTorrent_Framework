@@ -107,7 +107,25 @@ void applySettingsPackProxyHelper(lt::settings_pack *pack, settings_pack_struct 
 void applySettingsPackHelper(lt::settings_pack *pack, settings_pack_struct *_pack) {
     pack->set_int(lt::settings_pack::int_types::download_rate_limit, _pack->download_limit);
     pack->set_int(lt::settings_pack::int_types::upload_rate_limit, _pack->upload_limit);
-    
+
+    // The most secure, rc4 only so that all streams are encrypted
+    pack->set_int(lt::settings_pack::allowed_enc_level, lt::settings_pack::pe_rc4);
+    pack->set_bool(lt::settings_pack::prefer_rc4, true);
+    switch (_pack->encryption_policy) {
+        case enabled:
+            pack->set_int(lt::settings_pack::out_enc_policy, lt::settings_pack::pe_enabled);
+            pack->set_int(lt::settings_pack::in_enc_policy, lt::settings_pack::pe_enabled);
+            break;
+        case forced:
+            pack->set_int(lt::settings_pack::out_enc_policy, lt::settings_pack::pe_forced);
+            pack->set_int(lt::settings_pack::in_enc_policy, lt::settings_pack::pe_forced);
+            break;
+        case disabled:
+            pack->set_int(lt::settings_pack::out_enc_policy, lt::settings_pack::pe_disabled);
+            pack->set_int(lt::settings_pack::in_enc_policy, lt::settings_pack::pe_disabled);
+            break;
+    }
+
     pack->set_bool(lt::settings_pack::enable_dht, _pack->enable_dht);
     pack->set_bool(lt::settings_pack::enable_lsd, _pack->enable_lsd);
     pack->set_bool(lt::settings_pack::enable_incoming_utp, _pack->enable_utp);
