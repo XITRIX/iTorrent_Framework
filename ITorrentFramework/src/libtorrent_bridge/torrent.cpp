@@ -25,6 +25,7 @@
 #include "libtorrent/torrent_status.hpp"
 #include "libtorrent/read_resume_data.hpp"
 #include "libtorrent/write_resume_data.hpp"
+#include "libtorrent/extensions/ut_pex.hpp"
 #include <boost/make_shared.hpp>
 #include "libtorrent_bridge/result_struct.h"
 #include "libtorrent_bridge/file_struct.h"
@@ -75,6 +76,9 @@ public:
 
         printf("LibTorrent version: %s\n", version());
         s = new lt::session(pack);
+
+        if (settings_pack.enable_pex)
+                s->add_extension(&lt::create_ut_pex_plugin);
     }
     
     char* addTorrentByName(char* torrent) {

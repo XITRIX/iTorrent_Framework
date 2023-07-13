@@ -49,7 +49,9 @@ public struct SettingsPack {
     public var enableUtp: Bool
     public var enableUpnp: Bool
     public var enableNatpmp: Bool
-    
+
+    public var enablePex: Bool
+
     public var maxActiveTorrents: Int
     public var maxDownloadingTorrents: Int
     public var maxUplodingTorrents: Int
@@ -81,6 +83,7 @@ public struct SettingsPack {
                              enable_utp: enableUtp,
                              enable_upnp: enableUpnp,
                              enable_natpmp: enableNatpmp,
+                             enable_pex: enablePex,
                              outgoing_interfaces: outgoungInterfaces.cString(),
                              listen_interfaces: listenInterfaces.cString(),
                              port_range_first: Int32(portRangeFirst),
@@ -127,6 +130,7 @@ public extension SettingsPack {
         enableUtp = native.enable_utp
         enableUpnp = native.enable_upnp
         enableNatpmp = native.enable_natpmp
+        enablePex = native.enable_pex
         maxActiveTorrents = Int(native.max_active_torrents_limit)
         maxUplodingTorrents = Int(native.max_upload_torrents_limit)
         maxDownloadingTorrents = Int(native.max_download_torrents_limit)
@@ -151,6 +155,7 @@ public extension SettingsPack {
          enableUtp: Bool,
          enableUpnp: Bool,
          enableNatpmp: Bool,
+         enablePex: Bool,
          maxActiveTorrents: Int,
          maxUplodingTorrents: Int,
          maxDownloadingTorrents: Int,
@@ -174,6 +179,7 @@ public extension SettingsPack {
         self.enableUtp = enableUtp
         self.enableUpnp = enableUpnp
         self.enableNatpmp = enableNatpmp
+        self.enablePex = enablePex
         self.maxActiveTorrents = maxActiveTorrents
         self.maxUplodingTorrents = maxUplodingTorrents
         self.maxDownloadingTorrents = maxDownloadingTorrents
