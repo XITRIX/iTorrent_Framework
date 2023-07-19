@@ -84,8 +84,9 @@ public:
     char* addTorrentByName(char* torrent) {
         try {
             auto handle = addTorrent(torrent);
-            char* res = new char[hash_to_string(handle.status().info_hashes.get_best()).length() + 1];
-            strcpy(res, hash_to_string(handle.status().info_hashes.get_best()).c_str());
+            auto hash = get_universal_hash_from_handle(handle);
+            char* res = new char[hash_to_string(hash).length() + 1];
+            strcpy(res, hash_to_string(hash).c_str());
             return res;
         } catch (boost::system::system_error const & e) {
             // send error
@@ -166,8 +167,8 @@ public:
         
         handle.unset_flags(lt::torrent_flags::stop_when_ready);
         handlers = s->get_torrents();
-        
-        hash = hash_to_string(handle.status().info_hashes.get_best());
+
+        hash = hash_to_string(get_universal_hash_from_handle(handle));
         char* res = new char[hash.length() + 1];
         strcpy(res, hash.c_str());
         return res;
@@ -175,8 +176,8 @@ public:
     
     torrent_handle* getHandleByHash(char* torrent_hash) {
         for (int i = 0; i < handlers.size(); i++) {
-			std::string s = hash_to_string(handlers[i].status().info_hashes.get_best());
-            if (strcmp(s.c_str(), torrent_hash) == 0) {
+            std::string hash = hash_to_string(get_universal_hash_from_handle(handlers[i]));
+            if (strcmp(hash.c_str(), torrent_hash) == 0) {
                 return &(handlers[i]);
             }
         }
@@ -279,7 +280,12 @@ extern "C" char* get_magnet_hash(char* magnet_link) {
     if (ec.value() != 0) {
         s = "-1";
     } else {
+
+#ifdef ITF_USES_LIBTORRENT2
         s = hash_to_string(params.info_hashes.get_best());
+#else
+        s = hash_to_string(params.info_hash);
+#endif
     }
     
 	char* res = new char[s.length() + 1];
@@ -642,10 +648,11 @@ extern "C" TorrentResult get_torrent_info() {
         res.torrents[i].state = new char[state_str[stat.state].length() + 1];
         strcpy((char*)res.torrents[i].state, state_str[stat.state].c_str());
         
-        std::string hash = hash_to_string(stat.info_hashes.get_best());
+        std::string hash = hash_to_string(get_universal_hash_from_status(stat));
         res.torrents[i].hash = new char[hash.length() + 1];
         strcpy(res.torrents[i].hash, hash.c_str());
 
+#ifdef ITF_USES_LIBTORRENT2
         if (stat.info_hashes.has_v1()) {
             std::string hashv1 = hash_to_string(stat.info_hashes.v1);
             res.torrents[i].hashv1 = new char[hashv1.length() + 1];
@@ -661,7 +668,14 @@ extern "C" TorrentResult get_torrent_info() {
         } else {
             res.torrents[i].hashv2 = nullptr;
         }
-        
+#else
+        std::string hashv1 = hash_to_string(stat.info_hash);
+        res.torrents[i].hashv1 = new char[hashv1.length() + 1];
+        strcpy(res.torrents[i].hashv1, hashv1.c_str());
+
+        res.torrents[i].hashv2 = nullptr;
+#endif
+
         if (info != NULL) {
             res.torrents[i].creator = new char[info->creator().length() + 1];
             strcpy((char*)res.torrents[i].creator, info->creator().c_str());

@@ -24,8 +24,14 @@ namespace TorrentHandle {
     bool isChecking(lt::torrent_handle handle);
 }
 
+libtorrent::sha1_hash get_universal_hash_from_handle(libtorrent::torrent_handle handle);
+libtorrent::sha1_hash get_universal_hash_from_status(libtorrent::torrent_status status);
+
 std::string hash_to_string(libtorrent::sha1_hash hash);
+
+#ifdef ITF_USES_LIBTORRENT2
 std::string hash_to_string(libtorrent::sha256_hash hash);
+#endif
 
 bool exists (const std::string& name);
 

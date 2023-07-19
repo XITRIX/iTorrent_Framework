@@ -31,11 +31,25 @@ std::string hash_to_string(libtorrent::sha1_hash hash) {
 	return ss.str();
 }
 
+libtorrent::sha1_hash get_universal_hash_from_handle(libtorrent::torrent_handle handle) {
+    return get_universal_hash_from_status(handle.status());
+}
+
+libtorrent::sha1_hash get_universal_hash_from_status(libtorrent::torrent_status status) {
+#ifdef ITF_USES_LIBTORRENT2
+    return status.info_hashes.get_best();
+#else
+    return status.info_hash;
+#endif
+}
+
+#ifdef ITF_USES_LIBTORRENT2
 std::string hash_to_string(libtorrent::sha256_hash hash) {
     std::stringstream ss;
     ss << hash;
     return ss.str();
 }
+#endif
 
 bool exists (const std::string& name) {
 	return ( access( name.c_str(), F_OK ) != -1 );
