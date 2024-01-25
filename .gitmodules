@@ -1,3 +1,6 @@
 [submodule "submodules/libtorrent"]
 	path = submodules/libtorrent
 	url = https://github.com/arvidn/libtorrent.git
+[submodule "submodules/vcpkg"]
+	path = submodules/vcpkg
+	url = https://github.com/microsoft/vcpkg.git
