@@ -36,14 +36,14 @@ libtorrent::sha1_hash get_universal_hash_from_handle(libtorrent::torrent_handle 
 }
 
 libtorrent::sha1_hash get_universal_hash_from_status(libtorrent::torrent_status status) {
-#ifdef ITF_USES_LIBTORRENT2
-    return status.info_hashes.get_best();
-#else
+#if LIBTORRENT_VERSION_MAJOR == 1
     return status.info_hash;
+#else
+    return status.info_hashes.get_best();
 #endif
 }
 
-#ifdef ITF_USES_LIBTORRENT2
+#if LIBTORRENT_VERSION_MAJOR != 1
 std::string hash_to_string(libtorrent::sha256_hash hash) {
     std::stringstream ss;
     ss << hash;

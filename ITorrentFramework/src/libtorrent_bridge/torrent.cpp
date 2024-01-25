@@ -281,10 +281,10 @@ extern "C" char* get_magnet_hash(char* magnet_link) {
         s = "-1";
     } else {
 
-#ifdef ITF_USES_LIBTORRENT2
-        s = hash_to_string(params.info_hashes.get_best());
-#else
+#if LIBTORRENT_VERSION_MAJOR == 1
         s = hash_to_string(params.info_hash);
+#else
+        s = hash_to_string(params.info_hashes.get_best());
 #endif
     }
     
@@ -652,7 +652,13 @@ extern "C" TorrentResult get_torrent_info() {
         res.torrents[i].hash = new char[hash.length() + 1];
         strcpy(res.torrents[i].hash, hash.c_str());
 
-#ifdef ITF_USES_LIBTORRENT2
+#if LIBTORRENT_VERSION_MAJOR == 1
+        std::string hashv1 = hash_to_string(stat.info_hash);
+        res.torrents[i].hashv1 = new char[hashv1.length() + 1];
+        strcpy(res.torrents[i].hashv1, hashv1.c_str());
+
+        res.torrents[i].hashv2 = nullptr;
+#else
         if (stat.info_hashes.has_v1()) {
             std::string hashv1 = hash_to_string(stat.info_hashes.v1);
             res.torrents[i].hashv1 = new char[hashv1.length() + 1];
@@ -668,12 +674,6 @@ extern "C" TorrentResult get_torrent_info() {
         } else {
             res.torrents[i].hashv2 = nullptr;
         }
-#else
-        std::string hashv1 = hash_to_string(stat.info_hash);
-        res.torrents[i].hashv1 = new char[hashv1.length() + 1];
-        strcpy(res.torrents[i].hashv1, hashv1.c_str());
-
-        res.torrents[i].hashv2 = nullptr;
 #endif
 
         if (info != NULL) {

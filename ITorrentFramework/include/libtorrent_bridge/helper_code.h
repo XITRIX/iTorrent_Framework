@@ -16,6 +16,7 @@
 #include "libtorrent/torrent_handle.hpp"
 #include "libtorrent/settings_pack.hpp"
 #include "libtorrent/torrent_status.hpp"
+#include "libtorrent/version.hpp"
 #include "libtorrent_bridge/settings_pack_struct.h"
 
 using namespace std;
@@ -29,7 +30,7 @@ libtorrent::sha1_hash get_universal_hash_from_status(libtorrent::torrent_status 
 
 std::string hash_to_string(libtorrent::sha1_hash hash);
 
-#ifdef ITF_USES_LIBTORRENT2
+#if LIBTORRENT_VERSION_MAJOR != 1
 std::string hash_to_string(libtorrent::sha256_hash hash);
 #endif
 

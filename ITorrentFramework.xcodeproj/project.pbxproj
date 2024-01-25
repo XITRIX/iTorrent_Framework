@@ -51,6 +51,7 @@
 		7C9E0F14296D5ECC00EFF686 /* OpenSSL.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 7C9E0F0A296D582400EFF686 /* OpenSSL.xcframework */; };
 		7C9E0F15296D5ECC00EFF686 /* OpenSSL.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 7C9E0F0A296D582400EFF686 /* OpenSSL.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		D1936AE72B6295FA00C7094B /* libtorrent-rasterbar.a in Frameworks */ = {isa = PBXBuildFile; fileRef = D1936AE62B6295F600C7094B /* libtorrent-rasterbar.a */; };
+		D1936AEC2B62A60500C7094B /* libiconv.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = D1936AEB2B62A5FC00C7094B /* libiconv.tbd */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -115,6 +116,7 @@
 		7C79ACC8296C16B200EF32F4 /* make.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = make.sh; sourceTree = "<group>"; };
 		7C9E0F0A296D582400EFF686 /* OpenSSL.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = OpenSSL.xcframework; path = submodules/OpenSSL.xcframework; sourceTree = "<group>"; };
 		D1936AE62B6295F600C7094B /* libtorrent-rasterbar.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libtorrent-rasterbar.a"; path = "build/submodules/libtorrent/libtorrent-rasterbar.a"; sourceTree = "<group>"; };
+		D1936AEB2B62A5FC00C7094B /* libiconv.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libiconv.tbd; path = Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.0.sdk/usr/lib/libiconv.tbd; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -126,6 +128,7 @@
 				D1936AE72B6295FA00C7094B /* libtorrent-rasterbar.a in Frameworks */,
 				7C9E0F14296D5ECC00EFF686 /* OpenSSL.xcframework in Frameworks */,
 				7C6020CC296C80BB00702EB1 /* CoreFoundation.framework in Frameworks */,
+				D1936AEC2B62A60500C7094B /* libiconv.tbd in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -135,6 +138,7 @@
 		7C6020A6296C7D7B00702EB1 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				D1936AEB2B62A5FC00C7094B /* libiconv.tbd */,
 				D1936AE62B6295F600C7094B /* libtorrent-rasterbar.a */,
 				7C602134296C95FA00702EB1 /* LibTorrent.xcframework */,
 				7C9E0F0A296D582400EFF686 /* OpenSSL.xcframework */,
@@ -514,7 +518,7 @@
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = ITF_USES_LIBTORRENT2;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
@@ -578,7 +582,7 @@
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
-				GCC_PREPROCESSOR_DEFINITIONS = ITF_USES_LIBTORRENT2;
+				GCC_PREPROCESSOR_DEFINITIONS = "";
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
